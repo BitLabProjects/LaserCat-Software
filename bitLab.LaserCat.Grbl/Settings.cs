@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  unsafe partial class Grbl
+  unsafe partial class GrblFirmware
   {
     /*
       settings.c - eeprom configuration handling 
@@ -134,40 +134,40 @@ namespace bitLab.LaserCat.Grbl
     // Method to restore EEPROM-saved Grbl global settings back to defaults. 
     public void settings_restore_global_settings()
     {
-      settings.pulse_microseconds = Grbl.DEFAULT_STEP_PULSE_MICROSECONDS;
-      settings.stepper_idle_lock_time = Grbl.DEFAULT_STEPPER_IDLE_LOCK_TIME;
-      settings.step_invert_mask = Grbl.DEFAULT_STEPPING_INVERT_MASK;
-      settings.dir_invert_mask = Grbl.DEFAULT_DIRECTION_INVERT_MASK;
-      settings.status_report_mask = Grbl.DEFAULT_STATUS_REPORT_MASK;
-      settings.junction_deviation = Grbl.DEFAULT_JUNCTION_DEVIATION;
-      settings.arc_tolerance = Grbl.DEFAULT_ARC_TOLERANCE;
-      settings.homing_dir_mask = Grbl.DEFAULT_HOMING_DIR_MASK;
-      settings.homing_feed_rate = Grbl.DEFAULT_HOMING_FEED_RATE;
-      settings.homing_seek_rate = Grbl.DEFAULT_HOMING_SEEK_RATE;
-      settings.homing_debounce_delay = Grbl.DEFAULT_HOMING_DEBOUNCE_DELAY;
-      settings.homing_pulloff = Grbl.DEFAULT_HOMING_PULLOFF;
+      settings.pulse_microseconds = GrblFirmware.DEFAULT_STEP_PULSE_MICROSECONDS;
+      settings.stepper_idle_lock_time = GrblFirmware.DEFAULT_STEPPER_IDLE_LOCK_TIME;
+      settings.step_invert_mask = GrblFirmware.DEFAULT_STEPPING_INVERT_MASK;
+      settings.dir_invert_mask = GrblFirmware.DEFAULT_DIRECTION_INVERT_MASK;
+      settings.status_report_mask = GrblFirmware.DEFAULT_STATUS_REPORT_MASK;
+      settings.junction_deviation = GrblFirmware.DEFAULT_JUNCTION_DEVIATION;
+      settings.arc_tolerance = GrblFirmware.DEFAULT_ARC_TOLERANCE;
+      settings.homing_dir_mask = GrblFirmware.DEFAULT_HOMING_DIR_MASK;
+      settings.homing_feed_rate = GrblFirmware.DEFAULT_HOMING_FEED_RATE;
+      settings.homing_seek_rate = GrblFirmware.DEFAULT_HOMING_SEEK_RATE;
+      settings.homing_debounce_delay = GrblFirmware.DEFAULT_HOMING_DEBOUNCE_DELAY;
+      settings.homing_pulloff = GrblFirmware.DEFAULT_HOMING_PULLOFF;
 
       settings.flags = 0;
-      if (Grbl.DEFAULT_REPORT_INCHES) { settings.flags |= BITFLAG_REPORT_INCHES; }
-      if (Grbl.DEFAULT_AUTO_START) { settings.flags |= BITFLAG_AUTO_START; }
-      if (Grbl.DEFAULT_INVERT_ST_ENABLE) { settings.flags |= BITFLAG_INVERT_ST_ENABLE; }
-      if (Grbl.DEFAULT_INVERT_LIMIT_PINS) { settings.flags |= BITFLAG_INVERT_LIMIT_PINS; }
-      if (Grbl.DEFAULT_SOFT_LIMIT_ENABLE) { settings.flags |= BITFLAG_SOFT_LIMIT_ENABLE; }
-      if (Grbl.DEFAULT_HARD_LIMIT_ENABLE) { settings.flags |= BITFLAG_HARD_LIMIT_ENABLE; }
-      if (Grbl.DEFAULT_HOMING_ENABLE) { settings.flags |= BITFLAG_HOMING_ENABLE; }
+      if (GrblFirmware.DEFAULT_REPORT_INCHES) { settings.flags |= BITFLAG_REPORT_INCHES; }
+      if (GrblFirmware.DEFAULT_AUTO_START) { settings.flags |= BITFLAG_AUTO_START; }
+      if (GrblFirmware.DEFAULT_INVERT_ST_ENABLE) { settings.flags |= BITFLAG_INVERT_ST_ENABLE; }
+      if (GrblFirmware.DEFAULT_INVERT_LIMIT_PINS) { settings.flags |= BITFLAG_INVERT_LIMIT_PINS; }
+      if (GrblFirmware.DEFAULT_SOFT_LIMIT_ENABLE) { settings.flags |= BITFLAG_SOFT_LIMIT_ENABLE; }
+      if (GrblFirmware.DEFAULT_HARD_LIMIT_ENABLE) { settings.flags |= BITFLAG_HARD_LIMIT_ENABLE; }
+      if (GrblFirmware.DEFAULT_HOMING_ENABLE) { settings.flags |= BITFLAG_HOMING_ENABLE; }
 
-      settings.steps_per_mm[NutsAndBolts.X_AXIS] = Grbl.DEFAULT_X_STEPS_PER_MM;
-      settings.steps_per_mm[NutsAndBolts.Y_AXIS] = Grbl.DEFAULT_Y_STEPS_PER_MM;
-      settings.steps_per_mm[NutsAndBolts.Z_AXIS] = Grbl.DEFAULT_Z_STEPS_PER_MM;
-      settings.max_rate[NutsAndBolts.X_AXIS] = Grbl.DEFAULT_X_MAX_RATE;
-      settings.max_rate[NutsAndBolts.Y_AXIS] = Grbl.DEFAULT_Y_MAX_RATE;
-      settings.max_rate[NutsAndBolts.Z_AXIS] = Grbl.DEFAULT_Z_MAX_RATE;
-      settings.acceleration[NutsAndBolts.X_AXIS] = Grbl.DEFAULT_X_ACCELERATION;
-      settings.acceleration[NutsAndBolts.Y_AXIS] = Grbl.DEFAULT_Y_ACCELERATION;
-      settings.acceleration[NutsAndBolts.Z_AXIS] = Grbl.DEFAULT_Z_ACCELERATION;
-      settings.max_travel[NutsAndBolts.X_AXIS] = (-Grbl.DEFAULT_X_MAX_TRAVEL);
-      settings.max_travel[NutsAndBolts.Y_AXIS] = (-Grbl.DEFAULT_Y_MAX_TRAVEL);
-      settings.max_travel[NutsAndBolts.Z_AXIS] = (-Grbl.DEFAULT_Z_MAX_TRAVEL);
+      settings.steps_per_mm[NutsAndBolts.X_AXIS] = GrblFirmware.DEFAULT_X_STEPS_PER_MM;
+      settings.steps_per_mm[NutsAndBolts.Y_AXIS] = GrblFirmware.DEFAULT_Y_STEPS_PER_MM;
+      settings.steps_per_mm[NutsAndBolts.Z_AXIS] = GrblFirmware.DEFAULT_Z_STEPS_PER_MM;
+      settings.max_rate[NutsAndBolts.X_AXIS] = GrblFirmware.DEFAULT_X_MAX_RATE;
+      settings.max_rate[NutsAndBolts.Y_AXIS] = GrblFirmware.DEFAULT_Y_MAX_RATE;
+      settings.max_rate[NutsAndBolts.Z_AXIS] = GrblFirmware.DEFAULT_Z_MAX_RATE;
+      settings.acceleration[NutsAndBolts.X_AXIS] = GrblFirmware.DEFAULT_X_ACCELERATION;
+      settings.acceleration[NutsAndBolts.Y_AXIS] = GrblFirmware.DEFAULT_Y_ACCELERATION;
+      settings.acceleration[NutsAndBolts.Z_AXIS] = GrblFirmware.DEFAULT_Z_ACCELERATION;
+      settings.max_travel[NutsAndBolts.X_AXIS] = (-GrblFirmware.DEFAULT_X_MAX_TRAVEL);
+      settings.max_travel[NutsAndBolts.Y_AXIS] = (-GrblFirmware.DEFAULT_Y_MAX_TRAVEL);
+      settings.max_travel[NutsAndBolts.Z_AXIS] = (-GrblFirmware.DEFAULT_Z_MAX_TRAVEL);
 
       write_global_settings();
     }

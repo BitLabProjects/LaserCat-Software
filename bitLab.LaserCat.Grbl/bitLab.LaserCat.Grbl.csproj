@@ -62,6 +62,12 @@
     <Compile Include="Stepper.cs" />
     <Compile Include="System.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\bitLab.Logging\bitLab.Logging.csproj">
+      <Project>{a25dc3f3-71df-4145-93e3-a7c5eca652b1}</Project>
+      <Name>bitLab.Logging</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using bitLab.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,17 +7,28 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  unsafe public partial class Grbl
+  unsafe public partial class GrblFirmware
   {
-    char pgm_read_byte_near( char* s)
+    private string printLineBuffer;
+    public void printPgmString(string s)
     {
-      return s[0];
-    }
-    public void printPgmString(char* s)
-    {
-      char c;
-      while ((c = pgm_read_byte_near(s++))!=0)
-        serial_write(c);
+      const string newLineString = "\r\n";
+      if (s.Contains(newLineString))
+      {
+        var lines = s.Split(new string[] { newLineString }, StringSplitOptions.None);
+        for (var i = 0; i < lines.Length; i++) {
+          //Se è l'ultimo split ed è vuoto significa che s finisce con \r\n, quindi invia il buffer
+          if (i == lines.Length - 1 && string.IsNullOrEmpty(lines[i]))
+            break;
+          printLineBuffer += lines[i];
+          Log.LogInfo("Grbl: " + printLineBuffer);
+          printLineBuffer = string.Empty;
+        }
+      }
+      else
+      {
+        printLineBuffer += s;
+      }
     }
     public void printString(char[] s)
     {

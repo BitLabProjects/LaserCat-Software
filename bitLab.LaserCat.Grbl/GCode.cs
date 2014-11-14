@@ -8,8 +8,8 @@ namespace bitLab.LaserCat.Grbl
 {
   unsafe public partial class GCode
   {
-    private Grbl mGrbl;
-    public GCode(Grbl grbl)
+    private GrblFirmware mGrbl;
+    public void Initialize(GrblFirmware grbl)
     {
       mGrbl = grbl;
     }
@@ -230,7 +230,7 @@ namespace bitLab.LaserCat.Grbl
       // Load default G54 coordinate system.
       if (!(mGrbl.settings_read_coord_data(gc_state.modal.coord_select, gc_state.coord_system)))
       { 
-        mGrbl.report_status_message(Grbl.STATUS_SETTING_READ_FAIL); 
+        mGrbl.report_status_message(GrblFirmware.STATUS_SETTING_READ_FAIL); 
       } 
     }
 
@@ -304,9 +304,9 @@ namespace bitLab.LaserCat.Grbl
     
         // Import the next g-code word, expecting a letter followed by a value. Otherwise, error out.
         letter = Convert.ToChar(line[char_counter]);
-        if((letter < 'A') || (letter > 'Z')) { return(Grbl.STATUS_EXPECTED_COMMAND_LETTER); } // [Expected word letter]
+        if((letter < 'A') || (letter > 'Z')) { return(GrblFirmware.STATUS_EXPECTED_COMMAND_LETTER); } // [Expected word letter]
         char_counter++;
-        if (mGrbl.read_float(line, ref char_counter, ref value) == 0) { return (Grbl.STATUS_BAD_NUMBER_FORMAT); } // [Expected word value]
+        if (mGrbl.read_float(line, ref char_counter, ref value) == 0) { return (GrblFirmware.STATUS_BAD_NUMBER_FORMAT); } // [Expected word value]
 
         // Convert values to smaller uint8 significand and mantissa values for parsing this word.
         // NOTE: Mantissa is multiplied by 100 to catch non-integer command values. This is more 
@@ -335,7 +335,7 @@ namespace bitLab.LaserCat.Grbl
                 // Check for G10/28/30/92 being called with G0/1/2/3/38 on same block.
                 // * G43.1 is also an axis command but is not explicitly defined this way.
                 if (mantissa == 0) { // Ignore G28.1, G30.1, and G92.1
-                  if (axis_command != 0) { return(Grbl.STATUS_GCODE_AXIS_COMMAND_CONFLICT); } // [Axis word/command conflict]
+                  if (axis_command != 0) { return(GrblFirmware.STATUS_GCODE_AXIS_COMMAND_CONFLICT); } // [Axis word/command conflict]
                   axis_command = AXIS_COMMAND_NON_MODAL;
                 }
                 // No break. Continues to next line.
@@ -347,7 +347,7 @@ namespace bitLab.LaserCat.Grbl
               case 0: case 1: case 2: case 3: case 38: 
                 // Check for G0/1/2/3/38 being called with G10/28/30/92 on same block.
                 // * G43.1 is also an axis command but is not explicitly defined this way.
-                if (axis_command != 0) { return(Grbl.STATUS_GCODE_AXIS_COMMAND_CONFLICT); } // [Axis word/command conflict]
+                if (axis_command != 0) { return(GrblFirmware.STATUS_GCODE_AXIS_COMMAND_CONFLICT); } // [Axis word/command conflict]
                 axis_command = AXIS_COMMAND_MOTION_MODE; 
                 // No break. Continues to next line.
                 perform80 = true;
@@ -383,13 +383,13 @@ namespace bitLab.LaserCat.Grbl
                 // NOTE: The NIST g-code standard vaguely states that when a tool length offset is changed,
                 // there cannot be any axis motion or coordinate offsets updated. Meaning G43, G43.1, and G49
                 // all are explicit axis commands, regardless if they require axis words or not. 
-                if (axis_command != 0) { return(Grbl.STATUS_GCODE_AXIS_COMMAND_CONFLICT); } // [Axis word/command conflict] }
+                if (axis_command != 0) { return(GrblFirmware.STATUS_GCODE_AXIS_COMMAND_CONFLICT); } // [Axis word/command conflict] }
                 axis_command = AXIS_COMMAND_TOOL_LENGTH_OFFSET;
                 if (int_value == 49) { // G49
                   gc_block.modal.tool_length = TOOL_LENGTH_OFFSET_CANCEL; 
                 } else if (mantissa == 10) { // G43.1
                   gc_block.modal.tool_length = TOOL_LENGTH_OFFSET_ENABLE_DYNAMIC;
-                } else { return(Grbl.STATUS_GCODE_UNSUPPORTED_COMMAND); } // [Unsupported G43.x command]
+                } else { return(GrblFirmware.STATUS_GCODE_UNSUPPORTED_COMMAND); } // [Unsupported G43.x command]
                 mantissa = 0; // Set to zero to indicate valid non-integer G command.
                 break;
               case 54: case 55: case 56: case 57: case 58: case 59: 
@@ -397,7 +397,7 @@ namespace bitLab.LaserCat.Grbl
                 word_bit = MODAL_GROUP_G12;
                 gc_block.modal.coord_select = (byte)(int_value-54); // Shift to array indexing.
                 break;
-              default: return(Grbl.STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G command]
+              default: return(GrblFirmware.STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G command]
             }
             if (perform4Or53)
             {
@@ -411,7 +411,7 @@ namespace bitLab.LaserCat.Grbl
                   {
                     case 0: gc_block.non_modal_command = NON_MODAL_GO_HOME_0; break;  // G28
                     case 10: gc_block.non_modal_command = NON_MODAL_SET_HOME_0; break; // G28.1
-                    default: return (Grbl.STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G28.x command]
+                    default: return (GrblFirmware.STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G28.x command]
                   }
                   mantissa = 0; // Set to zero to indicate valid non-integer G command.
                   break;
@@ -420,7 +420,7 @@ namespace bitLab.LaserCat.Grbl
                   {
                     case 0: gc_block.non_modal_command = NON_MODAL_GO_HOME_1; break;  // G30
                     case 10: gc_block.non_modal_command = NON_MODAL_SET_HOME_1; break; // G30.1
-                    default: return (Grbl.STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G30.x command]
+                    default: return (GrblFirmware.STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G30.x command]
                   }
                   mantissa = 0; // Set to zero to indicate valid non-integer G command.
                   break;
@@ -430,7 +430,7 @@ namespace bitLab.LaserCat.Grbl
                   {
                     case 0: gc_block.non_modal_command = NON_MODAL_SET_COORDINATE_OFFSET; break; // G92
                     case 10: gc_block.non_modal_command = NON_MODAL_RESET_COORDINATE_OFFSET; break; // G92.1
-                    default: return (Grbl.STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G92.x command]
+                    default: return (GrblFirmware.STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G92.x command]
                   }
                   mantissa = 0; // Set to zero to indicate valid non-integer G command.
                   break;
@@ -453,24 +453,24 @@ namespace bitLab.LaserCat.Grbl
                     // case 30: gc_block.modal.motion = MOTION_MODE_PROBE_NO_ERROR; break; // G38.3 Not supported.
                     // case 40: // Not supported.
                     // case 50: // Not supported.
-                    default: return (Grbl.STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G38.x command]
+                    default: return (GrblFirmware.STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported G38.x command]
                   }
                   mantissa = 0; // Set to zero to indicate valid non-integer G command.
                   break;
                 case 80: gc_block.modal.motion = MOTION_MODE_NONE; break; // G80
               }
             }
-            if (mantissa > 0) { return(Grbl.STATUS_GCODE_COMMAND_VALUE_NOT_INTEGER); } // [Unsupported or invalid Gxx.x command]
+            if (mantissa > 0) { return(GrblFirmware.STATUS_GCODE_COMMAND_VALUE_NOT_INTEGER); } // [Unsupported or invalid Gxx.x command]
             // Check for more than one command per modal group violations in the current block
             // NOTE: Variable 'word_bit' is always assigned, if the command is valid.
-            if ( mGrbl.bit_istrue(command_words,Grbl.bit(word_bit)) ) { return(Grbl.STATUS_GCODE_MODAL_GROUP_VIOLATION); }
-            command_words |= Grbl.bit(word_bit);
+            if ( mGrbl.bit_istrue(command_words,GrblFirmware.bit(word_bit)) ) { return(GrblFirmware.STATUS_GCODE_MODAL_GROUP_VIOLATION); }
+            command_words |= GrblFirmware.bit(word_bit);
             break;
         
           case 'M':
       
             // Determine 'M' command and its modal group
-            if (mantissa > 0) { return(Grbl.STATUS_GCODE_COMMAND_VALUE_NOT_INTEGER); } // [No Mxx.x commands]
+            if (mantissa > 0) { return(GrblFirmware.STATUS_GCODE_COMMAND_VALUE_NOT_INTEGER); } // [No Mxx.x commands]
             switch(int_value) {
               case 0: case 1: case 2: case 30: 
                 word_bit = MODAL_GROUP_M4; 
@@ -489,22 +489,22 @@ namespace bitLab.LaserCat.Grbl
                 }
                 break;            
               case 7: case 8: case 9:
-                if (!Grbl.ENABLE_M7)
+                if (!GrblFirmware.ENABLE_M7)
                   break;
                 word_bit = MODAL_GROUP_M8; 
                 switch(int_value) {
-                  case 7: if (!Grbl.ENABLE_M7) break; gc_block.modal.coolant = COOLANT_MIST_ENABLE; break;
+                  case 7: if (!GrblFirmware.ENABLE_M7) break; gc_block.modal.coolant = COOLANT_MIST_ENABLE; break;
                   case 8: gc_block.modal.coolant = COOLANT_FLOOD_ENABLE; break;
                   case 9: gc_block.modal.coolant = COOLANT_DISABLE; break;
                 }
                 break;
-              default: return(Grbl.STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported M command]
+              default: return(GrblFirmware.STATUS_GCODE_UNSUPPORTED_COMMAND); // [Unsupported M command]
             }            
       
             // Check for more than one command per modal group violations in the current block
             // NOTE: Variable 'word_bit' is always assigned, if the command is valid.
-            if ( mGrbl.bit_istrue(command_words,Grbl.bit(word_bit)) ) { return(Grbl.STATUS_GCODE_MODAL_GROUP_VIOLATION); }
-            command_words |= Grbl.bit(word_bit);
+            if ( mGrbl.bit_istrue(command_words,GrblFirmware.bit(word_bit)) ) { return(GrblFirmware.STATUS_GCODE_MODAL_GROUP_VIOLATION); }
+            command_words |= GrblFirmware.bit(word_bit);
             break;
       
           // NOTE: All remaining letters assign values.
@@ -534,17 +534,17 @@ namespace bitLab.LaserCat.Grbl
               case 'X': word_bit = WORD_X; gc_block.values.xyz[NutsAndBolts.X_AXIS] = value; axis_words |= (1<<NutsAndBolts.X_AXIS); break;
               case 'Y': word_bit = WORD_Y; gc_block.values.xyz[NutsAndBolts.Y_AXIS] = value; axis_words |= (1<<NutsAndBolts.Y_AXIS); break;
               case 'Z': word_bit = WORD_Z; gc_block.values.xyz[NutsAndBolts.Z_AXIS] = value; axis_words |= (1<<NutsAndBolts.Z_AXIS); break;
-              default: return(Grbl.STATUS_GCODE_UNSUPPORTED_COMMAND);
+              default: return(GrblFirmware.STATUS_GCODE_UNSUPPORTED_COMMAND);
             } 
         
             // NOTE: Variable 'word_bit' is always assigned, if the non-command letter is valid.
-            if (mGrbl.bit_istrue(value_words,Grbl.bit(word_bit))) { return(Grbl.STATUS_GCODE_WORD_REPEATED); } // [Word repeated]
+            if (mGrbl.bit_istrue(value_words,GrblFirmware.bit(word_bit))) { return(GrblFirmware.STATUS_GCODE_WORD_REPEATED); } // [Word repeated]
             // Check for invalid negative values for words F, N, P, T, and S.
             // NOTE: Negative value check is done here simply for code-efficiency.
-            if (( Grbl.bit(word_bit) & (Grbl.bit(WORD_F)|Grbl.bit(WORD_N)|Grbl.bit(WORD_P)|Grbl.bit(WORD_T)|Grbl.bit(WORD_S)) ) != 0) {
-              if (value < 0.0) { return(Grbl.STATUS_NEGATIVE_VALUE); } // [Word value cannot be negative]
+            if (( GrblFirmware.bit(word_bit) & (GrblFirmware.bit(WORD_F)|GrblFirmware.bit(WORD_N)|GrblFirmware.bit(WORD_P)|GrblFirmware.bit(WORD_T)|GrblFirmware.bit(WORD_S)) ) != 0) {
+              if (value < 0.0) { return(GrblFirmware.STATUS_NEGATIVE_VALUE); } // [Word value cannot be negative]
             }
-            value_words |= Grbl.bit(word_bit); // Flag to indicate parameter assigned.
+            value_words |= GrblFirmware.bit(word_bit); // Flag to indicate parameter assigned.
             break;
         }   
       } 
@@ -586,9 +586,9 @@ namespace bitLab.LaserCat.Grbl
       }
   
       // Check for valid line number N value.
-      if (mGrbl.bit_istrue(value_words,Grbl.bit(WORD_N))) {
+      if (mGrbl.bit_istrue(value_words,GrblFirmware.bit(WORD_N))) {
         // Line number value cannot be less than zero (done) or greater than max line number.
-        if (gc_block.values.n > MAX_LINE_NUMBER) { return(Grbl.STATUS_GCODE_INVALID_LINE_NUMBER); } // [Exceeds max line number]
+        if (gc_block.values.n > MAX_LINE_NUMBER) { return(GrblFirmware.STATUS_GCODE_INVALID_LINE_NUMBER); } // [Exceeds max line number]
       }
       // mGrbl.bit_false(value_words,Grbl.bit(WORD_N)); // NOTE: Single-meaning value word. Set at end of error-checking.
   
@@ -607,7 +607,7 @@ namespace bitLab.LaserCat.Grbl
         // NOTE: G38 can also operate in inverse time, but is undefined as an error. Missing F word check added here.
         if (axis_command == AXIS_COMMAND_MOTION_MODE) { 
           if ((gc_block.modal.motion != MOTION_MODE_NONE) || (gc_block.modal.motion != MOTION_MODE_SEEK)) {
-            if (mGrbl.bit_isfalse(value_words,Grbl.bit(WORD_F))) { return(Grbl.STATUS_GCODE_UNDEFINED_FEED_RATE); } // [F word missing]
+            if (mGrbl.bit_isfalse(value_words,GrblFirmware.bit(WORD_F))) { return(GrblFirmware.STATUS_GCODE_UNDEFINED_FEED_RATE); } // [F word missing]
           }
         }
         // NOTE: It seems redundant to check for an F word to be passed after switching from G94 to G93. We would
@@ -625,7 +625,7 @@ namespace bitLab.LaserCat.Grbl
       } else { // = G94
         // - In units per mm mode: If F word passed, ensure value is in mm/min, otherwise push last state value.
         if (gc_state.modal.feed_rate == FEED_RATE_MODE_UNITS_PER_MIN) { // Last state is also G94
-          if (mGrbl.bit_istrue(value_words,Grbl.bit(WORD_F))) {
+          if (mGrbl.bit_istrue(value_words,GrblFirmware.bit(WORD_F))) {
             if (gc_block.modal.units == UNITS_MODE_INCHES) { gc_block.values.f *= NutsAndBolts.MM_PER_INCH; }
           } else {
             gc_block.values.f = gc_state.feed_rate; // Push last state feed rate
@@ -635,7 +635,7 @@ namespace bitLab.LaserCat.Grbl
       // mGrbl.bit_false(value_words,Grbl.bit(WORD_F)); // NOTE: Single-meaning value word. Set at end of error-checking.
   
       // [4. Set spindle speed ]: S is negative (done.)
-      if (mGrbl.bit_isfalse(value_words,Grbl.bit(WORD_S))) { gc_block.values.s = gc_state.spindle_speed; }
+      if (mGrbl.bit_isfalse(value_words,GrblFirmware.bit(WORD_S))) { gc_block.values.s = gc_state.spindle_speed; }
       // mGrbl.bit_false(value_words,Grbl.bit(WORD_S)); // NOTE: Single-meaning value word. Set at end of error-checking.
     
       // [5. Select tool ]: NOT SUPPORTED. Only tracks value. T is negative (done.) Not an integer. Greater than max tool value.
@@ -648,8 +648,8 @@ namespace bitLab.LaserCat.Grbl
   
       // [10. Dwell ]: P value missing. P is negative (done.) NOTE: See below.
       if (gc_block.non_modal_command == NON_MODAL_DWELL) {
-        if (mGrbl.bit_isfalse(value_words,Grbl.bit(WORD_P))) { return(Grbl.STATUS_GCODE_VALUE_WORD_MISSING); } // [P word missing]
-        mGrbl.bit_false(ref value_words,(ushort)Grbl.bit(WORD_P));
+        if (mGrbl.bit_isfalse(value_words,GrblFirmware.bit(WORD_P))) { return(GrblFirmware.STATUS_GCODE_VALUE_WORD_MISSING); } // [P word missing]
+        mGrbl.bit_false(ref value_words,(ushort)GrblFirmware.bit(WORD_P));
       }
   
       // [11. Set active plane ]: N/A
@@ -677,7 +677,7 @@ namespace bitLab.LaserCat.Grbl
 
       if (gc_block.modal.units == UNITS_MODE_INCHES) {
         for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) { // Axes indices are consistent, so loop may be used.
-          if (mGrbl.bit_istrue(axis_words,Grbl.bit(idx)) ) {
+          if (mGrbl.bit_istrue(axis_words,GrblFirmware.bit(idx)) ) {
             gc_block.values.xyz[idx] *= NutsAndBolts.MM_PER_INCH;
           }
         }
@@ -692,7 +692,7 @@ namespace bitLab.LaserCat.Grbl
       //   is absent or if any of the other axis words are present.
       if (axis_command == AXIS_COMMAND_TOOL_LENGTH_OFFSET ) { // Indicates called in block.
         if (gc_block.modal.tool_length == TOOL_LENGTH_OFFSET_ENABLE_DYNAMIC) {
-          if ((axis_words ^ (1 << Grbl.TOOL_LENGTH_OFFSET_AXIS)) != 0) { return (Grbl.STATUS_GCODE_G43_DYNAMIC_AXIS_ERROR); }
+          if ((axis_words ^ (1 << GrblFirmware.TOOL_LENGTH_OFFSET_AXIS)) != 0) { return (GrblFirmware.STATUS_GCODE_G43_DYNAMIC_AXIS_ERROR); }
         }
       }
   
@@ -704,10 +704,10 @@ namespace bitLab.LaserCat.Grbl
       //memcpy(coordinate_data,gc_state.coord_system,sizeof(gc_state.coord_system));
       Array.Copy(gc_state.coord_system, coordinate_data, gc_state.coord_system.Length);
       
-      if ( mGrbl.bit_istrue(command_words,Grbl.bit(MODAL_GROUP_G12)) ) { // Check if called in block
-        if (gc_block.modal.coord_select > Grbl.N_COORDINATE_SYSTEM) { return(Grbl.STATUS_GCODE_UNSUPPORTED_COORD_SYS); } // [Greater than N sys]
+      if ( mGrbl.bit_istrue(command_words,GrblFirmware.bit(MODAL_GROUP_G12)) ) { // Check if called in block
+        if (gc_block.modal.coord_select > GrblFirmware.N_COORDINATE_SYSTEM) { return(GrblFirmware.STATUS_GCODE_UNSUPPORTED_COORD_SYS); } // [Greater than N sys]
         if (gc_state.modal.coord_select != gc_block.modal.coord_select) {
-          if (!(mGrbl.settings_read_coord_data(gc_block.modal.coord_select,coordinate_data))) { return(Grbl.STATUS_SETTING_READ_FAIL); } 
+          if (!(mGrbl.settings_read_coord_data(gc_block.modal.coord_select,coordinate_data))) { return(GrblFirmware.STATUS_SETTING_READ_FAIL); } 
         }
       }
   
@@ -725,30 +725,30 @@ namespace bitLab.LaserCat.Grbl
           // [G10 Errors]: L missing and is not 2 or 20. P word missing. (Negative P value done.)
           // [G10 L2 Errors]: R word NOT SUPPORTED. P value not 0 to nCoordSys(max 9). Axis words missing.
           // [G10 L20 Errors]: P must be 0 to nCoordSys(max 9). Axis words missing.
-          if (axis_words == 0) { return Grbl.STATUS_GCODE_NO_AXIS_WORDS; }; // [No axis words]
-          if (mGrbl.bit_isfalse(value_words,((1<<WORD_P)|(1<<WORD_L)))) { return(Grbl.STATUS_GCODE_VALUE_WORD_MISSING); } // [P/L word missing]
+          if (axis_words == 0) { return GrblFirmware.STATUS_GCODE_NO_AXIS_WORDS; }; // [No axis words]
+          if (mGrbl.bit_isfalse(value_words,((1<<WORD_P)|(1<<WORD_L)))) { return(GrblFirmware.STATUS_GCODE_VALUE_WORD_MISSING); } // [P/L word missing]
           coord_select = (byte)mGrbl.trunc(gc_block.values.p); // Convert p value to int.
-          if (coord_select > Grbl.N_COORDINATE_SYSTEM) { return(Grbl.STATUS_GCODE_UNSUPPORTED_COORD_SYS); } // [Greater than N sys]
+          if (coord_select > GrblFirmware.N_COORDINATE_SYSTEM) { return(GrblFirmware.STATUS_GCODE_UNSUPPORTED_COORD_SYS); } // [Greater than N sys]
           if (gc_block.values.l != 20) {
             if (gc_block.values.l == 2) {
-              if (mGrbl.bit_istrue(value_words,Grbl.bit(WORD_R))) { return(Grbl.STATUS_GCODE_UNSUPPORTED_COMMAND); } // [G10 L2 R not supported]
-            } else { return(Grbl.STATUS_GCODE_UNSUPPORTED_COMMAND); } // [Unsupported L]
+              if (mGrbl.bit_istrue(value_words,GrblFirmware.bit(WORD_R))) { return(GrblFirmware.STATUS_GCODE_UNSUPPORTED_COMMAND); } // [G10 L2 R not supported]
+            } else { return(GrblFirmware.STATUS_GCODE_UNSUPPORTED_COMMAND); } // [Unsupported L]
           }
-          mGrbl.bit_false(ref value_words,(ushort)(Grbl.bit(WORD_L)|Grbl.bit(WORD_P)));
+          mGrbl.bit_false(ref value_words,(ushort)(GrblFirmware.bit(WORD_L)|GrblFirmware.bit(WORD_P)));
       
           // Determine coordinate system to change and try to load from EEPROM.
           if (coord_select > 0) { coord_select--; } // Adjust P1-P6 index to EEPROM coordinate data indexing.
           else { coord_select = gc_block.modal.coord_select; } // Index P0 as the active coordinate system
-          if (!mGrbl.settings_read_coord_data(coord_select,parameter_data)) { return(Grbl.STATUS_SETTING_READ_FAIL); } // [EEPROM read fail]
+          if (!mGrbl.settings_read_coord_data(coord_select,parameter_data)) { return(GrblFirmware.STATUS_SETTING_READ_FAIL); } // [EEPROM read fail]
     
           // Pre-calculate the coordinate data changes. NOTE: Uses parameter_data since coordinate_data may be in use by G54-59.
           for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) { // Axes indices are consistent, so loop may be used.
             // Update axes defined only in block. Always in machine coordinates. Can change non-active system.
-            if (mGrbl.bit_istrue(axis_words,Grbl.bit(idx)) ) {
+            if (mGrbl.bit_istrue(axis_words,GrblFirmware.bit(idx)) ) {
               if (gc_block.values.l == 20) {
                 // L20: Update coordinate system axis at current position (with modifiers) with programmed value
                 parameter_data[idx] = gc_state.position[idx]-gc_state.coord_offset[idx]-gc_block.values.xyz[idx];
-                if (idx == Grbl.TOOL_LENGTH_OFFSET_AXIS) { parameter_data[idx] -= gc_state.tool_length_offset; }
+                if (idx == GrblFirmware.TOOL_LENGTH_OFFSET_AXIS) { parameter_data[idx] -= gc_state.tool_length_offset; }
               } else {
                 // L2: Update coordinate system axis to programmed value.
                 parameter_data[idx] = gc_block.values.xyz[idx]; 
@@ -758,14 +758,14 @@ namespace bitLab.LaserCat.Grbl
           break;
         case NON_MODAL_SET_COORDINATE_OFFSET:
           // [G92 Errors]: No axis words.
-          if (axis_words == 0) { return(Grbl.STATUS_GCODE_NO_AXIS_WORDS); } // [No axis words]
+          if (axis_words == 0) { return(GrblFirmware.STATUS_GCODE_NO_AXIS_WORDS); } // [No axis words]
     
           // Update axes defined only in block. Offsets current system to defined value. Does not update when
           // active coordinate system is selected, but is still active unless G92.1 disables it. 
           for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) { // Axes indices are consistent, so loop may be used.
-            if (mGrbl.bit_istrue(axis_words,Grbl.bit(idx)) ) {
+            if (mGrbl.bit_istrue(axis_words,GrblFirmware.bit(idx)) ) {
               gc_block.values.xyz[idx] = gc_state.position[idx]-coordinate_data[idx]-gc_block.values.xyz[idx];
-              if (idx == Grbl.TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.xyz[idx] -= gc_state.tool_length_offset; }
+              if (idx == GrblFirmware.TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.xyz[idx] -= gc_state.tool_length_offset; }
             } else {
               gc_block.values.xyz[idx] = gc_state.coord_offset[idx];
             }
@@ -781,7 +781,7 @@ namespace bitLab.LaserCat.Grbl
           if (axis_command != AXIS_COMMAND_TOOL_LENGTH_OFFSET ) { // TLO block any axis command.
             if (axis_words != 0) {
               for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) { // Axes indices are consistent, so loop may be used to save flash space.
-                if ( mGrbl.bit_isfalse(axis_words,Grbl.bit(idx)) ) {
+                if ( mGrbl.bit_isfalse(axis_words,GrblFirmware.bit(idx)) ) {
                   gc_block.values.xyz[idx] = gc_state.position[idx]; // No axis word in block. Keep same axis position.
                 } else {
                   // Update specified value according to distance mode or ignore if absolute override is active.
@@ -790,7 +790,7 @@ namespace bitLab.LaserCat.Grbl
                     // Apply coordinate offsets based on distance mode.
                     if (gc_block.modal.distance == DISTANCE_MODE_ABSOLUTE) {
                       gc_block.values.xyz[idx] += coordinate_data[idx] + gc_state.coord_offset[idx];
-                      if (idx == Grbl.TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.xyz[idx] += gc_state.tool_length_offset; }
+                      if (idx == GrblFirmware.TOOL_LENGTH_OFFSET_AXIS) { gc_block.values.xyz[idx] += gc_state.tool_length_offset; }
                     } else {  // Incremental mode
                       gc_block.values.xyz[idx] += gc_state.position[idx];
                     }
@@ -806,13 +806,13 @@ namespace bitLab.LaserCat.Grbl
               // [G28 Errors]: Cutter compensation is enabled. 
               // Retreive G28 go-home position data (in machine coordinates) from EEPROM
               if (axis_words == 0) { axis_command = AXIS_COMMAND_NONE; } // Set to none if no intermediate motion.
-              if (!mGrbl.settings_read_coord_data(Grbl.SETTING_INDEX_G28, parameter_data)) { return (Grbl.STATUS_SETTING_READ_FAIL); }
+              if (!mGrbl.settings_read_coord_data(GrblFirmware.SETTING_INDEX_G28, parameter_data)) { return (GrblFirmware.STATUS_SETTING_READ_FAIL); }
               break;
             case NON_MODAL_GO_HOME_1:
               // [G30 Errors]: Cutter compensation is enabled. 
               // Retreive G30 go-home position data (in machine coordinates) from EEPROM
               if (axis_words == 0) { axis_command = AXIS_COMMAND_NONE; } // Set to none if no intermediate motion.
-              if (!mGrbl.settings_read_coord_data(Grbl.SETTING_INDEX_G30, parameter_data)) { return (Grbl.STATUS_SETTING_READ_FAIL); }
+              if (!mGrbl.settings_read_coord_data(GrblFirmware.SETTING_INDEX_G30, parameter_data)) { return (GrblFirmware.STATUS_SETTING_READ_FAIL); }
               break;
             case NON_MODAL_SET_HOME_0: case NON_MODAL_SET_HOME_1:
               // [G28.1/30.1 Errors]: Cutter compensation is enabled. 
@@ -825,7 +825,7 @@ namespace bitLab.LaserCat.Grbl
               // [G53 Errors]: G0 and G1 are not active. Cutter compensation is enabled.
               // NOTE: All explicit axis word commands are in this modal group. So no implicit check necessary.
               if (!(gc_block.modal.motion == MOTION_MODE_SEEK || gc_block.modal.motion == MOTION_MODE_LINEAR)) {
-                return(Grbl.STATUS_GCODE_G53_INVALID_MOTION_MODE); // [G53 G0/1 not active]
+                return(GrblFirmware.STATUS_GCODE_G53_INVALID_MOTION_MODE); // [G53 G0/1 not active]
               }
               break;
           }
@@ -836,7 +836,7 @@ namespace bitLab.LaserCat.Grbl
       if (gc_block.modal.motion == MOTION_MODE_NONE) {
         // [G80 Errors]: Axis word exist and are not used by a non-modal command.
         if ((axis_words != 0) && (axis_command != AXIS_COMMAND_NON_MODAL)) { 
-          return(Grbl.STATUS_GCODE_AXIS_WORDS_EXIST); // [No axis words allowed]
+          return(GrblFirmware.STATUS_GCODE_AXIS_WORDS_EXIST); // [No axis words allowed]
         }
 
       // Check remaining motion modes, if axis word are implicit (exist and not used by G10/28/30/92), or 
@@ -852,7 +852,7 @@ namespace bitLab.LaserCat.Grbl
         // the value must be positive. In inverse time mode, a positive value must be passed with each block.
         } else {      
           // Check if feed rate is defined for the motion modes that require it.
-          if (gc_block.values.f == 0.0) { return(Grbl.STATUS_GCODE_UNDEFINED_FEED_RATE); } // [Feed rate undefined]
+          if (gc_block.values.f == 0.0) { return(GrblFirmware.STATUS_GCODE_UNDEFINED_FEED_RATE); } // [Feed rate undefined]
      
           switch (gc_block.modal.motion) {
             case MOTION_MODE_LINEAR: 
@@ -869,17 +869,17 @@ namespace bitLab.LaserCat.Grbl
               // [G2/3 Full-Circle-Mode Errors]: NOT SUPPORTED. Axis words exist. No offsets programmed. P must be an integer.        
               // NOTE: Both radius and offsets are required for arc tracing and are pre-computed with the error-checking.
         
-              if (axis_words == 0) { return(Grbl.STATUS_GCODE_NO_AXIS_WORDS); } // [No axis words]
-              if ((axis_words & (Grbl.bit(axis_0)|Grbl.bit(axis_1))) == 0) { return(Grbl.STATUS_GCODE_NO_AXIS_WORDS_IN_PLANE); } // [No axis words in plane]
+              if (axis_words == 0) { return(GrblFirmware.STATUS_GCODE_NO_AXIS_WORDS); } // [No axis words]
+              if ((axis_words & (GrblFirmware.bit(axis_0)|GrblFirmware.bit(axis_1))) == 0) { return(GrblFirmware.STATUS_GCODE_NO_AXIS_WORDS_IN_PLANE); } // [No axis words in plane]
         
               // Calculate the change in position along each selected axis
               float x,y;
               x = gc_block.values.xyz[axis_0]-gc_state.position[axis_0]; // Delta x between current position and target
               y = gc_block.values.xyz[axis_1]-gc_state.position[axis_1]; // Delta y between current position and target
 
-              if ((value_words & Grbl.bit(WORD_R))!=0) { // Arc Radius Mode  
-                mGrbl.bit_false(ref value_words,(ushort)Grbl.bit(WORD_R));
-                if (gc_check_same_position(gc_state.position, gc_block.values.xyz)) { return(Grbl.STATUS_GCODE_INVALID_TARGET); } // [Invalid target]
+              if ((value_words & GrblFirmware.bit(WORD_R))!=0) { // Arc Radius Mode  
+                mGrbl.bit_false(ref value_words,(ushort)GrblFirmware.bit(WORD_R));
+                if (gc_check_same_position(gc_state.position, gc_block.values.xyz)) { return(GrblFirmware.STATUS_GCODE_INVALID_TARGET); } // [Invalid target]
           
                 // Convert radius value to proper units.
                 if (gc_block.modal.units == UNITS_MODE_INCHES) { gc_block.values.r *= NutsAndBolts.MM_PER_INCH; }
@@ -935,7 +935,7 @@ namespace bitLab.LaserCat.Grbl
                 // than d. If so, the sqrt of a negative number is complex and error out.
                 float h_x2_div_d = 4.0f * gc_block.values.r*gc_block.values.r - x*x - y*y;
 
-                if (h_x2_div_d < 0) { return(Grbl.STATUS_GCODE_ARC_RADIUS_ERROR); } // [Arc radius error]
+                if (h_x2_div_d < 0) { return(GrblFirmware.STATUS_GCODE_ARC_RADIUS_ERROR); } // [Arc radius error]
     
                 // Finish computing h_x2_div_d.
                 h_x2_div_d = -(float)System.Math.Sqrt(h_x2_div_d) / mGrbl.hypot_f(x, y); // == -(h * 2 / d)
@@ -970,13 +970,13 @@ namespace bitLab.LaserCat.Grbl
                 gc_block.values.ijk[axis_1] = 0.5f*(y+(x*h_x2_div_d));
           
               } else { // Arc Center Format Offset Mode  
-                if ((ijk_words & (Grbl.bit(axis_0)|Grbl.bit(axis_1))) == 0) { return(Grbl.STATUS_GCODE_NO_OFFSETS_IN_PLANE); } // [No offsets in plane]
-                mGrbl.bit_false(ref value_words,(ushort)(Grbl.bit(WORD_I)|Grbl.bit(WORD_J)|Grbl.bit(WORD_K)));  
+                if ((ijk_words & (GrblFirmware.bit(axis_0)|GrblFirmware.bit(axis_1))) == 0) { return(GrblFirmware.STATUS_GCODE_NO_OFFSETS_IN_PLANE); } // [No offsets in plane]
+                mGrbl.bit_false(ref value_words,(ushort)(GrblFirmware.bit(WORD_I)|GrblFirmware.bit(WORD_J)|GrblFirmware.bit(WORD_K)));  
           
                 // Convert IJK values to proper units.
                 if (gc_block.modal.units == UNITS_MODE_INCHES) {
                   for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) { // Axes indices are consistent, so loop may be used to save flash space.
-                    if ((ijk_words & Grbl.bit(idx))!= 0) { gc_block.values.ijk[idx] *= NutsAndBolts.MM_PER_INCH; }
+                    if ((ijk_words & GrblFirmware.bit(idx))!= 0) { gc_block.values.ijk[idx] *= NutsAndBolts.MM_PER_INCH; }
                   }
                 }         
 
@@ -991,8 +991,8 @@ namespace bitLab.LaserCat.Grbl
                 // Compute difference between current location and target radii for final error-checks.
                 float delta_r = (float)System.Math.Abs(target_r-gc_block.values.r);
                 if (delta_r > 0.005) { 
-                  if (delta_r > 0.5) { return(Grbl.STATUS_GCODE_INVALID_TARGET); } // [Arc definition error] > 0.5mm
-                  if (delta_r > (0.001*gc_block.values.r)) { return(Grbl.STATUS_GCODE_INVALID_TARGET); } // [Arc definition error] > 0.005mm AND 0.1% radius
+                  if (delta_r > 0.5) { return(GrblFirmware.STATUS_GCODE_INVALID_TARGET); } // [Arc definition error] > 0.5mm
+                  if (delta_r > (0.001*gc_block.values.r)) { return(GrblFirmware.STATUS_GCODE_INVALID_TARGET); } // [Arc definition error] > 0.005mm AND 0.1% radius
                 }
               }
               break;
@@ -1001,8 +1001,8 @@ namespace bitLab.LaserCat.Grbl
               //   is undefined. Probe is triggered. NOTE: Probe check moved to probe cycle. Instead of returning
               //   an error, it issues an alarm to prevent further motion to the probe. It's also done there to 
               //   allow the planner buffer to empty and move off the probe trigger before another probing cycle.
-              if (axis_words == 0) { return(Grbl.STATUS_GCODE_NO_AXIS_WORDS); } // [No axis words]
-              if (gc_check_same_position(gc_state.position, gc_block.values.xyz)) { return(Grbl.STATUS_GCODE_INVALID_TARGET); } // [Invalid target]
+              if (axis_words == 0) { return(GrblFirmware.STATUS_GCODE_NO_AXIS_WORDS); } // [No axis words]
+              if (gc_check_same_position(gc_state.position, gc_block.values.xyz)) { return(GrblFirmware.STATUS_GCODE_INVALID_TARGET); } // [Invalid target]
               break;
           } 
         }
@@ -1012,9 +1012,9 @@ namespace bitLab.LaserCat.Grbl
 
       // [0. Non-specific error-checks]: Complete unused value words check, i.e. IJK used when in arc
       // radius mode, or axis words that aren't used in the block.  
-      mGrbl.bit_false(ref value_words,(ushort)(Grbl.bit(WORD_N)|Grbl.bit(WORD_F)|Grbl.bit(WORD_S)|Grbl.bit(WORD_T))); // Remove single-meaning value words. 
-      if (axis_command != 0) { mGrbl.bit_false(ref value_words,(ushort)(Grbl.bit(WORD_X)|Grbl.bit(WORD_Y)|Grbl.bit(WORD_Z))); } // Remove axis words. 
-      if (value_words != 0) { return(Grbl.STATUS_GCODE_UNUSED_WORDS); } // [Unused words]
+      mGrbl.bit_false(ref value_words,(ushort)(GrblFirmware.bit(WORD_N)|GrblFirmware.bit(WORD_F)|GrblFirmware.bit(WORD_S)|GrblFirmware.bit(WORD_T))); // Remove single-meaning value words. 
+      if (axis_command != 0) { mGrbl.bit_false(ref value_words,(ushort)(GrblFirmware.bit(WORD_X)|GrblFirmware.bit(WORD_Y)|GrblFirmware.bit(WORD_Z))); } // Remove axis words. 
+      if (value_words != 0) { return(GrblFirmware.STATUS_GCODE_UNUSED_WORDS); } // [Unused words]
 
    
       /* -------------------------------------------------------------------------------------
@@ -1077,7 +1077,7 @@ namespace bitLab.LaserCat.Grbl
       if (axis_command == AXIS_COMMAND_TOOL_LENGTH_OFFSET ) { // Indicates a change.
         gc_state.modal.tool_length = gc_block.modal.tool_length;
         if (gc_state.modal.tool_length == TOOL_LENGTH_OFFSET_ENABLE_DYNAMIC) { // G43.1
-          gc_state.tool_length_offset = gc_block.values.xyz[Grbl.TOOL_LENGTH_OFFSET_AXIS];
+          gc_state.tool_length_offset = gc_block.values.xyz[GrblFirmware.TOOL_LENGTH_OFFSET_AXIS];
         } else { // G49
           gc_state.tool_length_offset = 0.0f;
         }
@@ -1124,10 +1124,10 @@ namespace bitLab.LaserCat.Grbl
           mGrbl.copyArray(gc_state.position, parameter_data);
           break;
         case NON_MODAL_SET_HOME_0:
-          mGrbl.settings_write_coord_data(Grbl.SETTING_INDEX_G28, gc_state.position);
+          mGrbl.settings_write_coord_data(GrblFirmware.SETTING_INDEX_G28, gc_state.position);
           break;
         case NON_MODAL_SET_HOME_1:
-          mGrbl.settings_write_coord_data(Grbl.SETTING_INDEX_G30, gc_state.position);
+          mGrbl.settings_write_coord_data(GrblFirmware.SETTING_INDEX_G30, gc_state.position);
           break;
         case NON_MODAL_SET_COORDINATE_OFFSET:
           mGrbl.copyArray(gc_state.coord_offset, gc_block.values.xyz);
@@ -1201,7 +1201,7 @@ namespace bitLab.LaserCat.Grbl
       }
     
       // TODO: % to denote start of program. Sets auto cycle start?
-      return(Grbl.STATUS_OK);
+      return(GrblFirmware.STATUS_OK);
     }
         
 

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  public partial class Grbl
+  public partial class GrblFirmware
   {
     public const int LINE_BUFFER_SIZE = 80;
 
@@ -137,7 +137,6 @@ namespace bitLab.LaserCat.Grbl
 
         protocol_execute_runtime();  // Runtime command check point.
         if (sys.abort!=0) { return; } // Bail to main() program loop to reset system.
-              
       }
   
       return; /* Never reached */

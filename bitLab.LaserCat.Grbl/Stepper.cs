@@ -1,6 +1,6 @@
 namespace bitLab.LaserCat.Grbl
 {
-  unsafe public partial class Grbl
+  unsafe public partial class GrblFirmware
   {
 
     // Define global system variables

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  partial class Grbl
+  partial class GrblFirmware
   {
 
     public void coolant_init()

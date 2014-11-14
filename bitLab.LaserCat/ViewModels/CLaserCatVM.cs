@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using bitLab.ViewModel;
 using bitLab.ViewModel.Console;
+using System.IO;
+using bitLab.LaserCat.Model;
 
 namespace bitLab.LaserCat.ViewModels
 {
@@ -14,9 +16,17 @@ namespace bitLab.LaserCat.ViewModels
     public CLaserCatVM()
     {
       ConsoleVM = new CConsoleVM(false);
-      LoadTestGCode = new CDelegateCommand((obj) => { new Commands.CLoadTestGCodeFileCommand().Execute(); });
+      LoadTestGCode = new CDelegateCommand((obj) => {
+        string TestGCodeFile = Path.Combine(Environment.CurrentDirectory, @"..\..\Data\TestGCode.nc");
+        CLaserCat.Instance.LoadGCode(TestGCodeFile);
+      });
+      GrblStart = new CDelegateCommand((obj) =>
+      {
+        CLaserCat.Instance.GrblStart();
+      });
     }
 
-    public CDelegateCommand LoadTestGCode { get; set; } 
+    public CDelegateCommand LoadTestGCode { get; set; }
+    public CDelegateCommand GrblStart { get; set; } 
   }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  public partial class Grbl
+  public partial class GrblFirmware
   {
     //#ifdef DEFAULTS_GENERIC
     // Grbl generic default settings. Should work across different machines.
@@ -26,7 +26,7 @@ namespace bitLab.LaserCat.Grbl
     public const byte DEFAULT_STEPPING_INVERT_MASK = 0;
     public const byte DEFAULT_DIRECTION_INVERT_MASK = ((1 << NutsAndBolts.Y_AXIS) | (1 << NutsAndBolts.Z_AXIS));
     public const byte DEFAULT_STEPPER_IDLE_LOCK_TIME = 25; // msec (0-254, 255 keeps steppers enabled)
-    public const byte DEFAULT_STATUS_REPORT_MASK = ((Grbl.BITFLAG_RT_STATUS_MACHINE_POSITION) | (Grbl.BITFLAG_RT_STATUS_WORK_POSITION));
+    public const byte DEFAULT_STATUS_REPORT_MASK = ((GrblFirmware.BITFLAG_RT_STATUS_MACHINE_POSITION) | (GrblFirmware.BITFLAG_RT_STATUS_WORK_POSITION));
     public const float DEFAULT_JUNCTION_DEVIATION = 0.02f; // mm
     public const float DEFAULT_ARC_TOLERANCE = 0.002f; // mm
     public const bool DEFAULT_REPORT_INCHES = false; // false

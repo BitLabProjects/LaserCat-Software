@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  unsafe partial class Grbl
+  unsafe partial class GrblFirmware
   {
     // This file has been prepared for Doxygen automatic documentation generation.
     /*! \file ********************************************************************

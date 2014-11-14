@@ -6,12 +6,13 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  public partial class Grbl
+  public partial class GrblFirmware
   {
     private GCode mGCode;
-    public Grbl(GCode GCode)
+    public GrblFirmware(GCode GCode)
     {
       mGCode = GCode;
+      mGCode.Initialize(this);
     }
 
     public void Execute()

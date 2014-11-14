@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  unsafe public partial class Grbl
+  unsafe public partial class GrblFirmware
   {
-    char* PSTR(string s) { return null; } //TODO
+    string PSTR(string s) { return s; } //TODO
 
 
     // Handles the primary confirmation protocol response for streaming interfaces and human-feedback.

@@ -16,6 +16,7 @@
         </Style>
       </StackPanel.Resources>
       <Button Content="Load test GCode" Command="{Binding LoadTestGCode}" />
+      <Button Content="Start Grbl" Command="{Binding GrblStart}" />
     </StackPanel>
   </Grid>
 </Window>

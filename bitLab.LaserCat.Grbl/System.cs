@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  unsafe public partial class Grbl
+  unsafe public partial class GrblFirmware
   {
     //// Define global system variables
     //public struct system_t {

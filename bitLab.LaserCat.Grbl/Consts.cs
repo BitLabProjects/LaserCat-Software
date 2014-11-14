@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  partial class Grbl //System
+  partial class GrblFirmware //System
   {
     // Define system header files and standard libraries used by Grbl
 
@@ -52,7 +52,7 @@ namespace bitLab.LaserCat.Grbl
 
   }
 
-  partial class Grbl //CPU_MAP
+  partial class GrblFirmware //CPU_MAP
   {
     // Define serial port pins and interrupt vectors.
     //public int SERIAL_RX =     USART_RX_vect; //USART_RX_vect
@@ -169,7 +169,7 @@ namespace bitLab.LaserCat.Grbl
     public const int TICKS_PER_MICROSECOND = (F_CPU / 1000000);
   }
 
-  public partial class Grbl //Report
+  public partial class GrblFirmware //Report
   {
     // Define Grbl status codes.
     public const byte STATUS_OK = 0;
@@ -217,7 +217,7 @@ namespace bitLab.LaserCat.Grbl
     public const int MESSAGE_DISABLED = 5;
   }
 
-  public partial class Grbl //Stepper
+  public partial class GrblFirmware //Stepper
   {
     /*
     stepper.c - stepper motor driver: executes motion plans using stepper motors
@@ -276,7 +276,7 @@ namespace bitLab.LaserCat.Grbl
   //  public system_t sys;
   //}
 
-  public partial class Grbl //Settings
+  public partial class GrblFirmware //Settings
   {
     public const string GRBL_VERSION = "0.9g";
     public const string GRBL_VERSION_BUILD = "20140905";

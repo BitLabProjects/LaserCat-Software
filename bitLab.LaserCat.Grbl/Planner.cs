@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  unsafe public partial class Grbl
+  unsafe public partial class GrblFirmware
   {
     // The number of linear motions that can be in the plan at any give time
     //#ifndef BLOCK_BUFFER_SIZE

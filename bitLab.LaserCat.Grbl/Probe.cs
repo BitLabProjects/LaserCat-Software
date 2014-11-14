@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  public partial class Grbl
+  public partial class GrblFirmware
   {
     // Inverts the probe pin state depending on user settings.
     byte probe_invert_mask;

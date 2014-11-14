@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  public partial class Grbl
+  public partial class GrblFirmware
   {
 
     // Serial baud rate
