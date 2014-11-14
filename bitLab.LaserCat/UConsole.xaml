@@ -7,7 +7,7 @@
              d:DesignHeight="300" d:DesignWidth="300"
              xmlns:local="clr-namespace:bitLab.LaserCat"
              xmlns:conv="clr-namespace:bitLab.LaserCat.Converters">
-  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <ItemsControl ItemsSource="{Binding Lines}">
       <ItemsControl.ItemTemplate>
         <DataTemplate>
@@ -27,7 +27,7 @@
             </Grid.ColumnDefinitions>
             <TextBlock Text="{Binding Date, StringFormat='HH:mm:ss.ffff'}" Grid.Column="0" />
             <TextBlock Text="{Binding Type}" Grid.Column="1" Foreground="{Binding Color, Converter={StaticResource ColorToBrushConverter}}" />
-            <TextBlock Text="{Binding Text}" Grid.Column="2" />
+            <TextBlock Text="{Binding Text}" Grid.Column="2" TextWrapping="Wrap" />
           </Grid>
         </DataTemplate>
       </ItemsControl.ItemTemplate>

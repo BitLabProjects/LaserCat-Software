@@ -4,6 +4,18 @@
         Title="MainWindow" Height="350" Width="525"
         xmlns:local="clr-namespace:bitLab.LaserCat">
   <Grid Margin="5">
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition />
+      <ColumnDefinition Width="Auto" />
+    </Grid.ColumnDefinitions>
     <local:UConsole DataContext="{Binding ConsoleVM}" />
+    <StackPanel Orientation="Vertical" Grid.Column="1" Margin="5 0">
+      <StackPanel.Resources>
+        <Style TargetType="Button">
+          <Setter Property="Margin" Value="0 0 0 5" />
+        </Style>
+      </StackPanel.Resources>
+      <Button Content="Load test GCode" Command="{Binding LoadTestGCode}" />
+    </StackPanel>
   </Grid>
 </Window>

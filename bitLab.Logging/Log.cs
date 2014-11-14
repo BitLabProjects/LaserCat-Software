@@ -34,9 +34,18 @@ namespace bitLab.Logging
 
     public static void LogInfo(string message)
     {
-      var logMessage = new LogMessage(DateTime.Now, message, ELogMessageType.Info);
+      DispatchLogMessage(new LogMessage(DateTime.Now, message, ELogMessageType.Info));
+    }
+
+    public static void LogError(string message)
+    {
+      DispatchLogMessage(new LogMessage(DateTime.Now, message, ELogMessageType.Info));
+    }
+
+    private static void DispatchLogMessage(LogMessage message)
+    {
       foreach (var listener in Instance.mListeners)
-        listener.LogMessage(logMessage);
+        listener.LogMessage(message);
     }
   }
 }

@@ -14,6 +14,9 @@ namespace bitLab.LaserCat.ViewModels
     public CLaserCatVM()
     {
       ConsoleVM = new CConsoleVM(false);
+      LoadTestGCode = new CDelegateCommand((obj) => { new Commands.CLoadTestGCodeFileCommand().Execute(); });
     }
+
+    public CDelegateCommand LoadTestGCode { get; set; } 
   }
 }
