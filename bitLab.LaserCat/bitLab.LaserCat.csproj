@@ -57,6 +57,8 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="CLaserCatApp.cs" />
+    <Compile Include="Converters\CColorToBrushConverter.cs" />
+    <Compile Include="Converters\CEnumToStringConverter.cs" />
     <Compile Include="UConsole.xaml.cs">
       <DependentUpon>UConsole.xaml</DependentUpon>
     </Compile>
@@ -113,6 +115,10 @@
     <ProjectReference Include="..\bitLab.Logging\bitLab.Logging.csproj">
       <Project>{a25dc3f3-71df-4145-93e3-a7c5eca652b1}</Project>
       <Name>bitLab.Logging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\bitLab.Math\bitLab.Math.csproj">
+      <Project>{97412ef3-deef-41da-a332-f3920fa41860}</Project>
+      <Name>bitLab.Math</Name>
     </ProjectReference>
     <ProjectReference Include="..\bitLab.ViewModel\bitLab.ViewModel.csproj">
       <Project>{830d827e-3603-4564-adcd-a084f5581fd1}</Project>

@@ -8,18 +8,25 @@ namespace bitLab.Logging
 {
   public class LogMessage
   {
-    private string mMessage;
+    private DateTime mDate;
+    private string mText;
     private ELogMessageType mType;
 
-    internal LogMessage(string message, ELogMessageType type)
+    internal LogMessage(DateTime date, string text, ELogMessageType type)
     {
-      mMessage = message;
+      mDate = date;
+      mText = text;
       mType = type;
     }
 
-    public string Message
+    public DateTime Date
     {
-      get { return mMessage; }
+      get { return mDate; }
+    }
+
+    public string Text
+    {
+      get { return mText; }
     }
 
     public ELogMessageType Type

@@ -34,7 +34,7 @@ namespace bitLab.Logging
 
     public static void LogInfo(string message)
     {
-      var logMessage = new LogMessage(message, ELogMessageType.Info);
+      var logMessage = new LogMessage(DateTime.Now, message, ELogMessageType.Info);
       foreach (var listener in Instance.mListeners)
         listener.LogMessage(logMessage);
     }

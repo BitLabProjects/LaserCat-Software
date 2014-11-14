@@ -25,7 +25,7 @@ namespace bitLab.ViewModel.Console
 
     public void LogMessage(LogMessage message)
     {
-      AddConsoleLine(new CConsoleLineVM(message.Message, CColors.Orange));
+      AddConsoleLine(new CConsoleLineVM(message));
     }
 
     private void AddConsoleLine(CConsoleLineVM line)
