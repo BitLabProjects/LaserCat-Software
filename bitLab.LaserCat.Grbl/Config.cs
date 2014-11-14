@@ -47,8 +47,8 @@ namespace bitLab.LaserCat.Grbl
     // on separate pin, but homed in one cycle. Also, it should be noted that the function of hard limits 
     // will not be affected by pin sharing.
     // NOTE: Defaults are set for a traditional 3-axis CNC machine. Z-axis first to clear, followed by X & Y.
-    public int HOMING_CYCLE_0 = (1 << Z_AXIS); // REQUIRED: First move Z to clear workspace.
-    public int HOMING_CYCLE_1 = ((1 << X_AXIS) | (1 << Y_AXIS)); // OPTIONAL: Then move X,Y at the same time.
+    public int HOMING_CYCLE_0 = (1 << NutsAndBolts.Z_AXIS); // REQUIRED: First move Z to clear workspace.
+    public int HOMING_CYCLE_1 = ((1 << NutsAndBolts.X_AXIS) | (1 << NutsAndBolts.Y_AXIS)); // OPTIONAL: Then move X,Y at the same time.
     // #define HOMING_CYCLE_2                         // OPTIONAL: Uncomment and add axes mask to enable
 
     // Number of homing cycles performed after when the machine initially jogs to limit switches.
@@ -95,7 +95,7 @@ namespace bitLab.LaserCat.Grbl
     // Enables a second coolant control pin via the mist coolant g-code command M7 on the Arduino Uno
     // analog pin 5. Only use this option if you require a second coolant control pin.
     // NOTE: The M8 flood coolant control pin on analog pin 4 will still be functional regardless.
-    // public int ENABLE_M7 = // Disabled by default. Uncomment to enable.
+    public static bool ENABLE_M7 = false; // Disabled by default. Uncomment to enable.
 
     // ---------------------------------------------------------------------------------------
     // ADVANCED CONFIGURATION OPTIONS:
@@ -107,19 +107,19 @@ namespace bitLab.LaserCat.Grbl
     // NOTE: Changing this value also changes the execution time of a segment in the step segment buffer. 
     // When increasing this value, this stores less overall time in the segment buffer and vice versa. Make
     // certain the step segment buffer is increased/decreased to account for these changes.
-    public static int ACCELERATION_TICKS_PER_SECOND = 100;
+    public const int ACCELERATION_TICKS_PER_SECOND = 100;
 
     // Adaptive Multi-Axis Step Smoothing (AMASS) is an advanced feature that does what its name implies, 
     // smoothing the stepping of multi-axis motions. This feature smooths motion particularly at low step
     // frequencies below 10kHz, where the aliasing between axes of multi-axis motions can cause audible 
     // noise and shake your machine. At even lower step frequencies, AMASS adapts and provides even better
     // step smoothing. See stepper.c for more details on the AMASS system works.
-    public bool ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING = true; // Default enabled. Comment to disable.
+    public const bool ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING = true; // Default enabled. Comment to disable.
 
     // Sets which axis the tool length offset is applied. Assumes the spindle is always parallel with 
     // the selected axis with the tool oriented toward the negative direction. In other words, a positive
     // tool length offset value is subtracted from the current location.
-    public int TOOL_LENGTH_OFFSET_AXIS = Z_AXIS; // Default z-axis. Valid values are X_AXIS, Y_AXIS, or Z_AXIS.
+    public const int TOOL_LENGTH_OFFSET_AXIS = NutsAndBolts.Z_AXIS; // Default z-axis. Valid values are NutsAndBolts.X_AXIS, NutsAndBolts.Y_AXIS, or NutsAndBolts.Z_AXIS.
 
     // Enables variable spindle output voltage for different RPM values. On the Arduino Uno, the spindle
     // enable pin will output 5V for maximum RPM with 256 intermediate levels and 0V when disabled.

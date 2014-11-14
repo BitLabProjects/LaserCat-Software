@@ -10,8 +10,8 @@ namespace bitLab.LaserCat.Grbl
   {
     //// Useful macros
     //public const int clear_vector(a) memset(a, 0, sizeof(a))
-    //public const int clear_vector_float(a) memset(a, 0.0, sizeof(float)*N_AXIS)
-    //// public const int clear_vector_long(a) memset(a, 0.0, sizeof(long)*N_AXIS)
+    //public const int clear_vector_float(a) memset(a, 0.0, sizeof(float)*NutsAndBolts.N_AXIS)
+    //// public const int clear_vector_long(a) memset(a, 0.0, sizeof(long)*NutsAndBolts.N_AXIS)
     //public const int max(a,b) (((a) > (b)) ? (a) : (b))
     //public const int min(a,b) (((a) < (b)) ? (a) : (b))
 
@@ -39,40 +39,40 @@ namespace bitLab.LaserCat.Grbl
     // Read a floating point value from a string. Line points to the input buffer, char_counter 
     // is the indexer pointing to the current character of the line, while float_ptr is 
     // a pointer to the result variable. Returns true when it succeeds
-    byte read_float(char[] line, ref byte char_counter, ref float float_ptr)
+    public byte read_float(char[] line, ref byte char_counter, ref float float_ptr)
     {
       return 0;
       //TODO
     }
 
     // Delays variable-defined milliseconds. Compiler compatibility fix for _delay_ms().
-    void delay_ms(ushort ms)
+    public void delay_ms(ushort ms)
     {
     }
 
     // Delays variable-defined microseconds. Compiler compatibility fix for _delay_us().
-    void delay_us(uint us)
+    public void delay_us(uint us)
     {
     }
 
     // Computes hypotenuse, avoiding avr-gcc's bloated version and the extra error checking.
-    float hypot_f(float x, float y)
+    public float hypot_f(float x, float y)
     {
       return 0;
       //TODO
     }
 
-    void copyArray(float[] dst, float[] src)
+    public void copyArray(float[] dst, float[] src)
     {
       for (int i = 0; i < src.Length; i++)
         dst[i] = src[i];
     }
-    void copyArray(int[] dst, int[] src)
+    public void copyArray(int[] dst, int[] src)
     {
       for (int i = 0; i < src.Length; i++)
         dst[i] = src[i];
     }
-    void clear_vector(float[] dst)
+    public void clear_vector(float[] dst)
     {
       for (int i = 0; i < dst.Length; i++)
         dst[i] = 0.0f;

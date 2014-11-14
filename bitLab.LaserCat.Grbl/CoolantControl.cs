@@ -9,7 +9,7 @@ namespace bitLab.LaserCat.Grbl
   partial class Grbl
   {
 
-    void coolant_init()
+    public void coolant_init()
     {
       //TODO
       //COOLANT_FLOOD_DDR |= (1 << COOLANT_FLOOD_BIT);
@@ -20,7 +20,7 @@ namespace bitLab.LaserCat.Grbl
     }
 
 
-    void coolant_stop()
+    public void coolant_stop()
     {
       //TODO
       //COOLANT_FLOOD_PORT &= ~(1 << COOLANT_FLOOD_BIT);
@@ -30,7 +30,7 @@ namespace bitLab.LaserCat.Grbl
     }
 
 
-    void coolant_run(byte mode)
+    public void coolant_run(byte mode)
     {
       //TODO
       //if (sys.state == STATE_CHECK_MODE) { return; }

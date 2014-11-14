@@ -14,15 +14,15 @@ namespace bitLab.LaserCat.Grbl
     //  public byte state;                 // Tracks the current state of Grbl.
     //  public byte execute;               // Global system runtime executor bitflag variable. See EXEC bitmasks.
     //  public byte homing_axis_lock;
-    //  public fixed int position[(int)N_AXIS];      // Real-time machine (aka home) position vector in steps. 
+    //  public fixed int position[(int)NutsAndBolts.N_AXIS];      // Real-time machine (aka home) position vector in steps. 
     //                                 // NOTE: This may need to be a volatile variable, if problems arise.                             
     //  public byte auto_start;            // Planner auto-start flag. Toggled off during feed hold. Defaulted by settings.
     //  public volatile byte probe_state;   // Probing state value.  Used to coordinate the probing cycle with stepper ISR.
-    //  public fixed int probe_position[(int)N_AXIS]; // Last probe position in machine coordinates and steps.
+    //  public fixed int probe_position[(int)NutsAndBolts.N_AXIS]; // Last probe position in machine coordinates and steps.
     //};
     //public system_t sys;
 
-    void system_init() 
+    public void system_init() 
     {
       PINOUT_DDR &= ~(PINOUT_MASK); // Configure as input pins
       PINOUT_PORT |= PINOUT_MASK;   // Enable internal pull-up resistors. Normal high operation.
@@ -59,7 +59,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Executes user startup script, if stored.
-    void system_execute_startup(char[] line) 
+    public void system_execute_startup(char[] line) 
     {
       byte n;
       for (n=0; n < N_STARTUP_LINE; n++) {
@@ -68,7 +68,7 @@ namespace bitLab.LaserCat.Grbl
         } else {
           if (line[0] != 0) {
             printString(line); // Echo startup line to indicate execution.
-            report_status_message(gc_execute_line(line));
+            report_status_message(mGCode.gc_execute_line(line));
           }
         } 
       }  
@@ -83,7 +83,7 @@ namespace bitLab.LaserCat.Grbl
     // the lines that are processed afterward, not necessarily real-time during a cycle, 
     // since there are motions already stored in the buffer. However, this 'lag' should not
     // be an issue, since these commands are not typically used during a cycle.
-    byte system_execute_line(char[] line) 
+    public byte system_execute_line(char[] line) 
     {   
       byte char_counter = 1; 
       byte helper_var = 0; // Helper variable
@@ -197,7 +197,7 @@ namespace bitLab.LaserCat.Grbl
                 line[char_counter - helper_var] = line[char_counter];
               } while (line[char_counter++] != 0);
               // Execute gcode block to ensure block is valid.
-              helper_var = gc_execute_line(line); // Set helper_var to returned status code.
+              helper_var = mGCode.gc_execute_line(line); // Set helper_var to returned status code.
               if (helper_var != 0) { return (helper_var); }
               else
               {

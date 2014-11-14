@@ -38,7 +38,7 @@ namespace bitLab.LaserCat.Grbl
   
 
     // Returns the number of bytes used in the RX serial buffer.
-    byte serial_get_rx_buffer_count()
+    public byte serial_get_rx_buffer_count()
     {
       byte rtail = serial_rx_buffer_tail; // Copy to limit multiple calls to volatile
       if (serial_rx_buffer_head >= rtail) { return(byte)(serial_rx_buffer_head-rtail); }
@@ -48,7 +48,7 @@ namespace bitLab.LaserCat.Grbl
 
     // Returns the number of bytes used in the TX serial buffer.
     // NOTE: Not used except for debugging and ensuring no TX bottlenecks.
-    byte serial_get_tx_buffer_count()
+    public byte serial_get_tx_buffer_count()
     {
       byte ttail = serial_tx_buffer_tail; // Copy to limit multiple calls to volatile
       if (serial_tx_buffer_head >= ttail) { return(byte)(serial_tx_buffer_head-ttail); }
@@ -56,15 +56,15 @@ namespace bitLab.LaserCat.Grbl
     }
 
 
-    void serial_init()
+    public void serial_init()
     {
 	    //TODO
       //// Set baud rate
       //#if BAUD_RATE < 57600
-      //  uint16_t UBRR0_value = ((F_CPU / (8L * BAUD_RATE)) - 1)/2 ;
+      //  uint16_t UBRR0_value = ((NutsAndBolts.F_CPU / (8L * BAUD_RATE)) - 1)/2 ;
       //  UCSR0A &= ~(1 << U2X0); // baud doubler off  - Only needed on Uno XXX
       //#else
-      //  uint16_t UBRR0_value = ((F_CPU / (4L * BAUD_RATE)) - 1)/2;
+      //  uint16_t UBRR0_value = ((NutsAndBolts.F_CPU / (4L * BAUD_RATE)) - 1)/2;
       //  UCSR0A |= (1 << U2X0);  // baud doubler on for high baud rates, i.e. 115200
       //#endif
       //UBRR0H = UBRR0_value >> 8;
@@ -84,7 +84,7 @@ namespace bitLab.LaserCat.Grbl
     // Writes one byte to the TX serial buffer. Called by main program.
     // TODO: Check if we can speed this up for writing strings, rather than single bytes.
 
-    void serial_write(byte data) {
+    public void serial_write(byte data) {
       //TODO
       //// Calculate next head
       //byte next_head = serial_tx_buffer_head + 1;
@@ -138,7 +138,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Fetches the first byte in the serial read buffer. Called by main program.
-    byte serial_read()
+    public byte serial_read()
     {
       byte tail = serial_rx_buffer_tail; // Temporary serial_rx_buffer_tail (to optimize for volatile)
       if (serial_rx_buffer_head == tail) {
@@ -164,7 +164,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     //ISR(SERIAL_RX)
-    void SERIAL_RX()
+    public void SERIAL_RX()
     {
       char data = ' ';//TODO = UDR0;
       byte next_head;
@@ -200,7 +200,7 @@ namespace bitLab.LaserCat.Grbl
     }
 
 
-    void serial_reset_read_buffer() 
+    public void serial_reset_read_buffer() 
     {
       serial_rx_buffer_tail = serial_rx_buffer_head;
 

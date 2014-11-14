@@ -18,7 +18,7 @@ namespace bitLab.LaserCat.Grbl
 //#ifdef USE_LINE_NUMBERS
 //  void mc_line(float *target, float feed_rate, byte invert_feed_rate, int line_number)
 //#else
-  void mc_line(float[] target, float feed_rate, bool invert_feed_rate)
+  public void mc_line(float[] target, float feed_rate, bool invert_feed_rate)
 //#endif
 {
   // If enabled, check for soft limit violations. Placed here all line motions are picked up
@@ -74,7 +74,7 @@ namespace bitLab.LaserCat.Grbl
 //  void mc_arc(float *position, float *target, float *offset, float radius, float feed_rate, 
 //    byte invert_feed_rate, byte axis_0, byte axis_1, byte axis_linear, int line_number)
 //#else
-  void mc_arc(float[] position, float[] target, float[] offset, float radius, float feed_rate,
+  public void mc_arc(float[] position, float[] target, float[] offset, float radius, float feed_rate,
     byte invert_feed_rate, byte axis_0, byte axis_1, byte axis_linear)
 //#endif
 {
@@ -87,7 +87,7 @@ namespace bitLab.LaserCat.Grbl
   
   // CCW angle between position and target from circle center. Only one atan2() trig computation required.
   float angular_travel = (float)Math.Atan2(r_axis0*rt_axis1-r_axis1*rt_axis0, r_axis0*rt_axis0+r_axis1*rt_axis1);
-  if (gc_state.modal.motion == MOTION_MODE_CW_ARC) { // Correct atan2 output per direction
+  if (mGCode.gc_state.modal.motion == GCode.MOTION_MODE_CW_ARC) { // Correct atan2 output per direction
     if (angular_travel >= 0) { angular_travel -= (float)(2*Math.PI); }
   } else {
     if (angular_travel <= 0) { angular_travel += (float)(2*Math.PI); }
@@ -188,7 +188,7 @@ namespace bitLab.LaserCat.Grbl
 
 
 // Execute dwell in seconds.
-void mc_dwell(float seconds) 
+public void mc_dwell(float seconds) 
 {
   //TODO
    //if (sys.state == STATE_CHECK_MODE) { return; }
@@ -208,7 +208,7 @@ void mc_dwell(float seconds)
 // Perform homing cycle to locate and set machine zero. Only '$H' executes this command.
 // NOTE: There should be no motions in the buffer and Grbl must be in an idle state before
 // executing the homing cycle. This prevents incorrect buffered plans after homing.
-void mc_homing_cycle()
+public void mc_homing_cycle()
 {
   //TODO
   //sys.state = STATE_HOMING; // Set system state variable
@@ -249,7 +249,7 @@ void mc_homing_cycle()
 //#ifdef USE_LINE_NUMBERS
 //  void mc_probe_cycle(float *target, float feed_rate, byte invert_feed_rate, int line_number)
 //#else
-  void mc_probe_cycle(float[] target, float feed_rate, byte invert_feed_rate)
+  public void mc_probe_cycle(float[] target, float feed_rate, byte invert_feed_rate)
 //#endif
 { 
     //TODO
@@ -297,7 +297,7 @@ void mc_homing_cycle()
   //// Pull-off triggered probe to the trigger location since we had to decelerate a little beyond
   //// it to stop the machine in a controlled manner. 
   //byte idx;
-  //for(idx=0; idx<N_AXIS; idx++){
+  //for(idx=0; idx<NutsAndBolts.N_AXIS; idx++){
   //  // NOTE: The target[] variable updated here will be sent back and synced with the g-code parser.
   //  target[idx] = (float)sys.probe_position[idx]/settings.steps_per_mm[idx];
   //}
@@ -325,7 +325,7 @@ void mc_homing_cycle()
 // is in a motion state. If so, kills the steppers and sets the system alarm to flag position
 // lost, since there was an abrupt uncontrolled deceleration. Called at an interrupt level by
 // runtime abort command and hard limits. So, keep to a minimum.
- void mc_reset()
+ public void mc_reset()
 {
    //TODO
   //// Only this function can set the system reset. Helps prevent multiple kill calls.

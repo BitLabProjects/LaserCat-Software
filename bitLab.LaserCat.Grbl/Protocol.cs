@@ -16,7 +16,7 @@ namespace bitLab.LaserCat.Grbl
     // Directs and executes one line of formatted input from protocol_process. While mostly
     // incoming streaming g-code blocks, this also directs and executes Grbl internal commands,
     // such as settings, initiating the homing cycle, and toggling switch states.
-    void protocol_execute_line(char[] line) 
+    public void protocol_execute_line(char[] line) 
     {      
       protocol_execute_runtime(); // Runtime command check point.
       if (sys.abort != 0) { return; } // Bail to calling function upon system abort  
@@ -35,7 +35,7 @@ namespace bitLab.LaserCat.Grbl
 
       } else {
         // Parse and execute g-code block!
-        report_status_message(gc_execute_line(line));
+        report_status_message(mGCode.gc_execute_line(line));
       }
     }
 
@@ -43,7 +43,7 @@ namespace bitLab.LaserCat.Grbl
     /* 
       GRBL PRIMARY LOOP:
     */
-    void protocol_main_loop()
+    public void protocol_main_loop()
     {
       // ------------------------------------------------------------
       // Complete initialization procedures upon a power-up or reset.
@@ -155,7 +155,7 @@ namespace bitLab.LaserCat.Grbl
     // recalculating the buffer upon a feedhold or override.
     // NOTE: The sys.execute variable flags are set by any process, step or serial interrupts, pinouts,
     // limit switches, or the main program.
-    void protocol_execute_runtime()
+    public void protocol_execute_runtime()
     {
       byte rt_exec = sys.execute; // Copy to avoid calling volatile multiple times
       if (rt_exec != 0) { // Enter only if any bit flag is true
@@ -255,7 +255,7 @@ namespace bitLab.LaserCat.Grbl
 
     // Block until all buffered steps are executed or in a cycle state. Works with feed hold
     // during a synchronize call, if it should happen. Also, waits for clean cycle end.
-    void protocol_buffer_synchronize()
+    public void protocol_buffer_synchronize()
     {
       // If system is queued, ensure cycle resumes if the auto start flag is present.
       protocol_auto_cycle_start();
@@ -278,7 +278,7 @@ namespace bitLab.LaserCat.Grbl
     // NOTE: This function is called from the main loop and mc_line() only and executes when one of
     // two conditions exist respectively: There are no more blocks sent (i.e. streaming is finished, 
     // single commands), or the planner buffer is full and ready to go.
-    void protocol_auto_cycle_start() { if (sys.auto_start!=0) { bit_true_atomic(ref sys.execute, EXEC_CYCLE_START); } } 
+    public void protocol_auto_cycle_start() { if (sys.auto_start!=0) { bit_true_atomic(ref sys.execute, EXEC_CYCLE_START); } } 
 
   }
 }

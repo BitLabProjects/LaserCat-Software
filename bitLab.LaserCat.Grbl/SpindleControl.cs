@@ -8,7 +8,7 @@ namespace bitLab.LaserCat.Grbl
 {
   partial class Grbl
   {
-    void spindle_init()
+    public void spindle_init()
     {    
       //TODO
       //// On the Uno, spindle enable and PWM are shared. Other CPUs have seperate enable pin.
@@ -25,7 +25,7 @@ namespace bitLab.LaserCat.Grbl
     }
 
 
-    void spindle_stop()
+    public void spindle_stop()
     {
       //TODO
       //// On the Uno, spindle enable and PWM are shared. Other CPUs have seperate enable pin.
@@ -40,7 +40,7 @@ namespace bitLab.LaserCat.Grbl
     }
 
 
-    void spindle_run(byte direction, float rpm) 
+    public void spindle_run(byte direction, float rpm) 
     {
       //TODO
       //if (sys.state == STATE_CHECK_MODE) { return; }

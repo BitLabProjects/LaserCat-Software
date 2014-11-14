@@ -13,7 +13,7 @@ namespace bitLab.LaserCat.Grbl
     //TODO Implementate vuote, gestire
     //public _delay_ms(x) ;
     //public _delay_us(x) ;
-    //public ISR(x) void x() 
+    //public ISR(x) public public void x() 
     //public trunc(x) floor(x)
     //public lround(x) round(x)
     //inline double round(double number)
@@ -110,7 +110,6 @@ namespace bitLab.LaserCat.Grbl
     public int COOLANT_FLOOD_DDR; //DDRC
     public int COOLANT_FLOOD_PORT; //PORTC
     public int COOLANT_FLOOD_BIT = 3; // Uno Analog Pin 3
-    public bool ENABLE_M7 = false;
     // Mist coolant disabled by default. See config.h to enable/disable.
     public int COOLANT_MIST_DDR;
     public int COOLANT_MIST_PORT;
@@ -154,7 +153,7 @@ namespace bitLab.LaserCat.Grbl
     public int SPINDLE_PWM_BIT; // Shared with SPINDLE_ENABLE.
   }
 
-  public partial class Grbl //NutsAndBolts
+  public class NutsAndBolts
   {
     public const int N_AXIS = 3; // Number of axes
     public const int X_AXIS = 0; // Axis indexing value. Must start with 0 and be continuous.
@@ -266,9 +265,9 @@ namespace bitLab.LaserCat.Grbl
     // and timer accuracy.  Do not alter these settings unless you know what you are doing.
     public int MAX_AMASS_LEVEL = 3;
     // AMASS_LEVEL0: Normal operation. No AMASS. No upper cutoff frequency. Starts at LEVEL1 cutoff frequency.
-    public int AMASS_LEVEL1 = (F_CPU / 8000); // Over-drives ISR (x2). Defined as F_CPU/(Cutoff frequency in Hz)
-    public int AMASS_LEVEL2 = (F_CPU / 4000); // Over-drives ISR (x4)
-    public int AMASS_LEVEL3 = (F_CPU / 2000); // Over-drives ISR (x8)
+    public int AMASS_LEVEL1 = (NutsAndBolts.F_CPU / 8000); // Over-drives ISR (x2). Defined as NutsAndBolts.F_CPU/(Cutoff frequency in Hz)
+    public int AMASS_LEVEL2 = (NutsAndBolts.F_CPU / 4000); // Over-drives ISR (x4)
+    public int AMASS_LEVEL3 = (NutsAndBolts.F_CPU / 2000); // Over-drives ISR (x8)
 
   }
 
@@ -279,12 +278,12 @@ namespace bitLab.LaserCat.Grbl
 
   public partial class Grbl //Settings
   {
-    private const string GRBL_VERSION = "0.9g";
-    private const string GRBL_VERSION_BUILD = "20140905";
+    public const string GRBL_VERSION = "0.9g";
+    public const string GRBL_VERSION_BUILD = "20140905";
 
     // Version of the EEPROM data. Will be used to migrate existing data from older versions of Grbl
     // when firmware is upgraded. Always stored in byte 0 of eeprom
-    private const int SETTINGS_VERSION = 9;  // NOTE: Check settings_reset() when moving to next version.
+    public const int SETTINGS_VERSION = 9;  // NOTE: Check settings_reset() when moving to next version.
 
     // Define bit flag masks for the boolean settings in settings.flag.
     public const int BITFLAG_REPORT_INCHES = 1 << 0;
@@ -312,17 +311,17 @@ namespace bitLab.LaserCat.Grbl
     public const uint EEPROM_ADDR_BUILD_INFO = 942U;
 
     // Define EEPROM address indexing for coordinate parameters
-    private const int N_COORDINATE_SYSTEM = 6;  // Number of supported work coordinate systems (from index 1)
-    private const int SETTING_INDEX_NCOORD = N_COORDINATE_SYSTEM + 1; // Total number of system stored (from index 0)
+    public const int N_COORDINATE_SYSTEM = 6;  // Number of supported work coordinate systems (from index 1)
+    public const int SETTING_INDEX_NCOORD = N_COORDINATE_SYSTEM + 1; // Total number of system stored (from index 0)
     // NOTE: Work coordinate indices are (0=G54, 1=G55, ... , 6=G59)
-    private const int SETTING_INDEX_G28 = N_COORDINATE_SYSTEM;    // Home position 1
-    private const int SETTING_INDEX_G30 = N_COORDINATE_SYSTEM + 1;  // Home position 2
-    // private const SETTING_INDEX_G92    N_COORDINATE_SYSTEM+2  // Coordinate offset (G92.2,G92.3 not supported)
+    public const int SETTING_INDEX_G28 = N_COORDINATE_SYSTEM;    // Home position 1
+    public const int SETTING_INDEX_G30 = N_COORDINATE_SYSTEM + 1;  // Home position 2
+    // public const SETTING_INDEX_G92    N_COORDINATE_SYSTEM+2  // Coordinate offset (G92.2,G92.3 not supported)
 
     // Define Grbl axis settings numbering scheme. Starts at START_VAL, every INCREMENT, over N_SETTINGS.
-    private const int AXIS_N_SETTINGS = 4;
-    private const int AXIS_SETTINGS_START_VAL = 100; // NOTE: Reserving settings values >= 100 for axis settings. Up to 255.
-    private const int AXIS_SETTINGS_INCREMENT = 10;  // Must be greater than the number of axis settings
+    public const int AXIS_N_SETTINGS = 4;
+    public const int AXIS_SETTINGS_START_VAL = 100; // NOTE: Reserving settings values >= 100 for axis settings. Up to 255.
+    public const int AXIS_SETTINGS_INCREMENT = 10;  // Must be greater than the number of axis settings
   }
 
 }

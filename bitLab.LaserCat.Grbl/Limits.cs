@@ -12,7 +12,7 @@ namespace bitLab.LaserCat.Grbl
 public const double HOMING_AXIS_SEARCH_SCALAR = 1.5; // Must be > 1 to ensure limit switch will be engaged.
 
 
-void limits_init() 
+public void limits_init() 
 {
   LIMIT_DDR &= ~(LIMIT_MASK); // Set as input pins
 
@@ -37,7 +37,7 @@ void limits_init()
 }
 
 
-void limits_disable()
+public void limits_disable()
 {
   LIMIT_PCMSK &= ~LIMIT_MASK;  // Disable specific pins of the Pin Change Interrupt
   //TODO PCICR &= ~(1 << LIMIT_INT);  // Disable Pin Change Interrupt
@@ -97,7 +97,7 @@ void limits_disable()
 // mask, which prevents the stepper algorithm from executing step pulses. Homing motions typically 
 // circumvent the processes for executing motions in normal operation.
 // NOTE: Only the abort runtime command can interrupt this process.
-void limits_go_home(byte cycle_mask) 
+public void limits_go_home(byte cycle_mask) 
 {
   //TODO
   //if (sys.abort != 0) { return; } // Block if system reset has been issued.
@@ -108,11 +108,11 @@ void limits_go_home(byte cycle_mask)
   //bool invert_pin; 
   //byte idx;
   //byte n_cycle = (2*N_HOMING_LOCATE_CYCLE+1);
-  //float[] target = new float[N_AXIS];
+  //float[] target = new float[NutsAndBolts.N_AXIS];
   
-  //byte[] limit_pin = new byte[N_AXIS], step_pin = new byte[N_AXIS];
+  //byte[] limit_pin = new byte[NutsAndBolts.N_AXIS], step_pin = new byte[NutsAndBolts.N_AXIS];
   //float max_travel = 0.0f;
-  //for (idx=0; idx<N_AXIS; idx++) {  
+  //for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) {  
   //  // Initialize limit and step pin masks
   //  limit_pin[idx] = get_limit_pin_mask(idx);
   //  step_pin[idx] = get_step_pin_mask(idx);
@@ -134,7 +134,7 @@ void limits_go_home(byte cycle_mask)
   //  byte n_active_axis = 0;
   //  byte axislock = 0;
         
-  //  for (idx=0; idx<N_AXIS; idx++) {
+  //  for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) {
   //    // Set target location for active axes and setup computation for homing rate.
   //    if (bit_istrue(cycle_mask,bit(idx))) { 
   //      n_active_axis++;
@@ -150,7 +150,7 @@ void limits_go_home(byte cycle_mask)
   //    // Apply axislock to the step port pins active in this cycle.
   //    if (bit_istrue(cycle_mask,bit(idx))) { axislock |= step_pin[idx]; }
   //  }      
-  //  homing_rate *= (float)Math.Sqrt((float)n_active_axis); // [sqrt(N_AXIS)] Adjust so individual axes all move at homing rate.
+  //  homing_rate *= (float)Math.Sqrt((float)n_active_axis); // [sqrt(NutsAndBolts.N_AXIS)] Adjust so individual axes all move at homing rate.
   //  sys.homing_axis_lock = axislock;
   
   //  // Perform homing cycle. Planner buffer should be empty, as required to initiate the homing cycle.
@@ -168,7 +168,7 @@ void limits_go_home(byte cycle_mask)
   //    // Check limit state. Lock out cycle axes when they change.
   //    limit_state = LIMIT_PIN;
   //    if (invert_pin) { limit_state ^= LIMIT_MASK; }
-  //    for (idx=0; idx<N_AXIS; idx++) {
+  //    for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) {
   //      if (axislock & step_pin[idx]) {
   //        if (limit_state & limit_pin[idx]) { axislock &= ~(step_pin[idx]); }
   //      }
@@ -196,7 +196,7 @@ void limits_go_home(byte cycle_mask)
   //// set up pull-off maneuver from axes limit switches that have been homed. This provides
   //// some initial clearance off the switches and should also help prevent them from falsely
   //// triggering when hard limits are enabled or when more than one axes shares a limit pin.
-  //for (idx=0; idx<N_AXIS; idx++) {
+  //for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) {
   //  // Set up pull off targets and machine positions for limit switches homed in the negative
   //  // direction, rather than the traditional positive. Leave non-homed positions as zero and
   //  // do not move them.
@@ -243,12 +243,12 @@ void limits_go_home(byte cycle_mask)
 
 // Performs a soft limit check. Called from mc_line() only. Assumes the machine has been homed,
 // the workspace volume is in all negative space, and the system is in normal operation.
-void limits_soft_check(float[] target)
+public void limits_soft_check(float[] target)
 {
   //TODO
   //byte idx;
   //bool soft_limit_error = false;
-  //for (idx=0; idx<N_AXIS; idx++) {
+  //for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) {
    
   //  #ifdef HOMING_FORCE_SET_ORIGIN
   //    // When homing forced set origin is enabled, soft limits checks need to account for directionality.

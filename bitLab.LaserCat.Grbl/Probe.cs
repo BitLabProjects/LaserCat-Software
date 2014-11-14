@@ -16,7 +16,7 @@ namespace bitLab.LaserCat.Grbl
     public const byte PROBE_ACTIVE  = 1; // Actively watching the input pin.
 
     // Probe pin initialization routine.
-    void probe_init()
+    public void probe_init()
     {
       //TODO
       //PROBE_DDR &= ~(PROBE_MASK); // Configure as input pins
@@ -34,20 +34,20 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Returns the probe pin state. Triggered = true. Called by gcode parser and probe state monitor.
-    byte probe_get_state() { return (byte)((PROBE_PIN & PROBE_MASK) ^ probe_invert_mask); }
+    public byte probe_get_state() { return (byte)((PROBE_PIN & PROBE_MASK) ^ probe_invert_mask); }
 
 
     // Monitors probe pin state and records the system position when detected. Called by the
     // stepper ISR per ISR tick.
     // NOTE: This function must be extremely efficient as to not bog down the stepper ISR.
-    void probe_state_monitor()
+    public void probe_state_monitor()
     {
       if (sys.probe_state == PROBE_ACTIVE)
       {
         if (probe_get_state() != 0)
         {
           sys.probe_state = PROBE_OFF;
-          //memcpy(sys.probe_position, sys.position, sizeof(float) * N_AXIS);
+          //memcpy(sys.probe_position, sys.position, sizeof(float) * NutsAndBolts.N_AXIS);
           copyArray(sys.probe_position, sys.position);
           bit_true(ref sys.execute, EXEC_FEED_HOLD);
         }

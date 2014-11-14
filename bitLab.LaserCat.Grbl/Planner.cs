@@ -40,7 +40,7 @@ namespace bitLab.LaserCat.Grbl
       public plan_block_t(bool dummy)
       {
         direction_bits = 0;    // The direction bit set for this block (refers to *_DIRECTION_BIT in config.h)
-        steps = new uint[N_AXIS];    // Step count along each axis
+        steps = new uint[NutsAndBolts.N_AXIS];    // Step count along each axis
         step_event_count = 0; // The maximum step axis count and number of steps required to complete this block. 
         entry_speed_sqr = 0f;         // The current planned entry speed at block junction in (mm/min)^2
         max_entry_speed_sqr = 0f;     // Maximum allowable entry speed based on the minimum of junction limit and 
@@ -81,8 +81,8 @@ namespace bitLab.LaserCat.Grbl
       public float previous_nominal_speed_sqr;  // Nominal speed of previous path line segment
 
       public planner_t(bool dummy) {
-        position = new int[N_AXIS];
-        previous_unit_vec = new float[N_AXIS];
+        position = new int[NutsAndBolts.N_AXIS];
+        previous_unit_vec = new float[NutsAndBolts.N_AXIS];
         previous_nominal_speed_sqr = 0.0f;
       }
     };
@@ -90,7 +90,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Returns the index of the next block in the ring buffer. Also called by stepper segment buffer.
-    byte plan_next_block_index(byte block_index) 
+    public byte plan_next_block_index(byte block_index) 
     {
       block_index++;
       if (block_index == BLOCK_BUFFER_SIZE) { block_index = 0; }
@@ -172,7 +172,7 @@ namespace bitLab.LaserCat.Grbl
       ARM versions should have enough memory and speed for look-ahead blocks numbering up to a hundred or more.
 
     */
-    void planner_recalculate() 
+    public void planner_recalculate() 
     {   
       // Initialize block index to the last block in the planner buffer.
       byte block_index = plan_prev_block_index(block_buffer_head);
@@ -254,7 +254,7 @@ namespace bitLab.LaserCat.Grbl
     }
 
 
-    void plan_reset() 
+    public void plan_reset() 
     {
       //memset(&pl, 0, sizeof(pl)); // Clear planner struct
       pl = new planner_t(true);
@@ -266,7 +266,7 @@ namespace bitLab.LaserCat.Grbl
     }
 
 
-    void plan_discard_current_block() 
+    public void plan_discard_current_block() 
     {
       if (block_buffer_head != block_buffer_tail) { // Discard non-empty buffer.
         byte block_index = plan_next_block_index( block_buffer_tail );
@@ -277,7 +277,7 @@ namespace bitLab.LaserCat.Grbl
     }
 
 
-    int plan_get_current_block() 
+    public int plan_get_current_block() 
     {
       if (block_buffer_head == block_buffer_tail) { return(-1); } // Buffer empty  
       //return(&block_buffer[block_buffer_tail]);
@@ -294,14 +294,14 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Returns the availability status of the block ring buffer. True, if full.
-    bool plan_check_full_buffer()
+    public bool plan_check_full_buffer()
     {
       if (block_buffer_tail == next_buffer_head) { return(true); }
       return(false);
     }
 
 
-    /* Add a new linear movement to the buffer. target[N_AXIS] is the signed, absolute target position
+    /* Add a new linear movement to the buffer. target[NutsAndBolts.N_AXIS] is the signed, absolute target position
        in millimeters. Feed rate specifies the speed of the motion. If feed rate is inverted, the feed
        rate is taken to mean "frequency" and would complete the operation in 1/feed_rate minutes.
        All position data passed to the planner must be in terms of machine position to keep the planner 
@@ -314,7 +314,7 @@ namespace bitLab.LaserCat.Grbl
     //#ifdef USE_LINE_NUMBERS   
     //  void plan_buffer_line(float *target, float feed_rate, byte invert_feed_rate, int line_number) 
     //#else
-      void plan_buffer_line(float[] target, float feed_rate, bool invert_feed_rate) 
+      public void plan_buffer_line(float[] target, float feed_rate, bool invert_feed_rate) 
     //#endif
     {
       // Prepare and initialize new block
@@ -331,11 +331,11 @@ namespace bitLab.LaserCat.Grbl
       // Compute and store initial move distance data.
       // TODO: After this for-loop, we don't touch the stepper algorithm data. Might be a good idea
       // to try to keep these types of things completely separate from the planner for portability.
-      int[] target_steps = new int[N_AXIS];
-      float[] unit_vec = new float[N_AXIS];
+      int[] target_steps = new int[NutsAndBolts.N_AXIS];
+      float[] unit_vec = new float[NutsAndBolts.N_AXIS];
       float delta_mm;
       byte idx;
-      for (idx=0; idx<N_AXIS; idx++) {
+      for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) {
         // Calculate target position in absolute steps. This conversion should be consistent throughout.
         target_steps[idx] = (int)Math.Round(target[idx]*settings.steps_per_mm[idx]);
   
@@ -372,7 +372,7 @@ namespace bitLab.LaserCat.Grbl
       float inverse_unit_vec_value;
       float inverse_millimeters = 1.0f/block_buffer[blockIdx].millimeters;  // Inverse millimeters to remove multiple float divides	
       float junction_cos_theta = 0;
-      for (idx=0; idx<N_AXIS; idx++) {
+      for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) {
         if (unit_vec[idx] != 0) {  // Avoid divide by zero.
           unit_vec[idx] *= inverse_millimeters;  // Complete unit vector calculation
           inverse_unit_vec_value = (float)Math.Abs(1.0/unit_vec[idx]); // Inverse to remove multiple float divides.
@@ -452,17 +452,17 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Reset the planner position vectors. Called by the system abort/initialization routine.
-    void plan_sync_position()
+    public void plan_sync_position()
     {
       byte idx;
-      for (idx=0; idx<N_AXIS; idx++) {
+      for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) {
         pl.position[idx] = sys.position[idx];
       }
     }
 
 
     // Returns the number of active blocks are in the planner buffer.
-    byte plan_get_block_buffer_count()
+    public byte plan_get_block_buffer_count()
     {
       if (block_buffer_head >= block_buffer_tail) { return (byte)(block_buffer_head-block_buffer_tail); }
       return (byte)(BLOCK_BUFFER_SIZE - (block_buffer_tail-block_buffer_head));
@@ -471,7 +471,7 @@ namespace bitLab.LaserCat.Grbl
 
     // Re-initialize buffer plan with a partially completed block, assumed to exist at the buffer tail.
     // Called after a steppers have come to a complete stop for a feed hold and the cycle is stopped.
-    void plan_cycle_reinitialize()
+    public void plan_cycle_reinitialize()
     {
       // Re-plan from a complete stop. Reset planner entry speeds and buffer planned pointer.
       st_update_plan_block_parameters();

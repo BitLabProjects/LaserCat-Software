@@ -8,6 +8,12 @@ namespace bitLab.LaserCat.Grbl
 {
   public partial class Grbl
   {
+    private GCode mGCode;
+    public Grbl(GCode GCode)
+    {
+      mGCode = GCode;
+    }
+
     public void Execute()
     {
       // Initialize system upon power-up.

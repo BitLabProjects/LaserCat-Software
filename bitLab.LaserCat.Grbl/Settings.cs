@@ -87,18 +87,18 @@ namespace bitLab.LaserCat.Grbl
         homing_seek_rate = 0;
         homing_debounce_delay = 0;
         homing_pulloff = 0;
-        steps_per_mm = new float[N_AXIS];
-        max_rate = new float[N_AXIS];
-        acceleration = new float[N_AXIS];
-        max_travel = new float[N_AXIS];
+        steps_per_mm = new float[NutsAndBolts.N_AXIS];
+        max_rate = new float[NutsAndBolts.N_AXIS];
+        acceleration = new float[NutsAndBolts.N_AXIS];
+        max_travel = new float[NutsAndBolts.N_AXIS];
       }
     };
 
-    settings_t settings = new settings_t(true);
+    public settings_t settings = new settings_t(true);
 
 
     // Method to store startup lines into EEPROM
-    void settings_store_startup_line(byte n, char[] line)
+    public void settings_store_startup_line(byte n, char[] line)
     {
       //TODO
       //uint addr = n * (LINE_BUFFER_SIZE + 1) + EEPROM_ADDR_STARTUP_BLOCK;
@@ -107,23 +107,23 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Method to store build info into EEPROM
-    void settings_store_build_info(char[] line)
+    public void settings_store_build_info(char[] line)
     {
       memcpy_to_eeprom_with_checksum(EEPROM_ADDR_BUILD_INFO, line, LINE_BUFFER_SIZE);
     }
 
 
     // Method to store coord data parameters into EEPROM
-    void settings_write_coord_data(byte coord_select, float[] coord_data)
+    public void settings_write_coord_data(byte coord_select, float[] coord_data)
     {
       //TODO
-      //uint addr = coord_select * (sizeof(float) * N_AXIS + 1) + EEPROM_ADDR_PARAMETERS;
-      //memcpy_to_eeprom_with_checksum(addr, (byte*)coord_data, sizeof(float) * N_AXIS);
+      //uint addr = coord_select * (sizeof(float) * NutsAndBolts.N_AXIS + 1) + EEPROM_ADDR_PARAMETERS;
+      //memcpy_to_eeprom_with_checksum(addr, (byte*)coord_data, sizeof(float) * NutsAndBolts.N_AXIS);
     }
 
 
     // Method to store Grbl global settings struct and version number into EEPROM
-    void write_global_settings()
+    public void write_global_settings()
     {
       eeprom_put_char(0, SETTINGS_VERSION);
       //TODO
@@ -132,7 +132,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Method to restore EEPROM-saved Grbl global settings back to defaults. 
-    void settings_restore_global_settings()
+    public void settings_restore_global_settings()
     {
       settings.pulse_microseconds = Grbl.DEFAULT_STEP_PULSE_MICROSECONDS;
       settings.stepper_idle_lock_time = Grbl.DEFAULT_STEPPER_IDLE_LOCK_TIME;
@@ -156,25 +156,25 @@ namespace bitLab.LaserCat.Grbl
       if (Grbl.DEFAULT_HARD_LIMIT_ENABLE) { settings.flags |= BITFLAG_HARD_LIMIT_ENABLE; }
       if (Grbl.DEFAULT_HOMING_ENABLE) { settings.flags |= BITFLAG_HOMING_ENABLE; }
 
-      settings.steps_per_mm[X_AXIS] = Grbl.DEFAULT_X_STEPS_PER_MM;
-      settings.steps_per_mm[Y_AXIS] = Grbl.DEFAULT_Y_STEPS_PER_MM;
-      settings.steps_per_mm[Z_AXIS] = Grbl.DEFAULT_Z_STEPS_PER_MM;
-      settings.max_rate[X_AXIS] = Grbl.DEFAULT_X_MAX_RATE;
-      settings.max_rate[Y_AXIS] = Grbl.DEFAULT_Y_MAX_RATE;
-      settings.max_rate[Z_AXIS] = Grbl.DEFAULT_Z_MAX_RATE;
-      settings.acceleration[X_AXIS] = Grbl.DEFAULT_X_ACCELERATION;
-      settings.acceleration[Y_AXIS] = Grbl.DEFAULT_Y_ACCELERATION;
-      settings.acceleration[Z_AXIS] = Grbl.DEFAULT_Z_ACCELERATION;
-      settings.max_travel[X_AXIS] = (-Grbl.DEFAULT_X_MAX_TRAVEL);
-      settings.max_travel[Y_AXIS] = (-Grbl.DEFAULT_Y_MAX_TRAVEL);
-      settings.max_travel[Z_AXIS] = (-Grbl.DEFAULT_Z_MAX_TRAVEL);
+      settings.steps_per_mm[NutsAndBolts.X_AXIS] = Grbl.DEFAULT_X_STEPS_PER_MM;
+      settings.steps_per_mm[NutsAndBolts.Y_AXIS] = Grbl.DEFAULT_Y_STEPS_PER_MM;
+      settings.steps_per_mm[NutsAndBolts.Z_AXIS] = Grbl.DEFAULT_Z_STEPS_PER_MM;
+      settings.max_rate[NutsAndBolts.X_AXIS] = Grbl.DEFAULT_X_MAX_RATE;
+      settings.max_rate[NutsAndBolts.Y_AXIS] = Grbl.DEFAULT_Y_MAX_RATE;
+      settings.max_rate[NutsAndBolts.Z_AXIS] = Grbl.DEFAULT_Z_MAX_RATE;
+      settings.acceleration[NutsAndBolts.X_AXIS] = Grbl.DEFAULT_X_ACCELERATION;
+      settings.acceleration[NutsAndBolts.Y_AXIS] = Grbl.DEFAULT_Y_ACCELERATION;
+      settings.acceleration[NutsAndBolts.Z_AXIS] = Grbl.DEFAULT_Z_ACCELERATION;
+      settings.max_travel[NutsAndBolts.X_AXIS] = (-Grbl.DEFAULT_X_MAX_TRAVEL);
+      settings.max_travel[NutsAndBolts.Y_AXIS] = (-Grbl.DEFAULT_Y_MAX_TRAVEL);
+      settings.max_travel[NutsAndBolts.Z_AXIS] = (-Grbl.DEFAULT_Z_MAX_TRAVEL);
 
       write_global_settings();
     }
 
 
     // Helper function to clear the EEPROM space containing parameter data.
-    void settings_clear_parameters()
+    public void settings_clear_parameters()
     {
       byte idx;
       float[] coord_data = new float[3];
@@ -185,7 +185,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Helper function to clear the EEPROM space containing the startup lines.
-    void settings_clear_startup_lines()
+    public void settings_clear_startup_lines()
     {
       if (N_STARTUP_LINE > 0)
         eeprom_put_char(EEPROM_ADDR_STARTUP_BLOCK, 0);
@@ -195,7 +195,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Helper function to clear the EEPROM space containing the user build info string.
-    void settings_clear_build_info() { eeprom_put_char(EEPROM_ADDR_BUILD_INFO, 0); }
+    public void settings_clear_build_info() { eeprom_put_char(EEPROM_ADDR_BUILD_INFO, 0); }
 
 
     // Reads startup line from EEPROM. Updated pointed line string data.
@@ -216,7 +216,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Reads startup line from EEPROM. Updated pointed line string data.
-    bool settings_read_build_info(char[] line)
+    public bool settings_read_build_info(char[] line)
     {
       if (!(memcpy_from_eeprom_with_checksum(line, EEPROM_ADDR_BUILD_INFO, LINE_BUFFER_SIZE)))
       {
@@ -230,11 +230,11 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Read selected coordinate data from EEPROM. Updates pointed coord_data value.
-    bool settings_read_coord_data(byte coord_select, float[] coord_data)
+    public bool settings_read_coord_data(byte coord_select, float[] coord_data)
     {
       //TODO 
-      //uint addr = coord_select * (sizeof(float) * N_AXIS + 1) + EEPROM_ADDR_PARAMETERS;
-      //if (!(memcpy_from_eeprom_with_checksum((char*)coord_data, addr, sizeof(float)*Consts.N_AXIS))) {
+      //uint addr = coord_select * (sizeof(float) * NutsAndBolts.N_AXIS + 1) + EEPROM_ADDR_PARAMETERS;
+      //if (!(memcpy_from_eeprom_with_checksum((char*)coord_data, addr, sizeof(float)*Consts.NutsAndBolts.N_AXIS))) {
       //  // Reset with default zero vector
       //  clear_vector_float(coord_data); 
       //  settings_write_coord_data(coord_select,coord_data);
@@ -246,7 +246,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Reads Grbl global settings struct from EEPROM.
-    bool read_global_settings()
+    public bool read_global_settings()
     {
       // Check version-byte of eeprom
       byte version = eeprom_get_char(0);
@@ -265,7 +265,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // A helper method to set settings from command line
-    byte settings_store_global_setting(byte parameter, float value)
+    public byte settings_store_global_setting(byte parameter, float value)
     {
       if (value < 0.0) { return (STATUS_NEGATIVE_VALUE); }
       if (parameter >= AXIS_SETTINGS_START_VAL)
@@ -276,7 +276,7 @@ namespace bitLab.LaserCat.Grbl
         byte set_idx = 0;
         while (set_idx < AXIS_N_SETTINGS)
         {
-          if (parameter < N_AXIS)
+          if (parameter < NutsAndBolts.N_AXIS)
           {
             // Valid axis setting found.
             switch (set_idx)
@@ -291,7 +291,7 @@ namespace bitLab.LaserCat.Grbl
           else
           {
             set_idx++;
-            // If axis index greater than Consts.N_AXIS or setting index greater than number of axis settings, error out.
+            // If axis index greater than Consts.NutsAndBolts.N_AXIS or setting index greater than number of axis settings, error out.
             if ((parameter < AXIS_SETTINGS_INCREMENT) || (set_idx == AXIS_N_SETTINGS)) { return (STATUS_INVALID_STATEMENT); }
             parameter -= AXIS_SETTINGS_INCREMENT;
           }
@@ -374,7 +374,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Initialize the config subsystem
-    void settings_init()
+    public void settings_init()
     {
       if (!read_global_settings())
       {
@@ -391,7 +391,7 @@ namespace bitLab.LaserCat.Grbl
       }
 
       // Check all parameter data into a dummy variable. If error, reset to zero, otherwise do nothing.
-      float[] coord_data = new float[N_AXIS];
+      float[] coord_data = new float[NutsAndBolts.N_AXIS];
       byte i;
       for (i = 0; i <= SETTING_INDEX_NCOORD; i++)
       {
@@ -406,28 +406,28 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Returns step pin mask according to Grbl internal axis indexing.
-    byte get_step_pin_mask(byte axis_idx)
+    public byte get_step_pin_mask(byte axis_idx)
     {
-      if (axis_idx == X_AXIS) { return ((1 << X_STEP_BIT)); }
-      if (axis_idx == Y_AXIS) { return ((1 << Y_STEP_BIT)); }
+      if (axis_idx == NutsAndBolts.X_AXIS) { return ((1 << X_STEP_BIT)); }
+      if (axis_idx == NutsAndBolts.Y_AXIS) { return ((1 << Y_STEP_BIT)); }
       return ((1 << Z_STEP_BIT));
     }
 
 
     // Returns direction pin mask according to Grbl internal axis indexing.
-    byte get_direction_pin_mask(byte axis_idx)
+    public byte get_direction_pin_mask(byte axis_idx)
     {
-      if (axis_idx == X_AXIS) { return ((1 << X_DIRECTION_BIT)); }
-      if (axis_idx == Y_AXIS) { return ((1 << Y_DIRECTION_BIT)); }
+      if (axis_idx == NutsAndBolts.X_AXIS) { return ((1 << X_DIRECTION_BIT)); }
+      if (axis_idx == NutsAndBolts.Y_AXIS) { return ((1 << Y_DIRECTION_BIT)); }
       return ((1 << Z_DIRECTION_BIT));
     }
 
 
     // Returns limit pin mask according to Grbl internal axis indexing.
-    byte get_limit_pin_mask(byte axis_idx)
+    public byte get_limit_pin_mask(byte axis_idx)
     {
-      if (axis_idx == X_AXIS) { return ((1 << X_LIMIT_BIT)); }
-      if (axis_idx == Y_AXIS) { return ((1 << Y_LIMIT_BIT)); }
+      if (axis_idx == NutsAndBolts.X_AXIS) { return ((1 << X_LIMIT_BIT)); }
+      if (axis_idx == NutsAndBolts.Y_AXIS) { return ((1 << Y_LIMIT_BIT)); }
       return ((1 << Z_LIMIT_BIT));
     }
 

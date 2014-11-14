@@ -24,7 +24,7 @@ namespace bitLab.LaserCat.Grbl
     public const float DEFAULT_Z_MAX_TRAVEL = 200.0f; // mm
     public const byte DEFAULT_STEP_PULSE_MICROSECONDS = 10;
     public const byte DEFAULT_STEPPING_INVERT_MASK = 0;
-    public const byte DEFAULT_DIRECTION_INVERT_MASK = ((1 << Grbl.Y_AXIS) | (1 << Grbl.Z_AXIS));
+    public const byte DEFAULT_DIRECTION_INVERT_MASK = ((1 << NutsAndBolts.Y_AXIS) | (1 << NutsAndBolts.Z_AXIS));
     public const byte DEFAULT_STEPPER_IDLE_LOCK_TIME = 25; // msec (0-254, 255 keeps steppers enabled)
     public const byte DEFAULT_STATUS_REPORT_MASK = ((Grbl.BITFLAG_RT_STATUS_MACHINE_POSITION) | (Grbl.BITFLAG_RT_STATUS_WORK_POSITION));
     public const float DEFAULT_JUNCTION_DEVIATION = 0.02f; // mm
@@ -50,7 +50,7 @@ namespace bitLab.LaserCat.Grbl
     //  // driven by three Pololu A4988 stepper drivers with a 30V, 6A power supply at 1.5A per winding.
     //  #define MICROSTEPS 2
     //  #define STEPS_PER_REV 200.0
-    //  #define MM_PER_REV (0.050*MM_PER_INCH) // 0.050 inch/rev leadscrew
+    //  #define MM_PER_REV (0.050*NutsAndBolts.MM_PER_INCH) // 0.050 inch/rev leadscrew
     //  #define DEFAULT_X_STEPS_PER_MM (STEPS_PER_REV*MICROSTEPS/MM_PER_REV)
     //  #define DEFAULT_Y_STEPS_PER_MM (STEPS_PER_REV*MICROSTEPS/MM_PER_REV)
     //  #define DEFAULT_Z_STEPS_PER_MM (STEPS_PER_REV*MICROSTEPS/MM_PER_REV)
@@ -65,7 +65,7 @@ namespace bitLab.LaserCat.Grbl
     //  #define DEFAULT_Z_MAX_TRAVEL 170.0 // mm
     //  #define DEFAULT_STEP_PULSE_MICROSECONDS 10
     //  #define DEFAULT_STEPPING_INVERT_MASK 0
-    //  #define DEFAULT_DIRECTION_INVERT_MASK ((1<<Y_AXIS)|(1<<Z_AXIS))  
+    //  #define DEFAULT_DIRECTION_INVERT_MASK ((1<<NutsAndBolts.Y_AXIS)|(1<<NutsAndBolts.Z_AXIS))  
     //  #define DEFAULT_STEPPER_IDLE_LOCK_TIME 25 // msec (0-254, 255 keeps steppers enabled)
     //  #define DEFAULT_STATUS_REPORT_MASK ((BITFLAG_RT_STATUS_MACHINE_POSITION)|(BITFLAG_RT_STATUS_WORK_POSITION))
     //  #define DEFAULT_JUNCTION_DEVIATION 0.02 // mm
@@ -89,7 +89,7 @@ namespace bitLab.LaserCat.Grbl
     //  // grblShield with a 24V, 4.2A power supply.
     //  #define MICROSTEPS_XY 8
     //  #define STEP_REVS_XY 400
-    //  #define MM_PER_REV_XY (0.08*18*MM_PER_INCH) // 0.08 in belt pitch, 18 pulley teeth
+    //  #define MM_PER_REV_XY (0.08*18*NutsAndBolts.MM_PER_INCH) // 0.08 in belt pitch, 18 pulley teeth
     //  #define MICROSTEPS_Z 2
     //  #define STEP_REVS_Z 400
     //  #define MM_PER_REV_Z 1.250 // 1.25 mm/rev leadscrew
@@ -107,7 +107,7 @@ namespace bitLab.LaserCat.Grbl
     //  #define DEFAULT_Z_MAX_TRAVEL 200.0 // mm
     //  #define DEFAULT_STEP_PULSE_MICROSECONDS 10
     //  #define DEFAULT_STEPPING_INVERT_MASK 0
-    //  #define DEFAULT_DIRECTION_INVERT_MASK ((1<<Y_AXIS)|(1<<Z_AXIS))  
+    //  #define DEFAULT_DIRECTION_INVERT_MASK ((1<<NutsAndBolts.Y_AXIS)|(1<<NutsAndBolts.Z_AXIS))  
     //  #define DEFAULT_STEPPER_IDLE_LOCK_TIME 255 // msec (0-254, 255 keeps steppers enabled)
     //  #define DEFAULT_STATUS_REPORT_MASK ((BITFLAG_RT_STATUS_MACHINE_POSITION)|(BITFLAG_RT_STATUS_WORK_POSITION))
     //  #define DEFAULT_JUNCTION_DEVIATION 0.05 // mm
@@ -149,7 +149,7 @@ namespace bitLab.LaserCat.Grbl
     //  #define DEFAULT_Z_MAX_TRAVEL 100.0 // mm
     //  #define DEFAULT_STEP_PULSE_MICROSECONDS 10
     //  #define DEFAULT_STEPPING_INVERT_MASK 0
-    //  #define DEFAULT_DIRECTION_INVERT_MASK ((1<<X_AXIS)|(1<<Z_AXIS))
+    //  #define DEFAULT_DIRECTION_INVERT_MASK ((1<<NutsAndBolts.X_AXIS)|(1<<NutsAndBolts.Z_AXIS))
     //  #define DEFAULT_STEPPER_IDLE_LOCK_TIME 255 // msec (0-254, 255 keeps steppers enabled)
     //  #define DEFAULT_STATUS_REPORT_MASK ((BITFLAG_RT_STATUS_MACHINE_POSITION)|(BITFLAG_RT_STATUS_WORK_POSITION))
     //  #define DEFAULT_JUNCTION_DEVIATION 0.05 // mm
@@ -189,7 +189,7 @@ namespace bitLab.LaserCat.Grbl
     //  #define DEFAULT_Z_MAX_TRAVEL 150.0 // mm
     //  #define DEFAULT_STEP_PULSE_MICROSECONDS 10
     //  #define DEFAULT_STEPPING_INVERT_MASK 0
-    //  #define DEFAULT_DIRECTION_INVERT_MASK ((1<<Y_AXIS))  
+    //  #define DEFAULT_DIRECTION_INVERT_MASK ((1<<NutsAndBolts.Y_AXIS))  
     //  #define DEFAULT_STEPPER_IDLE_LOCK_TIME 25 // msec (0-254, 255 keeps steppers enabled)
     //  #define DEFAULT_STATUS_REPORT_MASK ((BITFLAG_RT_STATUS_MACHINE_POSITION)|(BITFLAG_RT_STATUS_WORK_POSITION))
     //  #define DEFAULT_JUNCTION_DEVIATION 0.02 // mm

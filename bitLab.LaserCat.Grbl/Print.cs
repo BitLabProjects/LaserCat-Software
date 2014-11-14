@@ -12,13 +12,13 @@ namespace bitLab.LaserCat.Grbl
     {
       return s[0];
     }
-    void printPgmString(char* s)
+    public void printPgmString(char* s)
     {
       char c;
       while ((c = pgm_read_byte_near(s++))!=0)
         serial_write(c);
     }
-    void printString(char[] s)
+    public void printString(char[] s)
     {
       //while (*s)
       //  serial_write(*s++);
@@ -26,7 +26,7 @@ namespace bitLab.LaserCat.Grbl
         serial_write(c);
     }
 
-    void serial_write(char data)
+    public void serial_write(char data)
     {
       //TODO
 

@@ -19,7 +19,7 @@ namespace bitLab.LaserCat.Grbl
     // responses.
     // NOTE: In silent mode, all error codes are greater than zero.
     // TODO: Install silent mode to return only numeric values, primarily for GUIs.
-    void report_status_message(byte status_code)
+    public void report_status_message(byte status_code)
     {
       if (status_code == 0)
       { // STATUS_OK
@@ -70,7 +70,7 @@ namespace bitLab.LaserCat.Grbl
       }
     }
 
-    void print_uint8_base10(byte n)
+    public void print_uint8_base10(byte n)
     {
       //TODO
       //if (n == 0) {
@@ -91,7 +91,7 @@ namespace bitLab.LaserCat.Grbl
     }
 
     // Prints alarm messages.
-    void report_alarm_message(int alarm_code)
+    public void report_alarm_message(int alarm_code)
     {
       printPgmString(PSTR("ALARM: "));
       switch (alarm_code)
@@ -113,7 +113,7 @@ namespace bitLab.LaserCat.Grbl
     // NOTE: For interfaces, messages are always placed within brackets. And if silent mode
     // is installed, the message number codes are less than zero.
     // TODO: Install silence feedback messages option in settings
-    void report_feedback_message(int message_code)
+    public void report_feedback_message(int message_code)
     {
       printPgmString(PSTR("["));
       switch (message_code)
@@ -134,13 +134,13 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Welcome message
-    void report_init_message()
+    public void report_init_message()
     {
       printPgmString(PSTR("\r\nGrbl " + GRBL_VERSION + " ['$' for help]\r\n"));
     }
 
     // Grbl help message
-    void report_grbl_help()
+    public void report_grbl_help()
     {
       printPgmString(PSTR("$$ (view Grbl settings)\r\n" +
                           "$# (view # parameters)\r\n" +
@@ -163,7 +163,7 @@ namespace bitLab.LaserCat.Grbl
     // NOTE: The numbering scheme here must correlate to storing in settings.c
 
     //TODO
-    void report_grbl_settings() {
+    public void report_grbl_settings() {
     //  // Print Grbl settings.
 
     //  //printPgmString(PSTR("$0=")); print_uint8_base10(settings.pulse_microseconds);
@@ -196,7 +196,7 @@ namespace bitLab.LaserCat.Grbl
     //  byte idx, set_idx;
     //  byte val = AXIS_SETTINGS_START_VAL;
     //  for (set_idx=0; set_idx<AXIS_N_SETTINGS; set_idx++) {
-    //    for (idx=0; idx<N_AXIS; idx++) {
+    //    for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) {
     //      printPgmString(PSTR("$"));
     //      print_uint8_base10(val+idx);
     //      printPgmString(PSTR("="));
@@ -208,9 +208,9 @@ namespace bitLab.LaserCat.Grbl
     //      }
     //      printPgmString(PSTR(" ("));
     //      switch (idx) {
-    //        case X_AXIS: printPgmString(PSTR("x")); break;
-    //        case Y_AXIS: printPgmString(PSTR("y")); break;
-    //        case Z_AXIS: printPgmString(PSTR("z")); break;
+    //        case NutsAndBolts.X_AXIS: printPgmString(PSTR("x")); break;
+    //        case NutsAndBolts.Y_AXIS: printPgmString(PSTR("y")); break;
+    //        case NutsAndBolts.Z_AXIS: printPgmString(PSTR("z")); break;
     //      }
     //      switch (set_idx) {
     //        case 0: printPgmString(PSTR(", step/mm")); break;
@@ -228,26 +228,26 @@ namespace bitLab.LaserCat.Grbl
     //// Prints current probe parameters. Upon a probe command, these parameters are updated upon a
     //// successful probe or upon a failed probe with the G38.3 without errors command (if supported). 
     //// These values are retained until Grbl is power-cycled, whereby they will be re-zeroed.
-    void report_probe_parameters()
+    public void report_probe_parameters()
     {
     //  uint8_t i;
-    //  float print_position[N_AXIS];
+    //  float print_position[NutsAndBolts.N_AXIS];
 
     //  // Report in terms of machine position.
     //  printPgmString(PSTR("[PRB:")); 
-    //  for (i=0; i< N_AXIS; i++) {
+    //  for (i=0; i< NutsAndBolts.N_AXIS; i++) {
     //    print_position[i] = sys.probe_position[i]/settings.steps_per_mm[i];
     //    printFloat_CoordValue(print_position[i]);
-    //    if (i < (N_AXIS-1)) { printPgmString(PSTR(",")); }
+    //    if (i < (NutsAndBolts.N_AXIS-1)) { printPgmString(PSTR(",")); }
     //  }  
     //  printPgmString(PSTR("]\r\n"));
     }
 
 
     //// Prints Grbl NGC parameters (coordinate offsets, probing)
-    void report_ngc_parameters()
+    public void report_ngc_parameters()
     {
-    //  float coord_data[N_AXIS];
+    //  float coord_data[NutsAndBolts.N_AXIS];
     //  uint8_t coord_select, i;
     //  for (coord_select = 0; coord_select <= SETTING_INDEX_NCOORD; coord_select++) { 
     //    if (!(settings_read_coord_data(coord_select,coord_data))) { 
@@ -261,16 +261,16 @@ namespace bitLab.LaserCat.Grbl
     //      default: print_uint8_base10(coord_select+54); break; // G54-G59
     //    }  
     //    printPgmString(PSTR(":"));         
-    //    for (i=0; i<N_AXIS; i++) {
+    //    for (i=0; i<NutsAndBolts.N_AXIS; i++) {
     //      printFloat_CoordValue(coord_data[i]);
-    //      if (i < (N_AXIS-1)) { printPgmString(PSTR(",")); }
+    //      if (i < (NutsAndBolts.N_AXIS-1)) { printPgmString(PSTR(",")); }
     //      else { printPgmString(PSTR("]\r\n")); }
     //    } 
     //  }
     //  printPgmString(PSTR("[G92:")); // Print G92,G92.1 which are not persistent in memory
-    //  for (i=0; i<N_AXIS; i++) {
+    //  for (i=0; i<NutsAndBolts.N_AXIS; i++) {
     //    printFloat_CoordValue(gc_state.coord_offset[i]);
-    //    if (i < (N_AXIS-1)) { printPgmString(PSTR(",")); }
+    //    if (i < (NutsAndBolts.N_AXIS-1)) { printPgmString(PSTR(",")); }
     //    else { printPgmString(PSTR("]\r\n")); }
     //  } 
     //  printPgmString(PSTR("[TLO:")); // Print tool length offset value
@@ -281,7 +281,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     //// Print current gcode parser mode state
-    void report_gcode_modes()
+    public void report_gcode_modes()
     {
     //  switch (gc_state.modal.motion) {
     //    case MOTION_MODE_SEEK : printPgmString(PSTR("[G0")); break;
@@ -339,7 +339,7 @@ namespace bitLab.LaserCat.Grbl
     }
 
     //// Prints specified startup line
-    void report_startup_line(byte n, char[] line)
+    public void report_startup_line(byte n, char[] line)
     {
     //  printPgmString(PSTR("$N")); print_uint8_base10(n);
     //  printPgmString(PSTR("=")); printString(line);
@@ -348,7 +348,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     //// Prints build info line
-    void report_build_info(char[] line)
+    public void report_build_info(char[] line)
     {
     //  printPgmString(PSTR("[" GRBL_VERSION "." GRBL_VERSION_BUILD ":"));
     //  printString(line);
@@ -361,16 +361,16 @@ namespace bitLab.LaserCat.Grbl
     // // specific needs, but the desired real-time data report must be as short as possible. This is
     // // requires as it minimizes the computational overhead and allows grbl to keep running smoothly, 
     // // especially during g-code programs with fast, short line segments and high frequency reports (5-20Hz).
-    void report_realtime_status()
+    public void report_realtime_status()
     {
     //  // **Under construction** Bare-bones status report. Provides real-time machine position relative to 
     //  // the system power on location (0,0,0) and work coordinate position (G54 and G92 applied). Eventually
     //  // to be added are distance to go on block, processed block id, and feed rate. Also a settings bitmask
     //  // for a user to select the desired real-time data.
     //  uint8_t i;
-    //  int32_t current_position[N_AXIS]; // Copy current state of the system position variable
+    //  int32_t current_position[NutsAndBolts.N_AXIS]; // Copy current state of the system position variable
     //  memcpy(current_position,sys.position,sizeof(sys.position));
-    //  float print_position[N_AXIS];
+    //  float print_position[NutsAndBolts.N_AXIS];
 
     //  // Report current machine state
     //  switch (sys.state) {
@@ -385,32 +385,32 @@ namespace bitLab.LaserCat.Grbl
 
     //  // If reporting a position, convert the current step count (current_position) to millimeters.
     //  if (bit_istrue(settings.status_report_mask,(BITFLAG_RT_STATUS_MACHINE_POSITION | BITFLAG_RT_STATUS_WORK_POSITION))) {
-    //    for (i=0; i< N_AXIS; i++) { print_position[i] = current_position[i]/settings.steps_per_mm[i]; }
+    //    for (i=0; i< NutsAndBolts.N_AXIS; i++) { print_position[i] = current_position[i]/settings.steps_per_mm[i]; }
     //  }
 
     //  // Report machine position
     //  if (bit_istrue(settings.status_report_mask,BITFLAG_RT_STATUS_MACHINE_POSITION)) {
     //    printPgmString(PSTR(",MPos:")); 
-    ////     print_position[X_AXIS] = 0.5*current_position[X_AXIS]/settings.steps_per_mm[X_AXIS]; 
-    ////     print_position[Z_AXIS] = 0.5*current_position[Y_AXIS]/settings.steps_per_mm[Y_AXIS]; 
-    ////     print_position[Y_AXIS] = print_position[X_AXIS]-print_position[Z_AXIS]);
-    ////     print_position[X_AXIS] -= print_position[Z_AXIS];    
-    ////     print_position[Z_AXIS] = current_position[Z_AXIS]/settings.steps_per_mm[Z_AXIS];     
-    //    for (i=0; i< N_AXIS; i++) {
+    ////     print_position[NutsAndBolts.X_AXIS] = 0.5*current_position[NutsAndBolts.X_AXIS]/settings.steps_per_mm[NutsAndBolts.X_AXIS]; 
+    ////     print_position[NutsAndBolts.Z_AXIS] = 0.5*current_position[NutsAndBolts.Y_AXIS]/settings.steps_per_mm[NutsAndBolts.Y_AXIS]; 
+    ////     print_position[NutsAndBolts.Y_AXIS] = print_position[NutsAndBolts.X_AXIS]-print_position[NutsAndBolts.Z_AXIS]);
+    ////     print_position[NutsAndBolts.X_AXIS] -= print_position[NutsAndBolts.Z_AXIS];    
+    ////     print_position[NutsAndBolts.Z_AXIS] = current_position[NutsAndBolts.Z_AXIS]/settings.steps_per_mm[NutsAndBolts.Z_AXIS];     
+    //    for (i=0; i< NutsAndBolts.N_AXIS; i++) {
     //      printFloat_CoordValue(print_position[i]);
-    //      if (i < (N_AXIS-1)) { printPgmString(PSTR(",")); }
+    //      if (i < (NutsAndBolts.N_AXIS-1)) { printPgmString(PSTR(",")); }
     //    }
     //  }
 
     //  // Report work position
     //  if (bit_istrue(settings.status_report_mask,BITFLAG_RT_STATUS_WORK_POSITION)) {
     //    printPgmString(PSTR(",WPos:")); 
-    //    for (i=0; i< N_AXIS; i++) {
+    //    for (i=0; i< NutsAndBolts.N_AXIS; i++) {
     //      // Apply work coordinate offsets and tool length offset to current position.
     //      print_position[i] -= gc_state.coord_system[i]+gc_state.coord_offset[i];
     //      if (i == TOOL_LENGTH_OFFSET_AXIS) { print_position[i] -= gc_state.tool_length_offset; }    
     //      printFloat_CoordValue(print_position[i]);
-    //      if (i < (N_AXIS-1)) { printPgmString(PSTR(",")); }
+    //      if (i < (NutsAndBolts.N_AXIS-1)) { printPgmString(PSTR(",")); }
     //    }
     //  }
 

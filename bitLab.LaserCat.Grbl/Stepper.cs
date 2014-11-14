@@ -22,10 +22,10 @@ namespace bitLab.LaserCat.Grbl
         state = 0;
         execute = 0;
         homing_axis_lock = 0;
-        position = new int[N_AXIS];
+        position = new int[NutsAndBolts.N_AXIS];
         auto_start = 0;
         probe_state = 0;
-        probe_position = new int[N_AXIS];
+        probe_position = new int[NutsAndBolts.N_AXIS];
       }
     } ;
 
@@ -40,7 +40,7 @@ namespace bitLab.LaserCat.Grbl
     public struct st_block_t
     {
       public byte direction_bits;
-      public fixed uint steps[(int)N_AXIS];
+      public fixed uint steps[(int)NutsAndBolts.N_AXIS];
       public uint step_event_count;
     };
 
@@ -74,7 +74,7 @@ namespace bitLab.LaserCat.Grbl
       public byte step_pulse_time;  // Step pulse reset time after step rise
       public byte step_outbits;         // The next stepping-bits to be output
       public byte dir_outbits;
-      public fixed uint steps[(int)N_AXIS];
+      public fixed uint steps[(int)NutsAndBolts.N_AXIS];
       public short step_count;       // Steps remaining in line segment motion  
       public byte exec_block_index; // Tracks the current st_block index. Change indicates new block.
       public st_block_t* exec_block;   // Pointer to the block data for the segment being executed
@@ -164,7 +164,7 @@ namespace bitLab.LaserCat.Grbl
 
     // Stepper state initialization. Cycle should only start if the st.cycle_start flag is
     // enabled. Startup init and limits call this function but shouldn't start the cycle.
-    void st_wake_up()
+    public void st_wake_up()
     {
       // Enable stepper drivers.
       if (bit_istrue(settings.flags, BITFLAG_INVERT_ST_ENABLE)) { STEPPERS_DISABLE_PORT |= (1 << STEPPERS_DISABLE_BIT); }
@@ -180,14 +180,14 @@ namespace bitLab.LaserCat.Grbl
         if (STEP_PULSE_DELAY == 10)
         {
           // Set total step pulse time after direction pin set. Ad hoc computation from oscilloscope.
-          st.step_pulse_time = (byte)(-(((settings.pulse_microseconds + STEP_PULSE_DELAY - 2) * TICKS_PER_MICROSECOND) >> 3));
+          st.step_pulse_time = (byte)(-(((settings.pulse_microseconds + STEP_PULSE_DELAY - 2) * NutsAndBolts.TICKS_PER_MICROSECOND) >> 3));
           // Set delay between direction pin write and step command.
           //TODO
-          //OCR0A = -(((settings.pulse_microseconds)*TICKS_PER_MICROSECOND) >> 3);
+          //OCR0A = -(((settings.pulse_microseconds)*NutsAndBolts.TICKS_PER_MICROSECOND) >> 3);
         }
         else // Normal operation
           // Set step pulse time. Ad hoc computation from oscilloscope. Uses two's complement.
-          st.step_pulse_time = (byte)(-(((settings.pulse_microseconds - 2) * TICKS_PER_MICROSECOND) >> 3));
+          st.step_pulse_time = (byte)(-(((settings.pulse_microseconds - 2) * NutsAndBolts.TICKS_PER_MICROSECOND) >> 3));
 
 
         // Enable Stepper Driver Interrupt
@@ -197,7 +197,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Stepper shutdown
-    void st_go_idle()
+    public void st_go_idle()
     {
       // Disable Stepper Driver Interrupt. Allow Stepper Port Reset Interrupt to finish, if active.
       //TODO TIMSK1 &= ~(1<<OCIE1A); // Disable Timer1 interrupt
@@ -323,9 +323,9 @@ namespace bitLab.LaserCat.Grbl
 
     //      #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
     //        // With AMASS enabled, adjust Bresenham axis increment counters according to AMASS level.
-    //        st.steps[X_AXIS] = st.exec_block->steps[X_AXIS] >> st.exec_segment->amass_level;
-    //        st.steps[Y_AXIS] = st.exec_block->steps[Y_AXIS] >> st.exec_segment->amass_level;
-    //        st.steps[Z_AXIS] = st.exec_block->steps[Z_AXIS] >> st.exec_segment->amass_level;
+    //        st.steps[NutsAndBolts.X_AXIS] = st.exec_block->steps[NutsAndBolts.X_AXIS] >> st.exec_segment->amass_level;
+    //        st.steps[NutsAndBolts.Y_AXIS] = st.exec_block->steps[NutsAndBolts.Y_AXIS] >> st.exec_segment->amass_level;
+    //        st.steps[NutsAndBolts.Z_AXIS] = st.exec_block->steps[NutsAndBolts.Z_AXIS] >> st.exec_segment->amass_level;
     //      #endif
 
     //    } else {
@@ -345,37 +345,37 @@ namespace bitLab.LaserCat.Grbl
 
     //  // Execute step displacement profile by Bresenham line algorithm
     //  #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
-    //    st.counter_x += st.steps[X_AXIS];
+    //    st.counter_x += st.steps[NutsAndBolts.X_AXIS];
     //  #else
-    //    st.counter_x += st.exec_block->steps[X_AXIS];
+    //    st.counter_x += st.exec_block->steps[NutsAndBolts.X_AXIS];
     //  #endif  
     //  if (st.counter_x > st.exec_block->step_event_count) {
     //    st.step_outbits |= (1<<X_STEP_BIT);
     //    st.counter_x -= st.exec_block->step_event_count;
-    //    if (st.exec_block->direction_bits & (1<<X_DIRECTION_BIT)) { sys.position[X_AXIS]--; }
-    //    else { sys.position[X_AXIS]++; }
+    //    if (st.exec_block->direction_bits & (1<<X_DIRECTION_BIT)) { sys.position[NutsAndBolts.X_AXIS]--; }
+    //    else { sys.position[NutsAndBolts.X_AXIS]++; }
     //  }
     //  #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
-    //    st.counter_y += st.steps[Y_AXIS];
+    //    st.counter_y += st.steps[NutsAndBolts.Y_AXIS];
     //  #else
-    //    st.counter_y += st.exec_block->steps[Y_AXIS];
+    //    st.counter_y += st.exec_block->steps[NutsAndBolts.Y_AXIS];
     //  #endif    
     //  if (st.counter_y > st.exec_block->step_event_count) {
     //    st.step_outbits |= (1<<Y_STEP_BIT);
     //    st.counter_y -= st.exec_block->step_event_count;
-    //    if (st.exec_block->direction_bits & (1<<Y_DIRECTION_BIT)) { sys.position[Y_AXIS]--; }
-    //    else { sys.position[Y_AXIS]++; }
+    //    if (st.exec_block->direction_bits & (1<<Y_DIRECTION_BIT)) { sys.position[NutsAndBolts.Y_AXIS]--; }
+    //    else { sys.position[NutsAndBolts.Y_AXIS]++; }
     //  }
     //  #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
-    //    st.counter_z += st.steps[Z_AXIS];
+    //    st.counter_z += st.steps[NutsAndBolts.Z_AXIS];
     //  #else
-    //    st.counter_z += st.exec_block->steps[Z_AXIS];
+    //    st.counter_z += st.exec_block->steps[NutsAndBolts.Z_AXIS];
     //  #endif  
     //  if (st.counter_z > st.exec_block->step_event_count) {
     //    st.step_outbits |= (1<<Z_STEP_BIT);
     //    st.counter_z -= st.exec_block->step_event_count;
-    //    if (st.exec_block->direction_bits & (1<<Z_DIRECTION_BIT)) { sys.position[Z_AXIS]--; }
-    //    else { sys.position[Z_AXIS]++; }
+    //    if (st.exec_block->direction_bits & (1<<Z_DIRECTION_BIT)) { sys.position[NutsAndBolts.Z_AXIS]--; }
+    //    else { sys.position[NutsAndBolts.Z_AXIS]++; }
     //  }  
 
     //  // During a homing cycle, lock out and prevent desired axes from moving.
@@ -428,12 +428,12 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Generates the step and direction port invert masks used in the Stepper Interrupt Driver.
-    void st_generate_step_dir_invert_masks()
+    public void st_generate_step_dir_invert_masks()
     {
       byte idx;
       step_port_invert_mask = 0;
       dir_port_invert_mask = 0;
-      for (idx = 0; idx < N_AXIS; idx++)
+      for (idx = 0; idx < NutsAndBolts.N_AXIS; idx++)
       {
         if (bit_istrue(settings.step_invert_mask, bit(idx))) { step_port_invert_mask |= get_step_pin_mask(idx); }
         if (bit_istrue(settings.dir_invert_mask, bit(idx))) { dir_port_invert_mask |= get_direction_pin_mask(idx); }
@@ -442,7 +442,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Reset and clear stepper subsystem variables
-    void st_reset()
+    public void st_reset()
     {
       // Initialize stepper driver idle state.
       st_go_idle();
@@ -467,7 +467,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Initialize and start the stepper motor subsystem
-    void stepper_init()
+    public void stepper_init()
     {
       // Configure step and direction interface pins
       STEP_DDR |= STEP_MASK;
@@ -497,7 +497,7 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Called by planner_recalculate() when the executing block is updated by the new plan.
-    void st_update_plan_block_parameters()
+    public void st_update_plan_block_parameters()
     {
       if (pl_blockIdx != -1)
       { // Ignore if at start of a new block.
@@ -522,7 +522,7 @@ namespace bitLab.LaserCat.Grbl
        Currently, the segment buffer conservatively holds roughly up to 40-50 msec of steps.
        NOTE: Computation units are in steps, millimeters, and minutes.
     */
-    void st_prep_buffer()
+    public void st_prep_buffer()
     {
       while (segment_buffer_tail != segment_next_head)
       { // Check if we need to fill the buffer.
@@ -552,9 +552,9 @@ namespace bitLab.LaserCat.Grbl
               st_prep_block->direction_bits = block_buffer[pl_blockIdx].direction_bits;
               if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
               {
-                st_prep_block->steps[X_AXIS] = block_buffer[pl_blockIdx].steps[X_AXIS];
-                st_prep_block->steps[Y_AXIS] = block_buffer[pl_blockIdx].steps[Y_AXIS];
-                st_prep_block->steps[Z_AXIS] = block_buffer[pl_blockIdx].steps[Z_AXIS];
+                st_prep_block->steps[NutsAndBolts.X_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.X_AXIS];
+                st_prep_block->steps[NutsAndBolts.Y_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Y_AXIS];
+                st_prep_block->steps[NutsAndBolts.Z_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Z_AXIS];
                 st_prep_block->step_event_count = block_buffer[pl_blockIdx].step_event_count;
               }
               else
@@ -562,9 +562,9 @@ namespace bitLab.LaserCat.Grbl
                 // With AMASS enabled, simply bit-shift multiply all Bresenham data by the max AMASS 
                 // level, such that we never divide beyond the original data anywhere in the algorithm.
                 // If the original data is divided, we can lose a step from integer roundoff.
-                st_prep_block->steps[X_AXIS] = block_buffer[pl_blockIdx].steps[X_AXIS] << MAX_AMASS_LEVEL;
-                st_prep_block->steps[Y_AXIS] = block_buffer[pl_blockIdx].steps[Y_AXIS] << MAX_AMASS_LEVEL;
-                st_prep_block->steps[Z_AXIS] = block_buffer[pl_blockIdx].steps[Z_AXIS] << MAX_AMASS_LEVEL;
+                st_prep_block->steps[NutsAndBolts.X_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.X_AXIS] << MAX_AMASS_LEVEL;
+                st_prep_block->steps[NutsAndBolts.Y_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Y_AXIS] << MAX_AMASS_LEVEL;
+                st_prep_block->steps[NutsAndBolts.Z_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Z_AXIS] << MAX_AMASS_LEVEL;
                 st_prep_block->step_event_count = block_buffer[pl_blockIdx].step_event_count << MAX_AMASS_LEVEL;
               }
             }
@@ -815,7 +815,7 @@ namespace bitLab.LaserCat.Grbl
           prep.dt_remainder = (n_steps_remaining - steps_remaining) * inv_rate; // Update segment partial step time
 
           // Compute CPU cycles per step for the prepped segment.
-          ushort cycles = (ushort)System.Math.Ceiling((TICKS_PER_MICROSECOND * 1000000.0 * 60) * inv_rate); // (cycles/step)    
+          ushort cycles = (ushort)System.Math.Ceiling((NutsAndBolts.TICKS_PER_MICROSECOND * 1000000.0 * 60) * inv_rate); // (cycles/step)    
 
           if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
           {
