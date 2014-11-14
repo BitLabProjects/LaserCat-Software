@@ -39,7 +39,7 @@ namespace bitLab.Logging
 
     public static void LogError(string message)
     {
-      DispatchLogMessage(new LogMessage(DateTime.Now, message, ELogMessageType.Info));
+      DispatchLogMessage(new LogMessage(DateTime.Now, message, ELogMessageType.Error));
     }
 
     private static void DispatchLogMessage(LogMessage message)

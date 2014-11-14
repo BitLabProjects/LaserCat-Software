@@ -27,7 +27,7 @@ namespace bitLab.LaserCat.Model
       }
 
       mGCodeLines.AddRange(File.ReadAllLines(mCurrentGCodeFile));
-      Logging.Log.LogInfo(String.Format("Loaded GCode file '{0}':", fullFileName));
+      Logging.Log.LogInfo(String.Format("Loaded GCode file '{0}'", fullFileName));
       Logging.Log.LogInfo("Statistics");
       Logging.Log.LogInfo(String.Format(" Lines: {0}", mGCodeLines.Count));
     }
