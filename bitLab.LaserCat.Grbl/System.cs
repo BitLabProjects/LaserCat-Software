@@ -186,7 +186,7 @@ namespace bitLab.LaserCat.Grbl
 
           if (performDefault)
           {
-            if (read_float(line, ref char_counter, ref parameter) == 0) { return (STATUS_BAD_NUMBER_FORMAT); }
+            if (!read_float(line, ref char_counter, ref parameter)) { return (STATUS_BAD_NUMBER_FORMAT); }
             if (line[char_counter++] != '=') { return (STATUS_INVALID_STATEMENT); }
             if (helper_var != 0)
             { // Store startup line
@@ -207,7 +207,7 @@ namespace bitLab.LaserCat.Grbl
             }
             else
             { // Store global setting.
-              if (read_float(line, ref char_counter, ref value) == 0) { return (STATUS_BAD_NUMBER_FORMAT); }
+              if (!read_float(line, ref char_counter, ref value)) { return (STATUS_BAD_NUMBER_FORMAT); }
               if (line[char_counter] != 0) { return (STATUS_INVALID_STATEMENT); }
               return (settings_store_global_setting((byte)parameter, value));
             }

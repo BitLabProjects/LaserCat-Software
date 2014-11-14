@@ -19,12 +19,14 @@ namespace bitLab.LaserCat.Grbl
 
     public bool HasByte
     {
-      get { return mInputBuffer.Count > 0; }
+      get { lock (this) { return mInputBuffer.Count > 0; } }
     }
 
     public byte ReadByte()
     {
-      return mInputBuffer.Dequeue();
+      lock (this) {
+        return mInputBuffer.Dequeue();
+      }
     }
 
     public void WriteByte(byte value)
@@ -34,8 +36,11 @@ namespace bitLab.LaserCat.Grbl
 
     public void AddLineToInputBuffer(String line)
     {
-      foreach (char c in line)
-        mInputBuffer.Enqueue(Convert.ToByte(c)); //TODO Use an appropriate encoding
+      lock (this)
+      {
+        foreach (char c in line)
+          mInputBuffer.Enqueue(Convert.ToByte(c)); //TODO Use an appropriate encoding
+      }
     }
   }
 }

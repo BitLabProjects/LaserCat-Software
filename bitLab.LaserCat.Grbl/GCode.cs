@@ -306,7 +306,7 @@ namespace bitLab.LaserCat.Grbl
         letter = Convert.ToChar(line[char_counter]);
         if((letter < 'A') || (letter > 'Z')) { return(GrblFirmware.STATUS_EXPECTED_COMMAND_LETTER); } // [Expected word letter]
         char_counter++;
-        if (mGrbl.read_float(line, ref char_counter, ref value) == 0) { return (GrblFirmware.STATUS_BAD_NUMBER_FORMAT); } // [Expected word value]
+        if (!mGrbl.read_float(line, ref char_counter, ref value)) { return (GrblFirmware.STATUS_BAD_NUMBER_FORMAT); } // [Expected word value]
 
         // Convert values to smaller uint8 significand and mantissa values for parsing this word.
         // NOTE: Mantissa is multiplied by 100 to catch non-integer command values. This is more 

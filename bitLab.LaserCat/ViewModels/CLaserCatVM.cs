@@ -17,7 +17,7 @@ namespace bitLab.LaserCat.ViewModels
     {
       ConsoleVM = new CConsoleVM(false);
       LoadTestGCode = new CDelegateCommand((obj) => {
-        string TestGCodeFile = Path.Combine(Environment.CurrentDirectory, @"..\..\Data\TestGCode.nc");
+        string TestGCodeFile = Path.Combine(Environment.CurrentDirectory, @"..\..\Data\TestGCodeSupported.nc");
         CLaserCat.Instance.LoadGCode(TestGCodeFile);
       });
       GrblStart = new CDelegateCommand((obj) => { CLaserCat.Instance.GrblStart(); });

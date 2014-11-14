@@ -50,7 +50,7 @@ namespace bitLab.LaserCat.Grbl
   
         // Reset Grbl primary systems.
         serial_reset_read_buffer(); // Clear serial read buffer
-        //TODO gc_init(); // Set g-code parser to default state
+        mGCode.gc_init(); // Set g-code parser to default state
         spindle_init();
         coolant_init();
         //TODO limits_init(); 
@@ -60,7 +60,7 @@ namespace bitLab.LaserCat.Grbl
 
         // Sync cleared gcode and planner positions to current system position.
         plan_sync_position();
-        //TODO gc_sync_position();
+        mGCode.gc_sync_position();
 
         // Reset system variables.
         sys.abort = 0;
