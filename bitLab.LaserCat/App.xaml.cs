@@ -13,5 +13,10 @@ namespace bitLab.LaserCat
   /// </summary>
   public partial class App : Application
   {
+    private void Application_Startup_1(object sender, StartupEventArgs e)
+    {
+      var app = new CLaserCatApp();
+      app.Startup();
+    }
   }
 }

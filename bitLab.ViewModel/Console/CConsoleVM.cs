@@ -13,8 +13,10 @@ namespace bitLab.ViewModel.Console
 {
   public class CConsoleVM: CBaseVM, ILogListener
   {
-    public CConsoleVM()
+    private bool mRemoveAfterDelay;
+    public CConsoleVM(bool RemoveAfterDelay)
     {
+      mRemoveAfterDelay = RemoveAfterDelay;
       Lines = new ObservableCollection<CConsoleLineVM>();
       Log.Register(this);
     }
@@ -29,7 +31,8 @@ namespace bitLab.ViewModel.Console
     private void AddConsoleLine(CConsoleLineVM line)
     {
       Invoke(() => Lines.Add(line));
-      RemoveLineWithDelay(line, 5000);
+      if (mRemoveAfterDelay)
+        RemoveLineWithDelay(line, 5000);
     }
 
     private void RemoveLineWithDelay(CConsoleLineVM line, int delayMillisec)

@@ -33,6 +33,9 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject>bitLab.LaserCat.App</StartupObject>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -53,6 +56,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CLaserCatApp.cs" />
+    <Compile Include="UConsole.xaml.cs">
+      <DependentUpon>UConsole.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModels\CLaserCatVM.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -65,6 +73,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="UConsole.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -98,14 +110,16 @@
       <Project>{ebd51f58-1fd6-40ac-a0e2-432b7965a4c0}</Project>
       <Name>bitLab.LaserCat.Grbl</Name>
     </ProjectReference>
+    <ProjectReference Include="..\bitLab.Logging\bitLab.Logging.csproj">
+      <Project>{a25dc3f3-71df-4145-93e3-a7c5eca652b1}</Project>
+      <Name>bitLab.Logging</Name>
+    </ProjectReference>
     <ProjectReference Include="..\bitLab.ViewModel\bitLab.ViewModel.csproj">
       <Project>{830d827e-3603-4564-adcd-a084f5581fd1}</Project>
       <Name>bitLab.ViewModel</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ViewModels\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
