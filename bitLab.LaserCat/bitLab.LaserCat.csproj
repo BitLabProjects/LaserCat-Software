@@ -8,7 +8,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>LaserCat_Net</RootNamespace>
-    <AssemblyName>LaserCat-Net</AssemblyName>
+    <AssemblyName>bitLab.LaserCat</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -94,9 +94,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\LaserCat-Net.Grbl\LaserCat-Net.Grbl.csproj">
+    <ProjectReference Include="..\bitLab.LaserCat.Grbl\bitLab.LaserCat.Grbl.csproj">
       <Project>{ebd51f58-1fd6-40ac-a0e2-432b7965a4c0}</Project>
-      <Name>LaserCat-Net.Grbl</Name>
+      <Name>bitLab.LaserCat.Grbl</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
