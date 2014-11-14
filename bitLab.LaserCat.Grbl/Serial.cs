@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace grbl_pcnet
+namespace bitLab.LaserCat.Grbl
 {
   partial class Grbl
   {

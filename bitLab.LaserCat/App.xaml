@@ -1,4 +1,4 @@
-﻿<Application x:Class="LaserCat_Net.App"
+﻿<Application x:Class="bitLab.LaserCat.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">

@@ -1,4 +1,4 @@
-namespace grbl_pcnet
+namespace bitLab.LaserCat.Grbl
 {
   unsafe public partial class Grbl
   {

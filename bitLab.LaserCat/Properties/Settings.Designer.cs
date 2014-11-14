@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace LaserCat_Net.Properties
+namespace bitLab.LaserCat.Properties
 {
 
 

@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace LaserCat_Net
+namespace bitLab.LaserCat
 {
   /// <summary>
   /// Interaction logic for App.xaml

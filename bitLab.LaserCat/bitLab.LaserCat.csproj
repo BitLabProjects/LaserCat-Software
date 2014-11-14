@@ -7,7 +7,7 @@
     <ProjectGuid>{C13FCF02-027A-4BE4-9C56-D35A0DC7A677}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LaserCat_Net</RootNamespace>
+    <RootNamespace>bitLab.LaserCat</RootNamespace>
     <AssemblyName>bitLab.LaserCat</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -98,6 +98,13 @@
       <Project>{ebd51f58-1fd6-40ac-a0e2-432b7965a4c0}</Project>
       <Name>bitLab.LaserCat.Grbl</Name>
     </ProjectReference>
+    <ProjectReference Include="..\bitLab.ViewModel\bitLab.ViewModel.csproj">
+      <Project>{830d827e-3603-4564-adcd-a084f5581fd1}</Project>
+      <Name>bitLab.ViewModel</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ViewModels\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
