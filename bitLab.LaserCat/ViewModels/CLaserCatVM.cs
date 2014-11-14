@@ -20,13 +20,12 @@ namespace bitLab.LaserCat.ViewModels
         string TestGCodeFile = Path.Combine(Environment.CurrentDirectory, @"..\..\Data\TestGCode.nc");
         CLaserCat.Instance.LoadGCode(TestGCodeFile);
       });
-      GrblStart = new CDelegateCommand((obj) =>
-      {
-        CLaserCat.Instance.GrblStart();
-      });
+      GrblStart = new CDelegateCommand((obj) => { CLaserCat.Instance.GrblStart(); });
+      SendGCodeLine = new CDelegateCommand((obj) => { CLaserCat.Instance.SendGCodeLine(); });
     }
 
     public CDelegateCommand LoadTestGCode { get; set; }
-    public CDelegateCommand GrblStart { get; set; } 
+    public CDelegateCommand GrblStart { get; set; }
+    public CDelegateCommand SendGCodeLine { get; set; } 
   }
 }

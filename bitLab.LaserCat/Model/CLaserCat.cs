@@ -13,13 +13,25 @@ namespace bitLab.LaserCat.Model
   {
     private string mCurrentGCodeFile;
     private List<string> mGCodeLines;
+    private int mCurrentGCodeLineIndex;
+    private CInMemorySerialPort mSerialPort;
     private GrblFirmware mGrbl;
     private Task mGrblTask;
 
     private CLaserCat()
     {
       mGCodeLines = new List<String>();
-      mGrbl = new GrblFirmware(new GCode());
+      mSerialPort = new CInMemorySerialPort();
+      mGrbl = new GrblFirmware(new GCode(), mSerialPort);
+      mCurrentGCodeLineIndex = -1;
+    }
+
+    private bool CheckGrblIsStarted()
+    {
+      if (mGrblTask != null)
+        return true;
+      Log.LogError("Could not complete operation: Grbl is not started");
+      return false;
     }
 
     public void LoadGCode(string fullFileName)
@@ -31,6 +43,8 @@ namespace bitLab.LaserCat.Model
         return;
       }
 
+      mCurrentGCodeLineIndex = -1;
+      mGCodeLines.Clear();
       mGCodeLines.AddRange(File.ReadAllLines(mCurrentGCodeFile));
       Log.LogInfo(String.Format("Loaded GCode file '{0}'", fullFileName));
       Log.LogInfo("Statistics");
@@ -55,6 +69,21 @@ namespace bitLab.LaserCat.Model
 
       mGrblTask.Start();
       Log.LogInfo("Grbl started");
+    }
+
+    public void SendGCodeLine()
+    {
+      if (!CheckGrblIsStarted()) return;
+
+      if (mCurrentGCodeLineIndex + 1 >= mGCodeLines.Count)
+      {
+        Log.LogError("Last GCode line reached");
+        return;
+      }
+
+      mCurrentGCodeLineIndex += 1;
+      Log.LogInfo(String.Format("Adding GCode line '{0}'", mGCodeLines[mCurrentGCodeLineIndex]));
+      mSerialPort.AddLineToInputBuffer(mGCodeLines[mCurrentGCodeLineIndex] + '\n');
     }
 
     #region Singleton

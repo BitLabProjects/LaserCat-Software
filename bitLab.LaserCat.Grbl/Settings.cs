@@ -202,7 +202,8 @@ namespace bitLab.LaserCat.Grbl
     public bool settings_read_startup_line(byte n, char[] line)
     {
       //TODO
-      return false;
+      line[0] = '\0';
+      return true;
       //uint addr = n * (LINE_BUFFER_SIZE + 1) + EEPROM_ADDR_STARTUP_BLOCK;
       //if (!(memcpy_from_eeprom_with_checksum(line, addr, LINE_BUFFER_SIZE)))
       //{

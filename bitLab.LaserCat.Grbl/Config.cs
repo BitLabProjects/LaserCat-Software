@@ -21,10 +21,10 @@ namespace bitLab.LaserCat.Grbl
     // used, if they are available per user setup. Also, extended ASCII codes (>127), which are never in 
     // g-code programs, maybe selected for interface programs.
     // NOTE: If changed, manually update help message in report.c.
-    public const char CMD_STATUS_REPORT = '?';
-    public const char CMD_FEED_HOLD = '!';
-    public const char CMD_CYCLE_START = '~';
-    public const char CMD_RESET = '\u0018'; //0x18; // ctrl-x.
+    public const byte CMD_STATUS_REPORT = 63; //'?';
+    public const byte CMD_FEED_HOLD = 33; //'!';
+    public const byte CMD_CYCLE_START = 126; //'~';
+    public const byte CMD_RESET = 24; //'\u0018'; //0x18; // ctrl-x.
 
     // If homing is enabled, homing init lock sets Grbl into an alarm state upon power up. This forces
     // the user to perform the homing cycle (or override the locks) before doing anything else. This is

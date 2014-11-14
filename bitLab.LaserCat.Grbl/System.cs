@@ -67,7 +67,7 @@ namespace bitLab.LaserCat.Grbl
           report_status_message(STATUS_SETTING_READ_FAIL);
         } else {
           if (line[0] != 0) {
-            printString(line); // Echo startup line to indicate execution.
+            printPgmString(new String(line)); // Echo startup line to indicate execution.
             report_status_message(mGCode.gc_execute_line(line));
           }
         } 

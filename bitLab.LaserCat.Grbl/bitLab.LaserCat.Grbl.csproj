@@ -43,10 +43,12 @@
     <Compile Include="Config.cs" />
     <Compile Include="Consts.cs" />
     <Compile Include="CoolantControl.cs" />
+    <Compile Include="CInMemorySerialPort.cs" />
     <Compile Include="Defaults.cs" />
     <Compile Include="Eeprom.cs" />
     <Compile Include="GCode.cs" />
     <Compile Include="Grbl.cs" />
+    <Compile Include="ISerialPort.cs" />
     <Compile Include="Limits.cs" />
     <Compile Include="MotionControl.cs" />
     <Compile Include="NutsAndBolts.cs" />

@@ -24,23 +24,27 @@ namespace bitLab.LaserCat.Grbl
     public const int XON_CHAR = 0x11;
 
     byte[] serial_rx_buffer = new byte[RX_BUFFER_SIZE];
-    byte serial_rx_buffer_head = 0;
-    volatile byte serial_rx_buffer_tail = 0;
+    int serial_rx_buffer_head = 0;
+    int serial_rx_buffer_tail = 0;
 
     byte[] serial_tx_buffer = new byte[TX_BUFFER_SIZE];
-    byte serial_tx_buffer_head = 0;
-    volatile byte serial_tx_buffer_tail = 0;
+    int serial_tx_buffer_head = 0;
+    int serial_tx_buffer_tail = 0;
 
 
     //#ifdef ENABLE_XONXOFF
     byte flow_ctrl = XON_SENT; // Flow control state variable
     //#endif
-  
+
+    private bool IsRxBufferFull
+    {
+      get { return ((serial_rx_buffer_head + 1) % RX_BUFFER_SIZE) == serial_rx_buffer_tail; }
+    } 
 
     // Returns the number of bytes used in the RX serial buffer.
     public byte serial_get_rx_buffer_count()
     {
-      byte rtail = serial_rx_buffer_tail; // Copy to limit multiple calls to volatile
+      int rtail = serial_rx_buffer_tail; // Copy to limit multiple calls to volatile
       if (serial_rx_buffer_head >= rtail) { return(byte)(serial_rx_buffer_head-rtail); }
       return (byte)(RX_BUFFER_SIZE - (rtail-serial_rx_buffer_head));
     }
@@ -50,7 +54,7 @@ namespace bitLab.LaserCat.Grbl
     // NOTE: Not used except for debugging and ensuring no TX bottlenecks.
     public byte serial_get_tx_buffer_count()
     {
-      byte ttail = serial_tx_buffer_tail; // Copy to limit multiple calls to volatile
+      int ttail = serial_tx_buffer_tail; // Copy to limit multiple calls to volatile
       if (serial_tx_buffer_head >= ttail) { return(byte)(serial_tx_buffer_head-ttail); }
       return (byte)(TX_BUFFER_SIZE - (ttail-serial_tx_buffer_head));
     }
@@ -136,11 +140,13 @@ namespace bitLab.LaserCat.Grbl
       //TODO if (tail == serial_tx_buffer_head) { UCSR0B &= ~(1 << UDRIE0); }
     }
 
-
     // Fetches the first byte in the serial read buffer. Called by main program.
     public byte serial_read()
     {
-      byte tail = serial_rx_buffer_tail; // Temporary serial_rx_buffer_tail (to optimize for volatile)
+      //SB!Fill the buffer from mSerialPort
+      FillRxBuffer();
+
+      int tail = serial_rx_buffer_tail; // Temporary serial_rx_buffer_tail (to optimize for volatile)
       if (serial_rx_buffer_head == tail) {
         return SERIAL_NO_DATA;
       } else {
@@ -162,12 +168,19 @@ namespace bitLab.LaserCat.Grbl
       }
     }
 
+    private void FillRxBuffer()
+    {
+      while (mSerialPort.HasByte && !IsRxBufferFull)
+        SERIAL_RX();
+    }
 
     //ISR(SERIAL_RX)
     public void SERIAL_RX()
     {
-      char data = ' ';//TODO = UDR0;
-      byte next_head;
+      if (!mSerialPort.HasByte)
+        return;
+      //char data = UDR0;
+      byte data = mSerialPort.ReadByte();
   
       // Pick off runtime command characters directly from the serial stream. These characters are
       // not passed into the buffer, but these set system state flag bits for runtime execution.
@@ -177,7 +190,7 @@ namespace bitLab.LaserCat.Grbl
         case CMD_FEED_HOLD:     bit_true_atomic(ref sys.execute, EXEC_FEED_HOLD); break; // Set as true
         case CMD_RESET:         mc_reset(); break; // Call motion control reset routine.
         default: // Write character to buffer    
-          next_head = (byte)(serial_rx_buffer_head + 1);
+          int next_head = serial_rx_buffer_head + 1;
           if (next_head == RX_BUFFER_SIZE) { next_head = 0; }
     
           // Write data to buffer unless it is full.

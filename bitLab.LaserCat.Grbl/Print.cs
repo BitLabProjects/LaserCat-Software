@@ -30,13 +30,6 @@ namespace bitLab.LaserCat.Grbl
         printLineBuffer += s;
       }
     }
-    public void printString(char[] s)
-    {
-      //while (*s)
-      //  serial_write(*s++);
-      foreach (char c in s)
-        serial_write(c);
-    }
 
     public void serial_write(char data)
     {

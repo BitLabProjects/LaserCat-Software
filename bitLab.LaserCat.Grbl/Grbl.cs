@@ -9,9 +9,11 @@ namespace bitLab.LaserCat.Grbl
   public partial class GrblFirmware
   {
     private GCode mGCode;
-    public GrblFirmware(GCode GCode)
+    private ISerialPort mSerialPort;
+    public GrblFirmware(GCode GCode, ISerialPort serialPort)
     {
       mGCode = GCode;
+      mSerialPort = serialPort;
       mGCode.Initialize(this);
     }
 
