@@ -1,0 +1,18 @@
+Fase 1: Convertire Grbl in C# e implementare un simulatore
+Fase 2: Capire il punto di stacco corretto tra PC e PIC
+Fase 3: Implementare nel PIC la parte necessaria e lasciare l'equivalente nel PC per il simulatore
+Fase 4: Conquistare il mondo
+
+Fase 1.
+1.1 Convertire Grbl in C#                                                     [Ok]    Lasciato alcuni TODO da convertire a necessità
+1.2 Implementare un simulatore
+- 1.2.1 Mostrare a video lo stato interno di Grbl:
+        - Planner Buffer, Segment Buffer (livello di riempimento, altro?)
+        - Stato dei moduli: stepper, coolant, limits, ecc..
+        - Stato della struttura sys (capire cosa è interessante)
+        - Lunghezza percorsa e mancante, velocità corrente, ...
+- 1.2.2 Piano cartesiano con:
+        - Puntino della posizione corrente
+        - Linee eseguite dal planner in blu
+        - Linee correntemente nel planner in rosso
+        
