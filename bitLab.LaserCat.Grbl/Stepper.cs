@@ -41,11 +41,27 @@ namespace bitLab.LaserCat.Grbl
     public struct st_block_t
     {
       public byte direction_bits;
-      public fixed uint steps[(int)NutsAndBolts.N_AXIS];
+      public uint[] steps;
       public uint step_event_count;
+
+      public st_block_t(bool dummy)
+      {
+        direction_bits = 0;
+        steps = new uint[NutsAndBolts.N_AXIS];
+        step_event_count = 0;
+      }
     };
 
-    public st_block_t[] st_block_buffer = new st_block_t[SEGMENT_BUFFER_SIZE - 1];
+    private static st_block_t[] CreateStBlockArray(int count)
+    {
+      var array = new st_block_t[count];
+      for (int i = 0; i < count; i++)
+      {
+        array[i] = new st_block_t(true);
+      }
+      return array;
+    }
+    public st_block_t[] st_block_buffer = CreateStBlockArray(SEGMENT_BUFFER_SIZE-1);
 
     //SB! Added event to notify planner blocks changes
     public event EventHandler StepperSegmentBufferChanged;
@@ -73,8 +89,8 @@ namespace bitLab.LaserCat.Grbl
     //SB! Returns the number of active blocks are in the segment buffer.
     public int stepper_get_segment_buffer_count()
     {
-      if (segment_buffer_head >= segment_buffer_tail) { return segment_buffer_head - segment_buffer_tail + 1; }
-      return SEGMENT_BUFFER_SIZE - (segment_buffer_tail - segment_buffer_head - 1);
+      if (segment_buffer_head >= segment_buffer_tail) { return segment_buffer_head - segment_buffer_tail; }
+      return SEGMENT_BUFFER_SIZE - (segment_buffer_tail - segment_buffer_head);
     }
 
     // Stepper ISR data struct. Contains the running data for the main stepper ISR.
@@ -93,8 +109,10 @@ namespace bitLab.LaserCat.Grbl
       public uint[] steps;
       public short step_count;       // Steps remaining in line segment motion  
       public byte exec_block_index; // Tracks the current st_block index. Change indicates new block.
-      public st_block_t* exec_block;   // Pointer to the block data for the segment being executed
-      public segment_t* exec_segment;  // Pointer to the segment being executed
+      //SB! Removed pointers and used indexed access instead
+      //public st_block_t* exec_block;   // Pointer to the block data for the segment being executed
+      //public segment_t* exec_segment;  // Pointer to the segment being executed
+      public int exec_segmentIdx;
 
       public stepper_t(bool dummy)
       {
@@ -107,8 +125,9 @@ namespace bitLab.LaserCat.Grbl
         steps = new uint[NutsAndBolts.N_AXIS];
         step_count = 0;
         exec_block_index = 0;
-        exec_block = null;
-        exec_segment = null;
+        //exec_block = null;
+        //exec_segment = null;
+        exec_segmentIdx = -1;
       }
     } ;
     stepper_t st;
@@ -123,7 +142,7 @@ namespace bitLab.LaserCat.Grbl
     byte dir_port_invert_mask;
 
     // Used to avoid ISR nesting of the "Stepper Driver Interrupt". Should never occur though.
-    volatile byte busy;
+    bool busy;
 
     // Pointers for the step segment being prepped from the planner buffer. Accessed only by the
     // main program. Pointers may be planning segments or planner blocks ahead of what being executed.
@@ -233,7 +252,7 @@ namespace bitLab.LaserCat.Grbl
       // Disable Stepper Driver Interrupt. Allow Stepper Port Reset Interrupt to finish, if active.
       //TODO TIMSK1 &= ~(1<<OCIE1A); // Disable Timer1 interrupt
       //TODO TCCR1B = (TCCR1B & ~((1<<CS12) | (1<<CS11))) | (1<<CS10); // Reset clock to no prescaling.
-      busy = 0;
+      busy = false;
 
       // Set stepper driver idle state, disabled or enabled, depending on settings and circumstances.
       bool pin_state = false; // Keep enabled.
@@ -300,129 +319,131 @@ namespace bitLab.LaserCat.Grbl
     // with probing and homing cycles that require true real-time positions.
     //TODO
     //ISR(TIMER1_COMPA_vect)
-    //{        
-    //// SPINDLE_ENABLE_PORT ^= 1<<SPINDLE_ENABLE_BIT; // Debug: Used to time ISR
-    //  if (busy) { return; } // The busy-flag is used to avoid reentering this interrupt
+    public void TIMER1_COMPA_vect()
+    {        
+    // SPINDLE_ENABLE_PORT ^= 1<<SPINDLE_ENABLE_BIT; // Debug: Used to time ISR
+      if (busy) { return; } // The busy-flag is used to avoid reentering this interrupt
 
-    //  // Set the direction pins a couple of nanoseconds before we step the steppers
-    //  DIRECTION_PORT = (DIRECTION_PORT & ~DIRECTION_MASK) | (st.dir_outbits & DIRECTION_MASK);
+      // Set the direction pins a couple of nanoseconds before we step the steppers
+      DIRECTION_PORT = (DIRECTION_PORT & ~DIRECTION_MASK) | (st.dir_outbits & DIRECTION_MASK);
 
-    //  // Then pulse the stepping pins
-    //  #ifdef STEP_PULSE_DELAY
-    //    st.step_bits = (STEP_PORT & ~STEP_MASK) | st.step_outbits; // Store out_bits to prevent overwriting.
-    //  #else  // Normal operation
-    //    STEP_PORT = (STEP_PORT & ~STEP_MASK) | st.step_outbits;
-    //  #endif  
+      // Then pulse the stepping pins
+      if (STEP_PULSE_DELAY!=0)
+        st.step_bits = (byte)((STEP_PORT & ~STEP_MASK) | st.step_outbits); // Store out_bits to prevent overwriting.
+      else  // Normal operation
+        STEP_PORT = (STEP_PORT & ~STEP_MASK) | st.step_outbits;
 
-    //  // Enable step pulse reset timer so that The Stepper Port Reset Interrupt can reset the signal after
-    //  // exactly settings.pulse_microseconds microseconds, independent of the main Timer1 prescaler.
-    //  //TODO TCNT0 = st.step_pulse_time; // Reload Timer0 counter
-    //  //TODO TCCR0B = (1<<CS01); // Begin Timer0. Full speed, 1/8 prescaler
+      // Enable step pulse reset timer so that The Stepper Port Reset Interrupt can reset the signal after
+      // exactly settings.pulse_microseconds microseconds, independent of the main Timer1 prescaler.
+      //TODO TCNT0 = st.step_pulse_time; // Reload Timer0 counter
+      //TODO TCCR0B = (1<<CS01); // Begin Timer0. Full speed, 1/8 prescaler
 
-    //  busy = true;
-    //  //TODO sei(); // Re-enable interrupts to allow Stepper Port Reset Interrupt to fire on-time. 
-    //         // NOTE: The remaining code in this ISR will finish before returning to main program.
+      busy = true;
+      //TODO sei(); // Re-enable interrupts to allow Stepper Port Reset Interrupt to fire on-time. 
+             // NOTE: The remaining code in this ISR will finish before returning to main program.
 
-    //  // If there is no step segment, attempt to pop one from the stepper buffer
-    //  if (st.exec_segment == NULL) {
-    //    // Anything in the buffer? If so, load and initialize next step segment.
-    //    if (segment_buffer_head != segment_buffer_tail) {
-    //      // Initialize new step segment and load number of steps to execute
-    //      st.exec_segment = &segment_buffer[segment_buffer_tail];
+      // If there is no step segment, attempt to pop one from the stepper buffer
+      if (st.exec_segmentIdx == -1)
+      {
+        // Anything in the buffer? If so, load and initialize next step segment.
+        if (segment_buffer_head != segment_buffer_tail) {
+          // Initialize new step segment and load number of steps to execute
+          st.exec_segmentIdx = segment_buffer_tail;
 
-    //      #ifndef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
-    //        // With AMASS is disabled, set timer prescaler for segments with slow step frequencies (< 250Hz).
-    //        TCCR1B = (TCCR1B & ~(0x07<<CS10)) | (st.exec_segment->prescaler<<CS10);
-    //      #endif
+          if (!ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING) {
+            // With AMASS is disabled, set timer prescaler for segments with slow step frequencies (< 250Hz).
+            //TODO TCCR1B = (TCCR1B & ~(0x07<<CS10)) | (segment_buffer[st.exec_segmentIdx].prescaler<<CS10);
+          }
 
-    //      // Initialize step segment timing per step and load number of steps to execute.
-    //      //TODO OCR1A = st.exec_segment->cycles_per_tick;
-    //      st.step_count = st.exec_segment->n_step; // NOTE: Can sometimes be zero when moving slow.
-    //      // If the new segment starts a new planner block, initialize stepper variables and counters.
-    //      // NOTE: When the segment data index changes, this indicates a new planner block.
-    //      if ( st.exec_block_index != st.exec_segment->st_block_index ) {
-    //        st.exec_block_index = st.exec_segment->st_block_index;
-    //        st.exec_block = &st_block_buffer[st.exec_block_index];
+          // Initialize step segment timing per step and load number of steps to execute.
+          //TODO OCR1A = segment_buffer[st.exec_segmentIdx].cycles_per_tick;
+          st.step_count = segment_buffer[st.exec_segmentIdx].n_step; // NOTE: Can sometimes be zero when moving slow.
+          // If the new segment starts a new planner block, initialize stepper variables and counters.
+          // NOTE: When the segment data index changes, this indicates a new planner block.
+          if ( st.exec_block_index != segment_buffer[st.exec_segmentIdx].st_block_index ) {
+            st.exec_block_index = segment_buffer[st.exec_segmentIdx].st_block_index;
+            //SB! no longer necessary, we already have st.exec_block_index
+            //st.exec_block = &st_block_buffer[st.exec_block_index];
 
-    //        // Initialize Bresenham line and distance counters
-    //        st.counter_x = (st.exec_block->step_event_count >> 1);
-    //        st.counter_y = st.counter_x;
-    //        st.counter_z = st.counter_x;        
-    //      }
+            // Initialize Bresenham line and distance counters
+            st.counter_x = (st_block_buffer[st.exec_block_index].step_event_count >> 1);
+            st.counter_y = st.counter_x;
+            st.counter_z = st.counter_x;        
+          }
 
-    //      st.dir_outbits = st.exec_block->direction_bits ^ dir_port_invert_mask; 
+          st.dir_outbits = (byte)(st_block_buffer[st.exec_block_index].direction_bits ^ dir_port_invert_mask); 
 
-    //      #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
-    //        // With AMASS enabled, adjust Bresenham axis increment counters according to AMASS level.
-    //        st.steps[NutsAndBolts.X_AXIS] = st.exec_block->steps[NutsAndBolts.X_AXIS] >> st.exec_segment->amass_level;
-    //        st.steps[NutsAndBolts.Y_AXIS] = st.exec_block->steps[NutsAndBolts.Y_AXIS] >> st.exec_segment->amass_level;
-    //        st.steps[NutsAndBolts.Z_AXIS] = st.exec_block->steps[NutsAndBolts.Z_AXIS] >> st.exec_segment->amass_level;
-    //      #endif
+          if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING) {
+            // With AMASS enabled, adjust Bresenham axis increment counters according to AMASS level.
+            st.steps[NutsAndBolts.X_AXIS] = st_block_buffer[st.exec_block_index].steps[NutsAndBolts.X_AXIS] >> segment_buffer[st.exec_segmentIdx].amass_level;
+            st.steps[NutsAndBolts.Y_AXIS] = st_block_buffer[st.exec_block_index].steps[NutsAndBolts.Y_AXIS] >> segment_buffer[st.exec_segmentIdx].amass_level;
+            st.steps[NutsAndBolts.Z_AXIS] = st_block_buffer[st.exec_block_index].steps[NutsAndBolts.Z_AXIS] >> segment_buffer[st.exec_segmentIdx].amass_level;
+          }
 
-    //    } else {
-    //      // Segment buffer empty. Shutdown.
-    //      st_go_idle();
-    //      bit_true_atomic(sys.execute,EXEC_CYCLE_STOP); // Flag main program for cycle end
-    //      return; // Nothing to do but exit.
-    //    }  
-    //  }
+        } else {
+          // Segment buffer empty. Shutdown.
+          st_go_idle();
+          bit_true_atomic(ref sys.execute, EXEC_CYCLE_STOP); // Flag main program for cycle end
+          return; // Nothing to do but exit.
+        }  
+      }
 
 
-    //  // Check probing state.
-    //  probe_state_monitor();
+      // Check probing state.
+      probe_state_monitor();
 
-    //  // Reset step out bits.
-    //  st.step_outbits = 0; 
+      // Reset step out bits.
+      st.step_outbits = 0; 
 
-    //  // Execute step displacement profile by Bresenham line algorithm
-    //  #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
-    //    st.counter_x += st.steps[NutsAndBolts.X_AXIS];
-    //  #else
-    //    st.counter_x += st.exec_block->steps[NutsAndBolts.X_AXIS];
-    //  #endif  
-    //  if (st.counter_x > st.exec_block->step_event_count) {
-    //    st.step_outbits |= (1<<X_STEP_BIT);
-    //    st.counter_x -= st.exec_block->step_event_count;
-    //    if (st.exec_block->direction_bits & (1<<X_DIRECTION_BIT)) { sys.position[NutsAndBolts.X_AXIS]--; }
-    //    else { sys.position[NutsAndBolts.X_AXIS]++; }
-    //  }
-    //  #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
-    //    st.counter_y += st.steps[NutsAndBolts.Y_AXIS];
-    //  #else
-    //    st.counter_y += st.exec_block->steps[NutsAndBolts.Y_AXIS];
-    //  #endif    
-    //  if (st.counter_y > st.exec_block->step_event_count) {
-    //    st.step_outbits |= (1<<Y_STEP_BIT);
-    //    st.counter_y -= st.exec_block->step_event_count;
-    //    if (st.exec_block->direction_bits & (1<<Y_DIRECTION_BIT)) { sys.position[NutsAndBolts.Y_AXIS]--; }
-    //    else { sys.position[NutsAndBolts.Y_AXIS]++; }
-    //  }
-    //  #ifdef ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING
-    //    st.counter_z += st.steps[NutsAndBolts.Z_AXIS];
-    //  #else
-    //    st.counter_z += st.exec_block->steps[NutsAndBolts.Z_AXIS];
-    //  #endif  
-    //  if (st.counter_z > st.exec_block->step_event_count) {
-    //    st.step_outbits |= (1<<Z_STEP_BIT);
-    //    st.counter_z -= st.exec_block->step_event_count;
-    //    if (st.exec_block->direction_bits & (1<<Z_DIRECTION_BIT)) { sys.position[NutsAndBolts.Z_AXIS]--; }
-    //    else { sys.position[NutsAndBolts.Z_AXIS]++; }
-    //  }  
+      // Execute step displacement profile by Bresenham line algorithm
+      if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
+        st.counter_x += st.steps[NutsAndBolts.X_AXIS];
+      else
+        st.counter_x += st_block_buffer[st.exec_block_index].steps[NutsAndBolts.X_AXIS];
+      
+      if (st.counter_x > st_block_buffer[st.exec_block_index].step_event_count) {
+        st.step_outbits |= (1<<X_STEP_BIT);
+        st.counter_x -= st_block_buffer[st.exec_block_index].step_event_count;
+        if ((st_block_buffer[st.exec_block_index].direction_bits & (1<<X_DIRECTION_BIT))!=0) { sys.position[NutsAndBolts.X_AXIS]--; }
+        else { sys.position[NutsAndBolts.X_AXIS]++; }
+      }
+      if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
+        st.counter_y += st.steps[NutsAndBolts.Y_AXIS];
+      else
+        st.counter_y += st_block_buffer[st.exec_block_index].steps[NutsAndBolts.Y_AXIS];
+      
+      if (st.counter_y > st_block_buffer[st.exec_block_index].step_event_count) {
+        st.step_outbits |= (1<<Y_STEP_BIT);
+        st.counter_y -= st_block_buffer[st.exec_block_index].step_event_count;
+        if ((st_block_buffer[st.exec_block_index].direction_bits & (1<<Y_DIRECTION_BIT))!=0) { sys.position[NutsAndBolts.Y_AXIS]--; }
+        else { sys.position[NutsAndBolts.Y_AXIS]++; }
+      }
+      if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
+        st.counter_z += st.steps[NutsAndBolts.Z_AXIS];
+      else
+        st.counter_z += st_block_buffer[st.exec_block_index].steps[NutsAndBolts.Z_AXIS];
+      
+      if (st.counter_z > st_block_buffer[st.exec_block_index].step_event_count) {
+        st.step_outbits |= (1<<Z_STEP_BIT);
+        st.counter_z -= st_block_buffer[st.exec_block_index].step_event_count;
+        if ((st_block_buffer[st.exec_block_index].direction_bits & (1<<Z_DIRECTION_BIT))!=0) { sys.position[NutsAndBolts.Z_AXIS]--; }
+        else { sys.position[NutsAndBolts.Z_AXIS]++; }
+      }  
 
-    //  // During a homing cycle, lock out and prevent desired axes from moving.
-    //  if (sys.state == STATE_HOMING) { st.step_outbits &= sys.homing_axis_lock; }   
+      // During a homing cycle, lock out and prevent desired axes from moving.
+      if (sys.state == STATE_HOMING) { st.step_outbits &= sys.homing_axis_lock; }   
 
-    //  st.step_count--; // Decrement step events count 
-    //  if (st.step_count == 0) {
-    //    // Segment is complete. Discard current segment and advance segment indexing.
-    //    st.exec_segment = NULL;
-    //    if ( ++segment_buffer_tail == SEGMENT_BUFFER_SIZE) { segment_buffer_tail = 0; }
-    //  }
+      st.step_count--; // Decrement step events count 
+      if (st.step_count == 0) {
+        // Segment is complete. Discard current segment and advance segment indexing.
+        st.exec_segmentIdx = -1;
+        if ( ++segment_buffer_tail == SEGMENT_BUFFER_SIZE) { segment_buffer_tail = 0; }
+      }
 
-    //  st.step_outbits ^= step_port_invert_mask;  // Apply step port invert mask    
-    //  busy = false;
-    //// SPINDLE_ENABLE_PORT ^= 1<<SPINDLE_ENABLE_BIT; // Debug: Used to time ISR
-    //}
+      st.step_outbits ^= step_port_invert_mask;  // Apply step port invert mask    
+      busy = false;
+    // SPINDLE_ENABLE_PORT ^= 1<<SPINDLE_ENABLE_BIT; // Debug: Used to time ISR
+    }
 
 
     /* The Stepper Port Reset Interrupt: Timer0 OVF interrupt handles the falling edge of the step
@@ -483,12 +504,12 @@ namespace bitLab.LaserCat.Grbl
       //memset(&st, 0, sizeof(st));
       prep = new st_prep_t();
       st = new stepper_t(true);
-      st.exec_segment = null;
+      st.exec_segmentIdx = -1;
       pl_blockIdx = -1;  // Planner block pointer used by segment buffer
       segment_buffer_tail = 0;
       segment_buffer_head = 0; // empty = tail
       segment_next_head = 1;
-      busy = 0;
+      busy = false;
 
       st_generate_step_dir_invert_masks();
 
@@ -580,26 +601,23 @@ namespace bitLab.LaserCat.Grbl
             // Prepare and copy Bresenham algorithm segment data from the new planner block, so that
             // when the segment buffer completes the planner block, it may be discarded when the 
             // segment buffer finishes the prepped block, but the stepper ISR is still executing it. 
-            fixed (st_block_t* st_prep_block = &st_block_buffer[prep.st_block_index])// Pointer to the stepper block data being prepped 
+            st_block_buffer[prep.st_block_index].direction_bits = block_buffer[pl_blockIdx].direction_bits;
+            if (!ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
             {
-              st_prep_block->direction_bits = block_buffer[pl_blockIdx].direction_bits;
-              if (!ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
-              {
-                st_prep_block->steps[NutsAndBolts.X_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.X_AXIS];
-                st_prep_block->steps[NutsAndBolts.Y_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Y_AXIS];
-                st_prep_block->steps[NutsAndBolts.Z_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Z_AXIS];
-                st_prep_block->step_event_count = block_buffer[pl_blockIdx].step_event_count;
-              }
-              else
-              {
-                // With AMASS enabled, simply bit-shift multiply all Bresenham data by the max AMASS 
-                // level, such that we never divide beyond the original data anywhere in the algorithm.
-                // If the original data is divided, we can lose a step from integer roundoff.
-                st_prep_block->steps[NutsAndBolts.X_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.X_AXIS] << MAX_AMASS_LEVEL;
-                st_prep_block->steps[NutsAndBolts.Y_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Y_AXIS] << MAX_AMASS_LEVEL;
-                st_prep_block->steps[NutsAndBolts.Z_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Z_AXIS] << MAX_AMASS_LEVEL;
-                st_prep_block->step_event_count = block_buffer[pl_blockIdx].step_event_count << MAX_AMASS_LEVEL;
-              }
+              st_block_buffer[prep.st_block_index].steps[NutsAndBolts.X_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.X_AXIS];
+              st_block_buffer[prep.st_block_index].steps[NutsAndBolts.Y_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Y_AXIS];
+              st_block_buffer[prep.st_block_index].steps[NutsAndBolts.Z_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Z_AXIS];
+              st_block_buffer[prep.st_block_index].step_event_count = block_buffer[pl_blockIdx].step_event_count;
+            }
+            else
+            {
+              // With AMASS enabled, simply bit-shift multiply all Bresenham data by the max AMASS 
+              // level, such that we never divide beyond the original data anywhere in the algorithm.
+              // If the original data is divided, we can lose a step from integer roundoff.
+              st_block_buffer[prep.st_block_index].steps[NutsAndBolts.X_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.X_AXIS] << MAX_AMASS_LEVEL;
+              st_block_buffer[prep.st_block_index].steps[NutsAndBolts.Y_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Y_AXIS] << MAX_AMASS_LEVEL;
+              st_block_buffer[prep.st_block_index].steps[NutsAndBolts.Z_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Z_AXIS] << MAX_AMASS_LEVEL;
+              st_block_buffer[prep.st_block_index].step_event_count = block_buffer[pl_blockIdx].step_event_count << MAX_AMASS_LEVEL;
             }
             // Initialize segment buffer data for generating the segments.
             prep.steps_remaining = block_buffer[pl_blockIdx].step_event_count;
