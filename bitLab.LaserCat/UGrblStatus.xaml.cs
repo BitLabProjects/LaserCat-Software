@@ -23,17 +23,6 @@ namespace bitLab.LaserCat
     public UGrblStatus()
     {
       InitializeComponent();
-      updateTxtProgressBar();
-    }
-
-    private void updateTxtProgressBar()
-    {
-      txtProgressBar.Text = String.Format("{0:0.0}%", progressBar.Value * 100.0 / progressBar.Maximum);
-    }
-
-    private void progressBar_ValueChanged_1(object sender, RoutedPropertyChangedEventArgs<double> e)
-    {
-      updateTxtProgressBar();
     }
   }
 }

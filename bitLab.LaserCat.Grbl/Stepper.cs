@@ -1,3 +1,4 @@
+using System;
 namespace bitLab.LaserCat.Grbl
 {
   unsafe public partial class GrblFirmware
@@ -46,6 +47,14 @@ namespace bitLab.LaserCat.Grbl
 
     public st_block_t[] st_block_buffer = new st_block_t[SEGMENT_BUFFER_SIZE - 1];
 
+    //SB! Added event to notify planner blocks changes
+    public event EventHandler StepperSegmentBufferChanged;
+    private void RaiseStepperSegmentBufferChanged()
+    {
+      if (StepperSegmentBufferChanged != null)
+        StepperSegmentBufferChanged(this, EventArgs.Empty);
+    }
+
     // Primary stepper segment ring buffer. Contains small, short line segments for the stepper 
     // algorithm to execute, which are "checked-out" incrementally from the first block in the
     // planner buffer. Once "checked-out", the steps in the segments buffer cannot be modified by 
@@ -61,6 +70,13 @@ namespace bitLab.LaserCat.Grbl
 
     public segment_t[] segment_buffer = new segment_t[SEGMENT_BUFFER_SIZE];
 
+    //SB! Returns the number of active blocks are in the segment buffer.
+    public int stepper_get_segment_buffer_count()
+    {
+      if (segment_buffer_head >= segment_buffer_tail) { return segment_buffer_head - segment_buffer_tail + 1; }
+      return SEGMENT_BUFFER_SIZE - (segment_buffer_tail - segment_buffer_head - 1);
+    }
+
     // Stepper ISR data struct. Contains the running data for the main stepper ISR.
     public struct stepper_t
     {
@@ -74,11 +90,26 @@ namespace bitLab.LaserCat.Grbl
       public byte step_pulse_time;  // Step pulse reset time after step rise
       public byte step_outbits;         // The next stepping-bits to be output
       public byte dir_outbits;
-      public fixed uint steps[(int)NutsAndBolts.N_AXIS];
+      public uint[] steps;
       public short step_count;       // Steps remaining in line segment motion  
       public byte exec_block_index; // Tracks the current st_block index. Change indicates new block.
       public st_block_t* exec_block;   // Pointer to the block data for the segment being executed
       public segment_t* exec_segment;  // Pointer to the segment being executed
+
+      public stepper_t(bool dummy)
+      {
+        counter_x = counter_y = counter_z = 0;
+        step_bits = 0;
+        execute_step = 0;
+        step_pulse_time = 0;
+        step_outbits = 0;
+        dir_outbits = 0;
+        steps = new uint[NutsAndBolts.N_AXIS];
+        step_count = 0;
+        exec_block_index = 0;
+        exec_block = null;
+        exec_segment = null;
+      }
     } ;
     stepper_t st;
 
@@ -449,8 +480,9 @@ namespace bitLab.LaserCat.Grbl
 
       // Initialize stepper algorithm variables.
       //TODO
-      //memset(&prep, 0, sizeof(prep));
       //memset(&st, 0, sizeof(st));
+      prep = new st_prep_t();
+      st = new stepper_t(true);
       st.exec_segment = null;
       pl_blockIdx = -1;  // Planner block pointer used by segment buffer
       segment_buffer_tail = 0;
@@ -463,6 +495,8 @@ namespace bitLab.LaserCat.Grbl
       // Initialize step and direction port pins.
       STEP_PORT = (STEP_PORT & ~STEP_MASK) | step_port_invert_mask;
       DIRECTION_PORT = (DIRECTION_PORT & ~DIRECTION_MASK) | dir_port_invert_mask;
+
+      RaiseStepperSegmentBufferChanged();
     }
 
 
@@ -494,7 +528,6 @@ namespace bitLab.LaserCat.Grbl
       #endif
       */
     }
-
 
     // Called by planner_recalculate() when the executing block is updated by the new plan.
     public void st_update_plan_block_parameters()
@@ -550,7 +583,7 @@ namespace bitLab.LaserCat.Grbl
             fixed (st_block_t* st_prep_block = &st_block_buffer[prep.st_block_index])// Pointer to the stepper block data being prepped 
             {
               st_prep_block->direction_bits = block_buffer[pl_blockIdx].direction_bits;
-              if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
+              if (!ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
               {
                 st_prep_block->steps[NutsAndBolts.X_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.X_AXIS];
                 st_prep_block->steps[NutsAndBolts.Y_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Y_AXIS];
@@ -864,6 +897,7 @@ namespace bitLab.LaserCat.Grbl
           // Segment complete! Increment segment buffer indices.
           segment_buffer_head = segment_next_head;
           if (++segment_next_head == SEGMENT_BUFFER_SIZE) { segment_next_head = 0; }
+          RaiseStepperSegmentBufferChanged();
 
           // Setup initial conditions for next segment.
           if (mm_remaining > prep.mm_complete)
