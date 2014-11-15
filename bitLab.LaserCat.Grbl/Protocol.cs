@@ -249,6 +249,8 @@ namespace bitLab.LaserCat.Grbl
       // Reload step segment buffer
       if ((sys.state & (STATE_CYCLE | STATE_HOLD | STATE_HOMING))!=0) { st_prep_buffer(); }  
   
+      //SB! Simulate stepper motor execution
+      RunStepperMotor();
     }  
 
 

@@ -82,7 +82,7 @@ namespace bitLab.LaserCat.Grbl
       public ushort cycles_per_tick; // Step distance traveled per ISR tick, aka step rate.  
       public byte amass_level;    // Indicates AMASS level for the ISR to execute this segment  
       public byte prescaler;      // Without AMASS, a prescaler is required to adjust for slow timing.
-    } ;
+    };
 
     public segment_t[] segment_buffer = new segment_t[SEGMENT_BUFFER_SIZE];
 
@@ -314,10 +314,24 @@ namespace bitLab.LaserCat.Grbl
        ISR is 5usec typical and 25usec maximum, well below requirement.
        NOTE: This ISR expects at least one step to be executed per segment.
     */
+    int LastTime;
+    private void RunStepperMotor()
+    {
+      if (LastTime == 0)
+        LastTime = Environment.TickCount;
+      else
+      {
+        if (Environment.TickCount - LastTime > 1)
+        {
+          LastTime = Environment.TickCount;
+          for(var i=0; i<100; i++)
+            TIMER1_COMPA_vect();
+        }
+      } 
+    }
     // TODO: Replace direct updating of the int32 position counters in the ISR somehow. Perhaps use smaller
     // int8 variables and update position counters only when a segment completes. This can get complicated 
     // with probing and homing cycles that require true real-time positions.
-    //TODO
     //ISR(TIMER1_COMPA_vect)
     public void TIMER1_COMPA_vect()
     {        
@@ -438,6 +452,7 @@ namespace bitLab.LaserCat.Grbl
         // Segment is complete. Discard current segment and advance segment indexing.
         st.exec_segmentIdx = -1;
         if ( ++segment_buffer_tail == SEGMENT_BUFFER_SIZE) { segment_buffer_tail = 0; }
+        RaiseStepperSegmentBufferChanged();
       }
 
       st.step_outbits ^= step_port_invert_mask;  // Apply step port invert mask    
