@@ -63,6 +63,10 @@
     <Compile Include="UConsole.xaml.cs">
       <DependentUpon>UConsole.xaml</DependentUpon>
     </Compile>
+    <Compile Include="UGrblStatus.xaml.cs">
+      <DependentUpon>UGrblStatus.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ViewModels\CGrblFirmwareVM.cs" />
     <Compile Include="ViewModels\CLaserCatVM.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -77,6 +81,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Page Include="UConsole.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="UGrblStatus.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

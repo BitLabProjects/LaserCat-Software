@@ -26,6 +26,8 @@ namespace bitLab.LaserCat.Model
       mCurrentGCodeLineIndex = -1;
     }
 
+    public GrblFirmware GrblFirmware { get { return mGrbl; } }
+
     private bool CheckGrblIsStarted()
     {
       if (mGrblTask != null)

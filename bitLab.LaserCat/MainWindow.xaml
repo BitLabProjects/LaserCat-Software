@@ -8,7 +8,16 @@
       <ColumnDefinition />
       <ColumnDefinition Width="Auto" />
     </Grid.ColumnDefinitions>
-    <local:UConsole DataContext="{Binding ConsoleVM}" />
+    <Grid Grid.Column="0">
+      <Grid.RowDefinitions>
+        <RowDefinition />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="200" />
+      </Grid.RowDefinitions>
+      <local:UGrblStatus Grid.Row="0" DataContext="{Binding GrblFirmwareVM}" />
+      <GridSplitter Grid.Row="1" Height="3" HorizontalAlignment="Stretch" />
+      <local:UConsole Grid.Row="2" Margin="0 2 0 0" DataContext="{Binding ConsoleVM}" />
+    </Grid>
     <StackPanel Orientation="Vertical" Grid.Column="1" Margin="5 0">
       <StackPanel.Resources>
         <Style TargetType="Button">

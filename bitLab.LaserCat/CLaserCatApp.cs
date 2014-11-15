@@ -13,6 +13,9 @@ namespace bitLab.LaserCat
   {
     public void Startup()
     {
+      System.Threading.Thread.CurrentThread.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-us");
+      System.Threading.Thread.CurrentThread.CurrentUICulture = System.Globalization.CultureInfo.GetCultureInfo("en-us");
+
       CBaseVM.Dispatcher = App.Current.Dispatcher;
 
       Logging.Log.LogInfo("Initializing application");

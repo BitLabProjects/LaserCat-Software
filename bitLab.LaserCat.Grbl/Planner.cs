@@ -18,6 +18,14 @@ namespace bitLab.LaserCat.Grbl
     //#endif
     public const int BLOCK_BUFFER_SIZE = 18;
 
+    //SB! Added event to notify planner blocks changes
+    public event EventHandler PlannerBlocksChanged;
+    private void RaisePlannerBlocksChanged()
+    {
+      if (PlannerBlocksChanged != null)
+        PlannerBlocksChanged(this, EventArgs.Empty);
+    }
+
     public struct plan_block_t
     {
       // Fields used by the bresenham algorithm for tracing the line
@@ -263,6 +271,7 @@ namespace bitLab.LaserCat.Grbl
       block_buffer_head = 0; // Empty = tail
       next_buffer_head = 1; // plan_next_block_index(block_buffer_head)
       block_buffer_planned = 0; // = block_buffer_tail;
+      RaisePlannerBlocksChanged();
     }
 
 
@@ -273,6 +282,7 @@ namespace bitLab.LaserCat.Grbl
         // Push block_buffer_planned pointer, if encountered.
         if (block_buffer_tail == block_buffer_planned) { block_buffer_planned = block_index; }
         block_buffer_tail = block_index;
+        RaisePlannerBlocksChanged();
       }
     }
 
@@ -448,6 +458,7 @@ namespace bitLab.LaserCat.Grbl
   
       // Finish up by recalculating the plan with the new block.
       planner_recalculate();
+      RaisePlannerBlocksChanged();
     }
 
 
@@ -462,10 +473,10 @@ namespace bitLab.LaserCat.Grbl
 
 
     // Returns the number of active blocks are in the planner buffer.
-    public byte plan_get_block_buffer_count()
+    public int plan_get_block_buffer_count()
     {
-      if (block_buffer_head >= block_buffer_tail) { return (byte)(block_buffer_head-block_buffer_tail); }
-      return (byte)(BLOCK_BUFFER_SIZE - (block_buffer_tail-block_buffer_head));
+      if (block_buffer_head >= block_buffer_tail) { return block_buffer_head-block_buffer_tail; }
+      return BLOCK_BUFFER_SIZE - (block_buffer_tail-block_buffer_head);
     }
 
 
@@ -476,7 +487,8 @@ namespace bitLab.LaserCat.Grbl
       // Re-plan from a complete stop. Reset planner entry speeds and buffer planned pointer.
       st_update_plan_block_parameters();
       block_buffer_planned = block_buffer_tail;
-      planner_recalculate();  
+      planner_recalculate();
+      RaisePlannerBlocksChanged();
     }
   }
 }

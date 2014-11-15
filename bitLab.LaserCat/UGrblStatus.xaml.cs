@@ -16,21 +16,24 @@ using System.Windows.Shapes;
 namespace bitLab.LaserCat
 {
   /// <summary>
-  /// Interaction logic for UConsole.xaml
+  /// Interaction logic for UGrblStatus.xaml
   /// </summary>
-  public partial class UConsole : UserControl
+  public partial class UGrblStatus : UserControl
   {
-    public UConsole()
+    public UGrblStatus()
     {
       InitializeComponent();
+      updateTxtProgressBar();
     }
 
-    private void Grid_Loaded_1(object sender, RoutedEventArgs e)
+    private void updateTxtProgressBar()
     {
-      var grid = sender as Grid;
-      GeneralTransform groupBoxTransform = grid.TransformToAncestor(scrollViewer);
-      Rect rectangle = groupBoxTransform.TransformBounds(new Rect(new Point(0, 0), grid.RenderSize));
-      scrollViewer.ScrollToVerticalOffset(rectangle.Top + scrollViewer.VerticalOffset);
+      txtProgressBar.Text = String.Format("{0:0.0}%", progressBar.Value * 100.0 / progressBar.Maximum);
+    }
+
+    private void progressBar_ValueChanged_1(object sender, RoutedPropertyChangedEventArgs<double> e)
+    {
+      updateTxtProgressBar();
     }
   }
 }

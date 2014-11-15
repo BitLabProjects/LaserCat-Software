@@ -815,7 +815,7 @@ namespace bitLab.LaserCat.Grbl
           prep.dt_remainder = (n_steps_remaining - steps_remaining) * inv_rate; // Update segment partial step time
 
           // Compute CPU cycles per step for the prepped segment.
-          ushort cycles = (ushort)System.Math.Ceiling((NutsAndBolts.TICKS_PER_MICROSECOND * 1000000.0 * 60) * inv_rate); // (cycles/step)    
+          uint cycles = (uint)System.Math.Ceiling((NutsAndBolts.TICKS_PER_MICROSECOND * 1000000.0 * 60) * inv_rate); // (cycles/step)    
 
           if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
           {
@@ -830,16 +830,16 @@ namespace bitLab.LaserCat.Grbl
               cycles >>= prep_segment->amass_level;
               prep_segment->n_step <<= prep_segment->amass_level;
             }
-            if (cycles < (1UL << 16)) { prep_segment->cycles_per_tick = cycles; } // < 65536 (4.1ms @ 16MHz)
+            if (cycles < (1 << 16)) { prep_segment->cycles_per_tick = (ushort)cycles; } // < 65536 (4.1ms @ 16MHz)
             else { prep_segment->cycles_per_tick = 0xffff; } // Just set the slowest speed possible.
           }
           else
           {
             // Compute step timing and timer prescalar for normal step generation.
-            if (cycles < (1UL << 16))
+            if (cycles < (1 << 16))
             { // < 65536  (4.1ms @ 16MHz)
               prep_segment->prescaler = 1; // prescaler: 0
-              prep_segment->cycles_per_tick = cycles;
+              prep_segment->cycles_per_tick = (ushort)cycles;
             }
             else if (cycles < (1UL << 19))
             { // < 524288 (32.8ms@16MHz)

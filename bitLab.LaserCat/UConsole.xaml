@@ -7,7 +7,7 @@
              d:DesignHeight="300" d:DesignWidth="300"
              xmlns:local="clr-namespace:bitLab.LaserCat"
              xmlns:conv="clr-namespace:bitLab.LaserCat.Converters">
-  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+  <ScrollViewer x:Name="scrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <ItemsControl ItemsSource="{Binding Lines}">
       <ItemsControl.ItemTemplate>
         <DataTemplate>
@@ -19,7 +19,7 @@
               <Setter Property="Margin" Value="0 0 5 0" />
             </Style>
           </DataTemplate.Resources>
-          <Grid Grid.IsSharedSizeScope="True">
+          <Grid Grid.IsSharedSizeScope="True" Loaded="Grid_Loaded_1">
             <Grid.ColumnDefinitions>
               <ColumnDefinition Width="Auto" />
               <ColumnDefinition Width="Auto" />
