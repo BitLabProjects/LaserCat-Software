@@ -38,7 +38,7 @@ namespace bitLab.LaserCat.Grbl
       // things uncontrollably. Very bad.
       if (HOMING_INIT_LOCK)
       {
-        if (bit_istrue(settings.flags, BITFLAG_HOMING_ENABLE)) { sys.state = STATE_ALARM; }
+        if (bit_istrue(settings.flags, BITFLAG_HOMING_ENABLE)) { sys.setState(STATE_ALARM); }
       }
   
       // Grbl initialization loop upon power-up or a system abort. For the latter, all processes

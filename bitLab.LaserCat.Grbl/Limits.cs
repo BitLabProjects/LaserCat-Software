@@ -231,13 +231,13 @@ public void limits_go_home(byte cycle_mask)
   
   //// Initiate pull-off using main motion control routines. 
   //// TODO : Clean up state routines so that this motion still shows homing state.
-  //sys.state = STATE_QUEUED;
+  //sys.setState(STATE_QUEUED);
   //bit_true_atomic(sys.execute, EXEC_CYCLE_START);
   //protocol_execute_runtime();
   //protocol_buffer_synchronize(); // Complete pull-off motion.
   
   //// Set system state to homing before returning. 
-  //sys.state = STATE_HOMING; 
+  //sys.setState(STATE_HOMING); 
 }
 
 

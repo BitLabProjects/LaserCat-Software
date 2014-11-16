@@ -59,7 +59,7 @@ namespace bitLab.LaserCat.Grbl
   
   // If idle, indicate to the system there is now a planned block in the buffer ready to cycle 
   // start. Otherwise ignore and continue on.
-  if (sys.state == 0) { sys.state = STATE_QUEUED; }
+  if (sys.state == 0) { sys.setState(STATE_QUEUED); }
 }
 
 
@@ -211,7 +211,7 @@ public void mc_dwell(float seconds)
 public void mc_homing_cycle()
 {
   //TODO
-  //sys.state = STATE_HOMING; // Set system state variable
+  //sys.setState(STATE_HOMING); // Set system state variable
   //limits_disable(); // Disable hard limits pin change register for cycle duration
     
   //// -------------------------------------------------------------------------------------
@@ -236,7 +236,7 @@ public void mc_homing_cycle()
   //gc_sync_position();
   
   //// Set idle state after homing completes and before returning to main program.  
-  //sys.state = STATE_IDLE;
+  //sys.setState(STATE_IDLE);
   //st_go_idle(); // Set idle state after homing completes
 
   //// If hard limits feature enabled, re-enable hard limits pin change register after homing cycle.

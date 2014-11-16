@@ -32,6 +32,11 @@ namespace bitLab.LaserCat.Grbl
         probe_state = 0;
         probe_position = new int[NutsAndBolts.N_AXIS];
       }
+
+      public void setState(byte newState)
+      {
+        state = newState;
+      }
     } ;
 
     public system_t sys = new system_t(true);
@@ -123,7 +128,7 @@ namespace bitLab.LaserCat.Grbl
             report_feedback_message(MESSAGE_DISABLED);
           } else {
             if (sys.state != 0) { return(STATUS_IDLE_ERROR); } // Requires no alarm mode.
-            sys.state = STATE_CHECK_MODE;
+            sys.setState(STATE_CHECK_MODE);
             report_feedback_message(MESSAGE_ENABLED);
           }
           break; 
@@ -131,7 +136,7 @@ namespace bitLab.LaserCat.Grbl
           if ( line[++char_counter] != 0 ) { return(STATUS_INVALID_STATEMENT); }
           if (sys.state == STATE_ALARM) { 
             report_feedback_message(MESSAGE_ALARM_UNLOCK);
-            sys.state = STATE_IDLE;
+            sys.setState(STATE_IDLE);
             // Don't run startup script. Prevents stored moves in startup from causing accidents.
           } // Otherwise, no effect.
           break;               

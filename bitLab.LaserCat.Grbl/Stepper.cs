@@ -213,14 +213,17 @@ namespace bitLab.LaserCat.Grbl
 
         // Enable Stepper Driver Interrupt
         //TODO TIMSK1 |= (1<<OCIE1A);
+        //SB!
+        mEnableMotors = true;
       }
     }
-
 
     // Stepper shutdown
     public void st_go_idle()
     {
       // Disable Stepper Driver Interrupt. Allow Stepper Port Reset Interrupt to finish, if active.
+      //SB!
+      mEnableMotors = false;
       //TODO TIMSK1 &= ~(1<<OCIE1A); // Disable Timer1 interrupt
       //TODO TCCR1B = (TCCR1B & ~((1<<CS12) | (1<<CS11))) | (1<<CS10); // Reset clock to no prescaling.
       busy = false;
@@ -285,29 +288,36 @@ namespace bitLab.LaserCat.Grbl
        ISR is 5usec typical and 25usec maximum, well below requirement.
        NOTE: This ISR expects at least one step to be executed per segment.
     */
-    int LastTime;
+    bool mEnableMotors;
+    int mLastTime;
     private void RunStepperMotor()
     {
-      if (LastTime == 0)
-        LastTime = Environment.TickCount;
+      if (mLastTime == 0)
+        mLastTime = Environment.TickCount;
       else
       {
-        if (Environment.TickCount - LastTime > 1)
+        if (Environment.TickCount - mLastTime > 1)
         {
-          LastTime = Environment.TickCount;
-          for(var i=0; i<100; i++)
-            TIMER1_COMPA_vect();
+          mLastTime = Environment.TickCount;
+          for (var i = 0; i < 100; i++)
+            if (mEnableMotors)
+              //SB! TIMER1_COMPA_vect returns true when a segment has been finished
+              //When that happens, quit executing the ISR, otherwise we might finish the segment buffer within the 100
+              //cycles and the main loop would not have a chance to refill it, which leads to a halt.
+              //Normally in Grbl this interrupt executes every 33.3us, and the main loop much more often.
+              if (TIMER1_COMPA_vect())
+                break;
         }
-      } 
+      }
     }
     // TODO: Replace direct updating of the int32 position counters in the ISR somehow. Perhaps use smaller
     // int8 variables and update position counters only when a segment completes. This can get complicated 
     // with probing and homing cycles that require true real-time positions.
     //ISR(TIMER1_COMPA_vect)
-    public void TIMER1_COMPA_vect()
+    public bool TIMER1_COMPA_vect()
     {        
     // SPINDLE_ENABLE_PORT ^= 1<<SPINDLE_ENABLE_BIT; // Debug: Used to time ISR
-      if (busy) { return; } // The busy-flag is used to avoid reentering this interrupt
+      if (busy) { return false; } // The busy-flag is used to avoid reentering this interrupt
 
       // Set the direction pins a couple of nanoseconds before we step the steppers
       DIRECTION_PORT = (DIRECTION_PORT & ~DIRECTION_MASK) | (st.dir_outbits & DIRECTION_MASK);
@@ -369,7 +379,7 @@ namespace bitLab.LaserCat.Grbl
           // Segment buffer empty. Shutdown.
           st_go_idle();
           bit_true_atomic(ref sys.execute, EXEC_CYCLE_STOP); // Flag main program for cycle end
-          return; // Nothing to do but exit.
+          return false; // Nothing to do but exit.
         }  
       }
 
@@ -419,16 +429,19 @@ namespace bitLab.LaserCat.Grbl
       if (sys.state == STATE_HOMING) { st.step_outbits &= sys.homing_axis_lock; }   
 
       st.step_count--; // Decrement step events count 
+      var hasFinishedASegment = false;
       if (st.step_count == 0) {
         // Segment is complete. Discard current segment and advance segment indexing.
         st.exec_segmentIdx = -1;
         if ( ++segment_buffer_tail == SEGMENT_BUFFER_SIZE) { segment_buffer_tail = 0; }
+        hasFinishedASegment = true;
         RaiseStepperSegmentBufferChanged();
       }
 
       st.step_outbits ^= step_port_invert_mask;  // Apply step port invert mask    
       busy = false;
     // SPINDLE_ENABLE_PORT ^= 1<<SPINDLE_ENABLE_BIT; // Debug: Used to time ISR
+      return hasFinishedASegment;
     }
 
 
@@ -834,7 +847,7 @@ namespace bitLab.LaserCat.Grbl
               prep.steps_remaining = n_steps_remaining;
               block_buffer[pl_blockIdx].millimeters = prep.steps_remaining / prep.step_per_mm; // Update with full steps.
               plan_cycle_reinitialize();
-              sys.state = STATE_QUEUED;
+              sys.setState(STATE_QUEUED);
               return; // Segment not generated, but current step data still retained.
             }
           }
@@ -922,7 +935,7 @@ namespace bitLab.LaserCat.Grbl
               prep.steps_remaining = (float)System.Math.Ceiling(steps_remaining);
               block_buffer[pl_blockIdx].millimeters = prep.steps_remaining / prep.step_per_mm; // Update with full steps.
               plan_cycle_reinitialize();
-              sys.state = STATE_QUEUED; // End cycle.        
+              sys.setState(STATE_QUEUED); // End cycle.        
 
               return; // Bail!
               // TODO: Try to move QUEUED setting into cycle re-initialize.

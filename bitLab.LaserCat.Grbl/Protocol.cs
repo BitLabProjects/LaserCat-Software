@@ -57,7 +57,7 @@ namespace bitLab.LaserCat.Grbl
         report_feedback_message(MESSAGE_ALARM_LOCK); 
       } else {
         // All systems go!
-        sys.state = STATE_IDLE; // Set system to ready. Clear all state flags.
+        sys.setState(STATE_IDLE); // Set system to ready. Clear all state flags.
         system_execute_startup(line); // Execute startup script.
       }
     
@@ -163,7 +163,7 @@ namespace bitLab.LaserCat.Grbl
         // the source of the error to the user. If critical, Grbl disables by entering an infinite
         // loop until system reset/abort.
         if ((rt_exec & (EXEC_ALARM | EXEC_CRIT_EVENT))!=0) {      
-          sys.state = STATE_ALARM; // Set system alarm state
+          sys.setState(STATE_ALARM); // Set system alarm state
 
           // Critical events. Hard/soft limit events identified by both critical event and alarm exec
           // flags. Probe fail is identified by the critical event exec flag only.
@@ -207,7 +207,7 @@ namespace bitLab.LaserCat.Grbl
           // !!! During a cycle, the segment buffer has just been reloaded and full. So the math involved
           // with the feed hold should be fine for most, if not all, operational scenarios.
           if (sys.state == STATE_CYCLE) {
-            sys.state = STATE_HOLD;
+            sys.setState(STATE_HOLD);
             st_update_plan_block_parameters();
             st_prep_buffer();
             sys.auto_start = 0; // Disable planner auto start upon feed hold.
@@ -218,7 +218,7 @@ namespace bitLab.LaserCat.Grbl
         // Execute a cycle start by starting the stepper interrupt begin executing the blocks in queue.
         if ((rt_exec & EXEC_CYCLE_START)!=0) { 
           if (sys.state == STATE_QUEUED) {
-            sys.state = STATE_CYCLE;
+            sys.setState(STATE_CYCLE);
             st_prep_buffer(); // Initialize step segment buffer before beginning cycle.
             st_wake_up();
             if (bit_istrue(settings.flags,BITFLAG_AUTO_START)) {
@@ -236,8 +236,8 @@ namespace bitLab.LaserCat.Grbl
         // cycle reinitializations. The stepper path should continue exactly as if nothing has happened.   
         // NOTE: EXEC_CYCLE_STOP is set by the stepper subsystem when a cycle or feed hold completes.
         if ((rt_exec & EXEC_CYCLE_STOP)!=0) {
-          if ( plan_get_current_block() != -1) { sys.state = STATE_QUEUED; }
-          else { sys.state = STATE_IDLE; }
+          if ( plan_get_current_block() != -1) { sys.setState(STATE_QUEUED); }
+          else { sys.setState(STATE_IDLE); }
           bit_false_atomic(ref sys.execute,EXEC_CYCLE_STOP);
         }
 
