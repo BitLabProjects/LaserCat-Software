@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Shapes;
+using System.Collections.ObjectModel;
 
 namespace bitLab.LaserCat.ViewModels
 {
@@ -15,8 +16,9 @@ namespace bitLab.LaserCat.ViewModels
 	{
 		public CCuttingPlaneVM()
 		{
-			mPlannedLines = new List<Line>();
-			mDrawnLines = new List<Line>();
+			mPlannedLines = new ObservableCollection<CLineVM>();
+			mDrawnLines = new ObservableCollection<CLineVM>();
+			Grbl.PlannerBlocksChanged += mGrbl_PlannerBlocksChanged;
 
 			mMaxX = 500;
 			mMaxY = 500;
@@ -36,15 +38,15 @@ namespace bitLab.LaserCat.ViewModels
 		public int MaxX { get { return mMaxX; } }
 		public int MaxY { get { return mMaxY; } }
 
-		private List<Line> mPlannedLines;
-		public List<Line> PlannedLines
+		private ObservableCollection<CLineVM> mPlannedLines;
+		public ObservableCollection<CLineVM> PlannedLines
 		{
 			get { return mPlannedLines; }
 			set { SetAndNotify(ref mPlannedLines, value); }
 		}
 
-		private List<Line> mDrawnLines;
-		public List<Line> DrawnLines
+		private ObservableCollection<CLineVM> mDrawnLines;
+		public ObservableCollection<CLineVM> DrawnLines
 		{
 			get { return mDrawnLines; }
 			set { SetAndNotify(ref mPlannedLines, value); }
@@ -74,10 +76,36 @@ namespace bitLab.LaserCat.ViewModels
 
 		}
 
-
-		public void AddPlannedLine(int x, int y)
+		private double GetNormalizedX(double x)
 		{
-			Line newLine = new Line();
+			return x * mScale + mCenterX;
+		}
+
+		private double GetNormalizedY(double y)
+		{
+			return -y * mScale + mCenterY;
+		}
+
+		private void mGrbl_PlannerBlocksChanged(object sender, CPlannerBlocksChangedEventArgs e)
+		{
+			Dispatcher.Invoke(() => mGrbl_PlannerBlocksChangedDo(e));
+		}
+
+		private void mGrbl_PlannerBlocksChangedDo(CPlannerBlocksChangedEventArgs e)
+		{
+			switch (e.PlannerBlocksChangedState)
+			{
+				case EPlannerBlockChangedState.BlockAdded:
+					var line = Grbl.plan_lines.Last();
+					AddPlannedLine(GetNormalizedX(line.end[0]), GetNormalizedY(line.end[1])); break;
+				case EPlannerBlockChangedState.BlockRemoved:
+					RemovePlannedLine(); break;
+			}
+		}
+
+		public void AddPlannedLine(double x, double y)
+		{
+			CLineVM newLine = new CLineVM();
 			if (mPlannedLines.Count > 0)
 			{
 				newLine.X1 = mPlannedLines.Last().X2;
@@ -90,13 +118,20 @@ namespace bitLab.LaserCat.ViewModels
 
 			newLine.X2 = x;
 			newLine.Y2 = y;
-
-			mPlannedLines.Add(newLine);
+			//ssl
+			PlannedLines.Add(newLine);
 		}
 
-		public void AddDrawnLine(int x, int y)
+		public void RemovePlannedLine()
 		{
-			Line newLine = new Line();
+			AddDrawnLine(PlannedLines.First().X2, PlannedLines.First().Y2);
+			PlannedLines.Remove(PlannedLines.First());
+		}
+
+
+		public void AddDrawnLine(double x, double y)
+		{
+			CLineVM newLine = new CLineVM();
 			if (mDrawnLines.Count > 0)
 			{
 				newLine.X1 = mDrawnLines.Last().X2;
@@ -110,7 +145,7 @@ namespace bitLab.LaserCat.ViewModels
 			newLine.X2 = x;
 			newLine.Y2 = y;
 
-			mDrawnLines.Add(newLine);
+			DrawnLines.Add(newLine);
 		}
 	}
 }
