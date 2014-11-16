@@ -22,11 +22,16 @@
     <Grid.RowDefinitions>
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
     <TextBlock Text="Planner" FontSize="16" Grid.Column="0" />
     <local:UProgressBarWithPercent Grid.Column="1" Maximum="{Binding PlannerBlockMaxSize, Mode=OneWay}" Value="{Binding PlannerBlockCount, Mode=OneWay}" />
+    
     <TextBlock Text="Segment buffer" FontSize="16" Grid.Row="1" Grid.Column="0" />
     <local:UProgressBarWithPercent Grid.Row="1" Grid.Column="1" Maximum="{Binding StepperSegmentBufferMaxSize, Mode=OneWay}" Value="{Binding StepperSegmentBufferCount, Mode=OneWay}" />
+
+    <TextBlock Text="Position" FontSize="16" Grid.Row="2" Grid.Column="0" />
+    <TextBlock Text="{Binding CurrentPositionString}" Grid.Row="2" Grid.Column="1" />
   </Grid>
 </UserControl>
