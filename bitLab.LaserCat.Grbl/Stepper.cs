@@ -3,35 +3,6 @@ namespace bitLab.LaserCat.Grbl
 {
   unsafe public partial class GrblFirmware
   {
-
-    // Define global system variables
-    public struct system_t
-    {
-      public byte abort;                 // System abort flag. Forces exit back to main loop for reset.
-      public byte state;                 // Tracks the current state of Grbl.
-      public byte execute;      // Global system runtime executor bitflag variable. See EXEC bitmasks.
-      public byte homing_axis_lock;
-      public int[] position;      // Real-time machine (aka home) position vector in steps. 
-      // NOTE: This may need to be a volatile variable, if problems arise.                             
-      public byte auto_start;            // Planner auto-start flag. Toggled off during feed hold. Defaulted by settings.
-      public byte probe_state;   // Probing state value.  Used to coordinate the probing cycle with stepper ISR.
-      public int[] probe_position; // Last probe position in machine coordinates and steps.
-
-      public system_t(bool dummy)
-      {
-        abort = 0;
-        state = 0;
-        execute = 0;
-        homing_axis_lock = 0;
-        position = new int[NutsAndBolts.N_AXIS];
-        auto_start = 0;
-        probe_state = 0;
-        probe_position = new int[NutsAndBolts.N_AXIS];
-      }
-    } ;
-
-    public system_t sys = new system_t(true);
-
     // Stores the planner block Bresenham algorithm execution data for the segments in the segment 
     // buffer. Normally, this buffer is partially in-use, but, for the worst case scenario, it will
     // never exceed the number of accessible stepper buffer segments (SEGMENT_BUFFER_SIZE-1).
