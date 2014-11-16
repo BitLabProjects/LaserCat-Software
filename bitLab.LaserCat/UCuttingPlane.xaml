@@ -7,9 +7,31 @@
 	<Border BorderThickness="2" BorderBrush="Black" Height="{Binding MaxY}" Width="{Binding MaxX}" >
 		<Canvas Height="{Binding MaxY}" Width="{Binding MaxX}" >
 		<!--<Canvas Height="200" Width="200" >-->
-			<ItemsControl ItemsSource="{Binding PlannedLines}"/>
-			<ItemsControl ItemsSource="{Binding DrawnLines}"/>
-			<Ellipse Canvas.Left="{Binding CurrX}" Canvas.Top="{Binding CurrY}" Height="5" Width="5" Stroke="Green" />
+			<ItemsControl ItemsSource="{Binding PlannedLines}">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<Canvas/>
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<Line Stroke="Red" StrokeThickness="2" X1="{Binding X1}" X2="{Binding X2}" Y1="{Binding Y1}" Y2="{Binding Y2}"/>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+			<ItemsControl ItemsSource="{Binding DrawnLines}">
+				<ItemsControl.ItemsPanel>
+					<ItemsPanelTemplate>
+						<Canvas/>
+					</ItemsPanelTemplate>
+				</ItemsControl.ItemsPanel>
+				<ItemsControl.ItemTemplate>
+					<DataTemplate>
+						<Line Stroke="Blue"  StrokeThickness="2" X1="{Binding X1}" X2="{Binding X2}" Y1="{Binding Y1}" Y2="{Binding Y2}"/>
+					</DataTemplate>
+				</ItemsControl.ItemTemplate>
+			</ItemsControl>
+			<Ellipse Canvas.Left="{Binding CurrX}" Canvas.Top="{Binding CurrY}" Height="5" Width="5" Stroke="Green" StrokeThickness="2"/>
 			<!--<Line Stroke="Green" StrokeThickness="5" X1="{Binding CurrX}" X2="{Binding CurrX}" Y1="{Binding CurrY}" Y2="{Binding CurrY}"/>-->
 		</Canvas>
 	</Border>

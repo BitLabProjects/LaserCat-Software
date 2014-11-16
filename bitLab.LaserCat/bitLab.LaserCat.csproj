@@ -75,6 +75,7 @@
     <Compile Include="ViewModels\CCuttingPlaneVM.cs" />
     <Compile Include="ViewModels\CGrblFirmwareVM.cs" />
     <Compile Include="ViewModels\CLaserCatVM.cs" />
+    <Compile Include="ViewModels\CLineVM.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
