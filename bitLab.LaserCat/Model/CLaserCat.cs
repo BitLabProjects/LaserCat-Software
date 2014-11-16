@@ -36,6 +36,11 @@ namespace bitLab.LaserCat.Model
       return false;
     }
 
+    private bool IsGCodeCompleted()
+    {
+      return mCurrentGCodeLineIndex + 1 >= mGCodeLines.Count;
+    }
+
     public void LoadGCode(string fullFileName)
     {
       mCurrentGCodeFile = fullFileName;
@@ -77,7 +82,7 @@ namespace bitLab.LaserCat.Model
     {
       if (!CheckGrblIsStarted()) return;
 
-      if (mCurrentGCodeLineIndex + 1 >= mGCodeLines.Count)
+      if (IsGCodeCompleted())
       {
         Log.LogError("Last GCode line reached");
         return;
@@ -86,6 +91,15 @@ namespace bitLab.LaserCat.Model
       mCurrentGCodeLineIndex += 1;
       Log.LogInfo(String.Format("Adding GCode line '{0}'", mGCodeLines[mCurrentGCodeLineIndex]));
       mSerialPort.AddLineToInputBuffer(mGCodeLines[mCurrentGCodeLineIndex] + '\n');
+    }
+
+    public void SendAllGCode()
+    {
+      if (!CheckGrblIsStarted()) return;
+
+      while (!IsGCodeCompleted()) { SendGCodeLine(); }
+
+      Log.LogInfo("GCode completed");
     }
 
     #region Singleton

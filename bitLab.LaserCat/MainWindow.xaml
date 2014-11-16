@@ -28,6 +28,7 @@
       <Button Content="Load test GCode" Command="{Binding LoadTestGCode}" />
       <Button Content="Start Grbl" Command="{Binding GrblStart}" />
       <Button Content="Send GCode Line" Command="{Binding SendGCodeLine}" />
+      <Button Content="Send All GCode" Command="{Binding SendAllGCode}" />
     </StackPanel>
   </Grid>
 </Window>

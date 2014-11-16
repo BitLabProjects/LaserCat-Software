@@ -23,6 +23,7 @@
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
       <RowDefinition Height="Auto" />
+      <RowDefinition Height="Auto" />
       <RowDefinition Height="*" />
     </Grid.RowDefinitions>
     <TextBlock Text="Planner" FontSize="16" Grid.Column="0" />
@@ -33,5 +34,8 @@
 
     <TextBlock Text="Position" FontSize="16" Grid.Row="2" Grid.Column="0" />
     <TextBlock Text="{Binding CurrentPositionString}" Grid.Row="2" Grid.Column="1" />
+
+    <TextBlock Text="Speed" FontSize="16" Grid.Row="3" Grid.Column="0" />
+    <TextBlock Text="{Binding StepperSpeed, StringFormat='0.00 mm/min'}" Grid.Row="3" Grid.Column="1" />
   </Grid>
 </UserControl>

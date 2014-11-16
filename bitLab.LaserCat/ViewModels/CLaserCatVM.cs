@@ -25,12 +25,13 @@ namespace bitLab.LaserCat.ViewModels
       });
       GrblStart = new CDelegateCommand((obj) => { CLaserCat.Instance.GrblStart(); });
       SendGCodeLine = new CDelegateCommand((obj) => { CLaserCat.Instance.SendGCodeLine(); });
-      
+      SendAllGCode = new CDelegateCommand((obj) => { CLaserCat.Instance.SendAllGCode(); });
     }
 
 
     public CDelegateCommand LoadTestGCode { get; set; }
     public CDelegateCommand GrblStart { get; set; }
-    public CDelegateCommand SendGCodeLine { get; set; } 
+    public CDelegateCommand SendGCodeLine { get; set; }
+    public CDelegateCommand SendAllGCode { get; set; } 
   }
 }
