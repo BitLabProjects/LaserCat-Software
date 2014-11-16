@@ -12,9 +12,13 @@ namespace bitLab.LaserCat.ViewModels
 {
   public class CGrblFirmwareVM : CBaseVM
   {
+		public CCuttingPlaneVM CuttingPlaneVM { get; set; }
+
+
     DispatcherTimer mStatusPollingTimer;
     public CGrblFirmwareVM()
     {
+			CuttingPlaneVM = new CCuttingPlaneVM();
       mStatusPollingTimer = new DispatcherTimer();
       mStatusPollingTimer.Interval = TimeSpan.FromSeconds(1);
       mStatusPollingTimer.Tick += mStatusPollingTimer_Tick;
@@ -26,6 +30,7 @@ namespace bitLab.LaserCat.ViewModels
     private void mStatusPollingTimer_Tick(object sender, EventArgs e)
     {
       Notify("CurrentPositionString");
+			CuttingPlaneVM.Update();
     }
 
     private void GrblFirmware_StepperSegmentBufferChanged(object sender, EventArgs e)
