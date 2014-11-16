@@ -22,7 +22,7 @@ namespace bitLab.LaserCat.ViewModels
 			mMaxY = 500;
 			mCenterX = mMaxX / 2;
 			mCenterY = mMaxY / 2;
-			mScale = mMaxY / 1000.0;
+			mScale = mMaxY / 20000.0;
 		}
 
 		private GrblFirmware Grbl { get { return CLaserCat.Instance.GrblFirmware; } }
@@ -68,7 +68,7 @@ namespace bitLab.LaserCat.ViewModels
 		public void Update()
 		{
 			CurrX = (int)(Grbl.sys.position[0] * mScale) + mCenterX;
-			CurrY = (int)(Grbl.sys.position[1] * mScale) + mCenterY;
+			CurrY = (int)(-Grbl.sys.position[1] * mScale) + mCenterY;
 			//CurrX = CurrX + 1;
 			//CurrY = CurrY + 1;
 
