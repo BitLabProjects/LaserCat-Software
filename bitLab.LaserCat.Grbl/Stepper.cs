@@ -212,8 +212,8 @@ namespace bitLab.LaserCat.Grbl
 
 
         // Enable Stepper Driver Interrupt
-        //TODO TIMSK1 |= (1<<OCIE1A);
         //SB!
+        //TODO TIMSK1 |= (1<<OCIE1A);
         mEnableMotors = true;
       }
     }
@@ -224,8 +224,9 @@ namespace bitLab.LaserCat.Grbl
       // Disable Stepper Driver Interrupt. Allow Stepper Port Reset Interrupt to finish, if active.
       //SB!
       mEnableMotors = false;
-      //TODO TIMSK1 &= ~(1<<OCIE1A); // Disable Timer1 interrupt
-      //TODO TCCR1B = (TCCR1B & ~((1<<CS12) | (1<<CS11))) | (1<<CS10); // Reset clock to no prescaling.
+      //TODO
+      //TIMSK1 &= ~(1<<OCIE1A); // Disable Timer1 interrupt
+      //TCCR1B = (TCCR1B & ~((1<<CS12) | (1<<CS11))) | (1<<CS10); // Reset clock to no prescaling.
       busy = false;
 
       // Set stepper driver idle state, disabled or enabled, depending on settings and circumstances.
@@ -461,7 +462,7 @@ namespace bitLab.LaserCat.Grbl
     //{
     //  // Reset stepping pins (leave the direction pins)
     //  STEP_PORT = (STEP_PORT & ~STEP_MASK) | (step_port_invert_mask & STEP_MASK); 
-    //  //TODO TCCR0B = 0; // Disable Timer0 to prevent re-entering this interrupt when it's not needed. 
+    //  TCCR0B = 0; // Disable Timer0 to prevent re-entering this interrupt when it's not needed. 
     //}
 
     //TODO
@@ -499,8 +500,6 @@ namespace bitLab.LaserCat.Grbl
       st_go_idle();
 
       // Initialize stepper algorithm variables.
-      //TODO
-      //memset(&st, 0, sizeof(st));
       prep = new st_prep_t();
       st = new stepper_t(true);
       st.exec_segmentIdx = -1;
@@ -959,7 +958,7 @@ namespace bitLab.LaserCat.Grbl
     // in the segment buffer. It will always be behind by up to the number of segment blocks (-1)
     // divided by the ACCELERATION TICKS PER SECOND in seconds. 
     //#ifdef REPORT_REALTIME_RATE
-    float st_get_realtime_rate()
+    public float st_get_realtime_rate()
     {
       if ((sys.state & (STATE_CYCLE | STATE_HOMING | STATE_HOLD)) != 0)
       {

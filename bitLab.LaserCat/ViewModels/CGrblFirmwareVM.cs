@@ -30,6 +30,7 @@ namespace bitLab.LaserCat.ViewModels
     private void mStatusPollingTimer_Tick(object sender, EventArgs e)
     {
       Notify("CurrentPositionString");
+      Notify("StepperSpeed");
 			CuttingPlaneVM.Update();
     }
 
@@ -58,5 +59,6 @@ namespace bitLab.LaserCat.ViewModels
     public int PlannerBlockMaxSize { get { return GrblFirmware.BLOCK_BUFFER_SIZE; } }
     public int StepperSegmentBufferCount { get { return Grbl.stepper_get_segment_buffer_count(); } }
     public int StepperSegmentBufferMaxSize { get { return GrblFirmware.SEGMENT_BUFFER_SIZE; } }
+    public float StepperSpeed { get { return Grbl.st_get_realtime_rate(); } }
   }
 }

@@ -10,17 +10,6 @@ namespace bitLab.LaserCat.Grbl
   {
     // Define system header files and standard libraries used by Grbl
 
-    //TODO Implementate vuote, gestire
-    //public _delay_ms(x) ;
-    //public _delay_us(x) ;
-    //public ISR(x) public public void x() 
-    //public trunc(x) floor(x)
-    //public lround(x) round(x)
-    //inline double round(double number)
-    //{
-    //    return number < 0.0 ? ceil(number - 0.5) : floor(number + 0.5);
-    //}
-
     // Define system executor bit map. Used internally by runtime protocol as runtime command flags, 
     // which notifies the main program to execute the specified runtime command asynchronously.
     // NOTE: The system executor uses an unsigned 8-bit volatile variable (8 flag limit.) The default

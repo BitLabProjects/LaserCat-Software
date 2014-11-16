@@ -16,15 +16,10 @@ namespace bitLab.LaserCat.Grbl
     //public const int min(a,b) (((a) < (b)) ? (a) : (b))
 
     // Bit field and masking macros
-    public static byte bit(int n) { return (byte)(1 << n); }
-    //public const int bit_true_atomic(x,mask) {byte sreg = SREG; cli(); (x) |= (mask); SREG = sreg; }
-    //public const int bit_false_atomic(x,mask) {byte sreg = SREG; cli(); (x) &= ~(mask); SREG = sreg; }
+    public static byte bit(int n) { return (byte)(1 << n); } 
     public void bit_false_atomic(ref byte x, byte mask) { bit_false(ref x, mask); }
     public void bit_true_atomic(ref byte x, byte mask) { bit_true(ref x, mask); }
     //public const int bit_toggle_atomic(x,mask) {byte sreg = SREG; cli(); (x) ^= (mask); SREG = sreg; }
-    //public const int bit_true_atomic(x,mask) bit_true(x,mask)
-    //public const int bit_false_atomic(x,mask) bit_false(x,mask)
-    //public const int bit_toggle_atomic(x,mask) (x) ^= (mask)
     public void bit_true(ref byte x, byte mask) { x |= mask; }
     public void bit_false(ref ushort x, ushort mask) { x &= (ushort)~mask; }
     public void bit_false(ref byte x, byte mask) { x &= (byte)~mask; }
@@ -121,18 +116,26 @@ namespace bitLab.LaserCat.Grbl
     // Delays variable-defined milliseconds. Compiler compatibility fix for _delay_ms().
     public void delay_ms(ushort ms)
     {
+      //TODO
     }
 
     // Delays variable-defined microseconds. Compiler compatibility fix for _delay_us().
     public void delay_us(uint us)
     {
+      //TODO
     }
 
     // Computes hypotenuse, avoiding avr-gcc's bloated version and the extra error checking.
     public float hypot_f(float x, float y)
     {
-      return 0;
-      //TODO
+      //SB!Copied from wikipedia
+      double t;
+      x = Math.Abs(x);
+      y = Math.Abs(y);
+      t = Math.Min(x, y);
+      x = Math.Max(x, y);
+      t = t / x;
+      return (float)(x * Math.Sqrt(1 + t * t));
     }
 
     public void copyArray(float[] dst, float[] src)
