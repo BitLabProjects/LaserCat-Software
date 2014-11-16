@@ -20,7 +20,7 @@ namespace bitLab.LaserCat.ViewModels
     {
 			CuttingPlaneVM = new CCuttingPlaneVM();
       mStatusPollingTimer = new DispatcherTimer();
-      mStatusPollingTimer.Interval = TimeSpan.FromSeconds(1);
+      mStatusPollingTimer.Interval = TimeSpan.FromMilliseconds(100);
       mStatusPollingTimer.Tick += mStatusPollingTimer_Tick;
       mStatusPollingTimer.Start();
       Grbl.PlannerBlocksChanged += mGrbl_PlannerBlocksChanged;

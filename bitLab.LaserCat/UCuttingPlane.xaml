@@ -9,7 +9,7 @@
 		<!--<Canvas Height="200" Width="200" >-->
 			<ItemsControl ItemsSource="{Binding PlannedLines}"/>
 			<ItemsControl ItemsSource="{Binding DrawnLines}"/>
-			<Ellipse Canvas.Left="{Binding CurrX}" Canvas.Top="{Binding CurrX}" Height="5" Width="5" Stroke="Green" />
+			<Ellipse Canvas.Left="{Binding CurrX}" Canvas.Top="{Binding CurrY}" Height="5" Width="5" Stroke="Green" />
 			<!--<Line Stroke="Green" StrokeThickness="5" X1="{Binding CurrX}" X2="{Binding CurrX}" Y1="{Binding CurrY}" Y2="{Binding CurrY}"/>-->
 		</Canvas>
 	</Border>
