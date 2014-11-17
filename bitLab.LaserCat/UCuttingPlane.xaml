@@ -31,8 +31,12 @@
 					</DataTemplate>
 				</ItemsControl.ItemTemplate>
 			</ItemsControl>
-			<Ellipse Canvas.Left="{Binding CurrX}" Canvas.Top="{Binding CurrY}" Height="5" Width="5" Stroke="Green" StrokeThickness="2"/>
-			<!--<Line Stroke="Green" StrokeThickness="5" X1="{Binding CurrX}" X2="{Binding CurrX}" Y1="{Binding CurrY}" Y2="{Binding CurrY}"/>-->
+      <Ellipse Canvas.Left="{Binding CurrX}" Canvas.Top="{Binding CurrY}" Height="5" Width="5" Stroke="Green" StrokeThickness="2">
+        <Ellipse.RenderTransform>
+          <TranslateTransform X="-2.5" Y="-2.5" />
+        </Ellipse.RenderTransform>
+      </Ellipse>
+      <!--<Line Stroke="Green" StrokeThickness="5" X1="{Binding CurrX}" X2="{Binding CurrX}" Y1="{Binding CurrY}" Y2="{Binding CurrY}"/>-->
 		</Canvas>
 	</Border>
 </UserControl>
