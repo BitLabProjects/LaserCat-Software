@@ -15,7 +15,7 @@ namespace bitLab.LaserCat.Grbl
 	public class CPlannerBlocksChangedEventArgs : EventArgs
 	{
 		public EPlannerBlockChangedState PlannerBlocksChangedState;
-    public DblPoint2 Target;
+    public DblPoint3 Target;
 	}
 
 	unsafe public partial class GrblFirmware
@@ -34,9 +34,9 @@ namespace bitLab.LaserCat.Grbl
 		public event EventHandler<CPlannerBlocksChangedEventArgs> PlannerBlocksChanged;
     private void RaisePlannerBlocksChanged(EPlannerBlockChangedState state)
     {
-      RaisePlannerBlocksChanged(state, new DblPoint2());
+      RaisePlannerBlocksChanged(state, new DblPoint3());
     }
-    private void RaisePlannerBlocksChanged(EPlannerBlockChangedState state, DblPoint2 target)
+    private void RaisePlannerBlocksChanged(EPlannerBlockChangedState state, DblPoint3 target)
 		{
 			if (PlannerBlocksChanged != null)
         PlannerBlocksChanged(this, new CPlannerBlocksChangedEventArgs() { PlannerBlocksChangedState = state, Target = target });
@@ -500,8 +500,9 @@ namespace bitLab.LaserCat.Grbl
 
 			// Finish up by recalculating the plan with the new block.
 			planner_recalculate();
-      RaisePlannerBlocksChanged(EPlannerBlockChangedState.BlockAdded, new DblPoint2(target[0] * settings.steps_per_mm[0],
-                                                                                    target[1] * settings.steps_per_mm[1]));
+      RaisePlannerBlocksChanged(EPlannerBlockChangedState.BlockAdded, new DblPoint3(target[0] * settings.steps_per_mm[0],
+                                                                                    target[1] * settings.steps_per_mm[1],
+                                                                                    target[2] * settings.steps_per_mm[2]));
 		}                                                                               
 
 		// Reset the planner position vectors. Called by the system abort/initialization routine.

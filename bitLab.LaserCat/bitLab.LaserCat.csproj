@@ -57,6 +57,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="CLaserCatApp.cs" />
+    <Compile Include="Converters\CBooleanToDashConverter.cs" />
     <Compile Include="Converters\CColorToBrushConverter.cs" />
     <Compile Include="Converters\CEnumToStringConverter.cs" />
     <Compile Include="Model\CLaserCat.cs" />

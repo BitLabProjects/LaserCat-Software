@@ -37,9 +37,10 @@ namespace bitLab.LaserCat.ViewModels
       else
         scale = mCuttingPlaneSize.x / worldWidth;
 
-      mWorldToCuttingPlaneTransform = new ScaleTranslateTransform(new DblPoint2(scale, -scale),
-                                                                  new DblPoint2(mCuttingPlaneSize.x / 2,
-                                                                                mCuttingPlaneSize.y / 2));
+      mWorldToCuttingPlaneTransform = new ScaleTranslateTransform(new DblPoint3(scale, -scale, 1),
+                                                                  new DblPoint3(mCuttingPlaneSize.x / 2,
+                                                                                mCuttingPlaneSize.y / 2,
+                                                                                0));
     }
     public void Resize(double newWidth, double newHeight)
     {
@@ -104,12 +105,12 @@ namespace bitLab.LaserCat.ViewModels
       }
     }
 
-    public void AddLineToList(ObservableCollection<CLineVM> list, DblPoint2 DstPoint)
+    public void AddLineToList(ObservableCollection<CLineVM> list, DblPoint3 DstPoint)
     {
       if (list.Count > 0)
         PlannedLines.Add(new CLineVM(list.Last().P2, DstPoint, mWorldToCuttingPlaneTransform));
       else
-        PlannedLines.Add(new CLineVM(new DblPoint2(0, 0), DstPoint, mWorldToCuttingPlaneTransform));
+        PlannedLines.Add(new CLineVM(new DblPoint3(0, 0, 0), DstPoint, mWorldToCuttingPlaneTransform));
     }
 
     public void RemovePlannedLine()

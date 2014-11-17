@@ -48,6 +48,7 @@
     <Compile Include="CScaleTranslateTransform.cs" />
     <Compile Include="CubicBezier.cs" />
     <Compile Include="DblPoint2.cs" />
+    <Compile Include="DblPoint3.cs" />
     <Compile Include="Files\SvgWriter.cs" />
     <Compile Include="IntGrid2.cs" />
     <Compile Include="IntPoint2.cs" />
