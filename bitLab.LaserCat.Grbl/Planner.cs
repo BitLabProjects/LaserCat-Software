@@ -519,7 +519,7 @@ namespace bitLab.LaserCat.Grbl
 		public int plan_get_block_buffer_count()
 		{
 			if (block_buffer_head >= block_buffer_tail) { return block_buffer_head - block_buffer_tail; }
-			return BLOCK_BUFFER_SIZE - (block_buffer_tail - block_buffer_head);
+			return BLOCK_BUFFER_SIZE - (block_buffer_tail - block_buffer_head - 1);
 		}
 
 

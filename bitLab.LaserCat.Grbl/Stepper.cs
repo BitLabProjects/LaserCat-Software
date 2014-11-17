@@ -61,7 +61,7 @@ namespace bitLab.LaserCat.Grbl
     public int stepper_get_segment_buffer_count()
     {
       if (segment_buffer_head >= segment_buffer_tail) { return segment_buffer_head - segment_buffer_tail; }
-      return SEGMENT_BUFFER_SIZE - (segment_buffer_tail - segment_buffer_head);
+      return SEGMENT_BUFFER_SIZE - (segment_buffer_tail - segment_buffer_head - 1);
     }
 
     // Stepper ISR data struct. Contains the running data for the main stepper ISR.
