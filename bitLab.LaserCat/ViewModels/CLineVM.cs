@@ -26,6 +26,7 @@ namespace bitLab.LaserCat.ViewModels
     {
       mP1Transformed = transform.Apply(mP1);
       mP2Transformed = transform.Apply(mP2);
+      Notify("");
     }
 
     public DblPoint2 P1 { get { return mP1; } }

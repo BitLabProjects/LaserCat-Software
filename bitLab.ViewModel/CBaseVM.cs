@@ -49,13 +49,15 @@ namespace bitLab.ViewModel
         PropertyChanged.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 
-    protected void SetAndNotify<T>(ref T field, T value, [CallerMemberName] string property = "")
+    protected bool SetAndNotify<T>(ref T field, T value, [CallerMemberName] string property = "")
     {
       if (!object.Equals(field, value))
       {
         field = value;
         Notify(property);
+        return true;
       }
+      return false;
     }
   }
 }

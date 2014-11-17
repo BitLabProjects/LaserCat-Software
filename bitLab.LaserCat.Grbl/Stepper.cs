@@ -300,7 +300,7 @@ namespace bitLab.LaserCat.Grbl
         if (Environment.TickCount - mLastTime > 1)
         {
           mLastTime = Environment.TickCount;
-          for (var i = 0; i < 100; i++)
+          for (var i = 0; i < 500; i++)
             if (mEnableMotors)
               //SB! TIMER1_COMPA_vect returns true when a segment has been finished
               //When that happens, quit executing the ISR, otherwise we might finish the segment buffer within the 100

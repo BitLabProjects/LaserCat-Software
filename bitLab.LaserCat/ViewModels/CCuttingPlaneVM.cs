@@ -26,10 +26,38 @@ namespace bitLab.LaserCat.ViewModels
 
     private void CalculateTransform()
     {
-      mWorldToCuttingPlaneTransform = new ScaleTranslateTransform(new DblPoint2(+mCuttingPlaneSize.x / 20000,
-                                                                                -mCuttingPlaneSize.y / 20000),
+      //Fitting of the world square inside the CuttingPlaneSize
+      double worldWidth = 20000;
+      double worldHeight = 20000;
+
+      double scale;
+      if (mCuttingPlaneSize.x / mCuttingPlaneSize.y > worldWidth / worldHeight)
+      {
+        //The first dimension to hit the border is height, because cuttingplane has a wider aspect than world
+        scale = mCuttingPlaneSize.y / worldHeight;
+      }
+      else
+      {
+        scale = mCuttingPlaneSize.x / worldWidth;
+      }
+
+      mWorldToCuttingPlaneTransform = new ScaleTranslateTransform(new DblPoint2(scale, -scale),
                                                                   new DblPoint2(mCuttingPlaneSize.x / 2,
                                                                                 mCuttingPlaneSize.y / 2));
+    }
+    public void Resize(double newWidth, double newHeight)
+    {
+      mCuttingPlaneSize = new DblPoint2(newWidth, newHeight);
+      CalculateTransform();
+      mSysPositionTransformed = mWorldToCuttingPlaneTransform.Apply(mSysPosition);
+      foreach (var lineVM in mPlannedLines)
+        lineVM.ApplyTransform(mWorldToCuttingPlaneTransform);
+      foreach (var lineVM in mDrawnLines)
+        lineVM.ApplyTransform(mWorldToCuttingPlaneTransform);
+      Notify("CuttingPlaneSizeX");
+      Notify("CuttingPlaneSizeY");
+      Notify("CurrX");
+      Notify("CurrY");
     }
 
     private GrblFirmware Grbl { get { return CLaserCat.Instance.GrblFirmware; } }
@@ -37,8 +65,8 @@ namespace bitLab.LaserCat.ViewModels
     private DblPoint2 mCuttingPlaneSize;
     private ScaleTranslateTransform mWorldToCuttingPlaneTransform;
 
-    public double MaxX { get { return mCuttingPlaneSize.x; } }
-    public double MaxY { get { return mCuttingPlaneSize.y; } }
+    public double CuttingPlaneSizeX { get { return mCuttingPlaneSize.x; } }
+    public double CuttingPlaneSizeY { get { return mCuttingPlaneSize.y; } }
 
     private ObservableCollection<CLineVM> mPlannedLines;
     public ObservableCollection<CLineVM> PlannedLines { get { return mPlannedLines; } }
@@ -49,8 +77,6 @@ namespace bitLab.LaserCat.ViewModels
     private DblPoint2 mSysPosition;
     private DblPoint2 mSysPositionTransformed;
     public double CurrX { get { return mSysPositionTransformed.x; } }
-
-    private double mSysPositionY;
     public double CurrY { get { return mSysPositionTransformed.y; } }
 
 
@@ -75,22 +101,20 @@ namespace bitLab.LaserCat.ViewModels
       {
         case EPlannerBlockChangedState.BlockAdded:
           var line = Grbl.plan_lines.Last();
-          AddLineToList(mPlannedLines, new DblPoint2(line.end[0], line.end[1])); break;
+          AddLineToList(mPlannedLines, new DblPoint2(line.end[0], line.end[1])); 
+          break;
         case EPlannerBlockChangedState.BlockRemoved:
-          RemovePlannedLine(); break;
+          RemovePlannedLine(); 
+          break;
       }
     }
 
     public void AddLineToList(ObservableCollection<CLineVM> list, DblPoint2 DstPoint)
     {
       if (list.Count > 0)
-      {
         PlannedLines.Add(new CLineVM(list.Last().P2, DstPoint, mWorldToCuttingPlaneTransform));
-      }
       else
-      {
         PlannedLines.Add(new CLineVM(new DblPoint2(0, 0), DstPoint, mWorldToCuttingPlaneTransform));
-      }
     }
 
     public void RemovePlannedLine()
