@@ -12,46 +12,27 @@ namespace bitLab.LaserCat.ViewModels
 {
 	public class CLineVM : CBaseVM
 	{
+    private DblPoint2 mP1, mP2;
+    private DblPoint2 mP1Transformed, mP2Transformed;
 
-		private double mX1;
-		public double X1
-		{
-			get { return mX1; }
-			set
-			{
-				SetAndNotify(ref mX1, value);				
-			}
-		}
+    public CLineVM(DblPoint2 P1, DblPoint2 P2, ScaleTranslateTransform transform)
+    {
+      mP1 = P1;
+      mP2 = P2;
+      ApplyTransform(transform);
+    }
 
-		private double mX2;
-		public double X2
-		{
-			get { return mX2; }
-			set
-			{
-				SetAndNotify(ref mX2, value);
-			}
-		}
+    public void ApplyTransform(ScaleTranslateTransform transform)
+    {
+      mP1Transformed = transform.Apply(mP1);
+      mP2Transformed = transform.Apply(mP2);
+    }
 
-		private double mY1;
-		public double Y1
-		{
-			get { return mY1; }
-			set
-			{
-				SetAndNotify(ref mY1, value);
-			}
-		}
-
-		private double mY2;
-		public double Y2
-		{
-			get { return mY2; }
-			set
-			{
-				SetAndNotify(ref mY2, value);
-			}
-		}
-
+    public DblPoint2 P1 { get { return mP1; } }
+    public DblPoint2 P2 { get { return mP2; } }
+		public double X1 { get { return mP1Transformed.x; } }
+    public double Y1 { get { return mP1Transformed.y; } }
+    public double X2 { get { return mP2Transformed.x; } }
+    public double Y2 { get { return mP2Transformed.y; } }
 	}
 }

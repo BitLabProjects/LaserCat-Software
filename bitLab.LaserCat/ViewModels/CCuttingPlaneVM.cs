@@ -12,140 +12,92 @@ using System.Collections.ObjectModel;
 
 namespace bitLab.LaserCat.ViewModels
 {
-	public class CCuttingPlaneVM : CBaseVM
-	{
-		public CCuttingPlaneVM()
-		{
-			mPlannedLines = new ObservableCollection<CLineVM>();
-			mDrawnLines = new ObservableCollection<CLineVM>();
-			Grbl.PlannerBlocksChanged += mGrbl_PlannerBlocksChanged;
+  public class CCuttingPlaneVM : CBaseVM
+  {
+    public CCuttingPlaneVM()
+    {
+      mPlannedLines = new ObservableCollection<CLineVM>();
+      mDrawnLines = new ObservableCollection<CLineVM>();
+      Grbl.PlannerBlocksChanged += mGrbl_PlannerBlocksChanged;
 
-			mMaxX = 500;
-			mMaxY = 500;
-			mCenterX = mMaxX / 2;
-			mCenterY = mMaxY / 2;
-			mScale = mMaxY / 20000.0;
-		}
+      mCuttingPlaneSize = new DblPoint2(500, 500);
+      CalculateTransform();
+    }
 
-		private GrblFirmware Grbl { get { return CLaserCat.Instance.GrblFirmware; } }
+    private void CalculateTransform()
+    {
+      mWorldToCuttingPlaneTransform = new ScaleTranslateTransform(new DblPoint2(+mCuttingPlaneSize.x / 20000,
+                                                                                -mCuttingPlaneSize.y / 20000),
+                                                                  new DblPoint2(mCuttingPlaneSize.x / 2,
+                                                                                mCuttingPlaneSize.y / 2));
+    }
 
-		private int mMaxX;
-		private int mMaxY;
-		private int mCenterX;
-		private int mCenterY;
-		private double mScale;
+    private GrblFirmware Grbl { get { return CLaserCat.Instance.GrblFirmware; } }
 
-		public int MaxX { get { return mMaxX; } }
-		public int MaxY { get { return mMaxY; } }
+    private DblPoint2 mCuttingPlaneSize;
+    private ScaleTranslateTransform mWorldToCuttingPlaneTransform;
 
-		private ObservableCollection<CLineVM> mPlannedLines;
-		public ObservableCollection<CLineVM> PlannedLines
-		{
-			get { return mPlannedLines; }
-			set { SetAndNotify(ref mPlannedLines, value); }
-		}
+    public double MaxX { get { return mCuttingPlaneSize.x; } }
+    public double MaxY { get { return mCuttingPlaneSize.y; } }
 
-		private ObservableCollection<CLineVM> mDrawnLines;
-		public ObservableCollection<CLineVM> DrawnLines
-		{
-			get { return mDrawnLines; }
-			set { SetAndNotify(ref mPlannedLines, value); }
-		}
+    private ObservableCollection<CLineVM> mPlannedLines;
+    public ObservableCollection<CLineVM> PlannedLines { get { return mPlannedLines; } }
 
-		private int mCurrX;
-		public int CurrX
-		{
-			get { return mCurrX; }
-			set { SetAndNotify(ref mCurrX, value); }
-		}
+    private ObservableCollection<CLineVM> mDrawnLines;
+    public ObservableCollection<CLineVM> DrawnLines { get { return mDrawnLines; } }
 
-		private int mCurrY;
-		public int CurrY
-		{
-			get { return mCurrY; }
-			set { SetAndNotify(ref mCurrY, value); }
-		}
+    private DblPoint2 mSysPosition;
+    private DblPoint2 mSysPositionTransformed;
+    public double CurrX { get { return mSysPositionTransformed.x; } }
+
+    private double mSysPositionY;
+    public double CurrY { get { return mSysPositionTransformed.y; } }
 
 
-		public void Update()
-		{
-			CurrX = (int)(Grbl.sys.position[0] * mScale) + mCenterX;
-			CurrY = (int)(-Grbl.sys.position[1] * mScale) + mCenterY;
-			//CurrX = CurrX + 1;
-			//CurrY = CurrY + 1;
+    public void Update()
+    {
+      //SB! Save original coordinates and normalize them in the property getter so that we can dinamically size the 
+      //drawing surface
+      mSysPosition = new DblPoint2(Grbl.sys.position[0], Grbl.sys.position[1]);
+      mSysPositionTransformed = mWorldToCuttingPlaneTransform.Apply(mSysPosition);
+      Notify("CurrX");
+      Notify("CurrY");
+    }
 
-		}
+    private void mGrbl_PlannerBlocksChanged(object sender, CPlannerBlocksChangedEventArgs e)
+    {
+      Dispatcher.Invoke(() => mGrbl_PlannerBlocksChangedDo(e));
+    }
 
-		private double GetNormalizedX(double x)
-		{
-			return x * mScale + mCenterX;
-		}
+    private void mGrbl_PlannerBlocksChangedDo(CPlannerBlocksChangedEventArgs e)
+    {
+      switch (e.PlannerBlocksChangedState)
+      {
+        case EPlannerBlockChangedState.BlockAdded:
+          var line = Grbl.plan_lines.Last();
+          AddLineToList(mPlannedLines, new DblPoint2(line.end[0], line.end[1])); break;
+        case EPlannerBlockChangedState.BlockRemoved:
+          RemovePlannedLine(); break;
+      }
+    }
 
-		private double GetNormalizedY(double y)
-		{
-			return -y * mScale + mCenterY;
-		}
+    public void AddLineToList(ObservableCollection<CLineVM> list, DblPoint2 DstPoint)
+    {
+      if (list.Count > 0)
+      {
+        PlannedLines.Add(new CLineVM(list.Last().P2, DstPoint, mWorldToCuttingPlaneTransform));
+      }
+      else
+      {
+        PlannedLines.Add(new CLineVM(new DblPoint2(0, 0), DstPoint, mWorldToCuttingPlaneTransform));
+      }
+    }
 
-		private void mGrbl_PlannerBlocksChanged(object sender, CPlannerBlocksChangedEventArgs e)
-		{
-			Dispatcher.Invoke(() => mGrbl_PlannerBlocksChangedDo(e));
-		}
-
-		private void mGrbl_PlannerBlocksChangedDo(CPlannerBlocksChangedEventArgs e)
-		{
-			switch (e.PlannerBlocksChangedState)
-			{
-				case EPlannerBlockChangedState.BlockAdded:
-					var line = Grbl.plan_lines.Last();
-					AddPlannedLine(GetNormalizedX(line.end[0]), GetNormalizedY(line.end[1])); break;
-				case EPlannerBlockChangedState.BlockRemoved:
-					RemovePlannedLine(); break;
-			}
-		}
-
-		public void AddPlannedLine(double x, double y)
-		{
-			CLineVM newLine = new CLineVM();
-			if (mPlannedLines.Count > 0)
-			{
-				newLine.X1 = mPlannedLines.Last().X2;
-				newLine.Y1 = mPlannedLines.Last().Y2;
-			}
-			else
-			{
-				newLine.X1 = newLine.X2 = newLine.Y1 = newLine.Y2 = 0;
-			}
-
-			newLine.X2 = x;
-			newLine.Y2 = y;
-			//ssl
-			PlannedLines.Add(newLine);
-		}
-
-		public void RemovePlannedLine()
-		{
-			AddDrawnLine(PlannedLines.First().X2, PlannedLines.First().Y2);
-			PlannedLines.Remove(PlannedLines.First());
-		}
-
-
-		public void AddDrawnLine(double x, double y)
-		{
-			CLineVM newLine = new CLineVM();
-			if (mDrawnLines.Count > 0)
-			{
-				newLine.X1 = mDrawnLines.Last().X2;
-				newLine.Y1 = mDrawnLines.Last().Y2;
-			}
-			else
-			{
-				newLine.X1 = newLine.X2 = newLine.Y1 = newLine.Y2 = 0;
-			}
-
-			newLine.X2 = x;
-			newLine.Y2 = y;
-
-			DrawnLines.Add(newLine);
-		}
-	}
+    public void RemovePlannedLine()
+    {
+      var lineToRemove = PlannedLines.First();
+      PlannedLines.RemoveAt(0);
+      mDrawnLines.Add(lineToRemove);
+    }
+  }
 }

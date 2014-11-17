@@ -45,6 +45,7 @@
     <Compile Include="CMath.cs" />
     <Compile Include="ConcaveHull.cs" />
     <Compile Include="CPoint.cs" />
+    <Compile Include="CScaleTranslateTransform.cs" />
     <Compile Include="CubicBezier.cs" />
     <Compile Include="DblPoint2.cs" />
     <Compile Include="Files\SvgWriter.cs" />
