@@ -69,6 +69,10 @@
       <Project>{a25dc3f3-71df-4145-93e3-a7c5eca652b1}</Project>
       <Name>bitLab.Logging</Name>
     </ProjectReference>
+    <ProjectReference Include="..\bitLab.Math\bitLab.Math.csproj">
+      <Project>{97412ef3-deef-41da-a332-f3920fa41860}</Project>
+      <Name>bitLab.Math</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

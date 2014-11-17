@@ -87,22 +87,22 @@ namespace bitLab.LaserCat.Grbl
       float rt_axis1 = target[axis_1] - center_axis1;
 
       // CCW angle between position and target from circle center. Only one atan2() trig computation required.
-      float angular_travel = (float)Math.Atan2(r_axis0 * rt_axis1 - r_axis1 * rt_axis0, r_axis0 * rt_axis0 + r_axis1 * rt_axis1);
+      float angular_travel = (float)System.Math.Atan2(r_axis0 * rt_axis1 - r_axis1 * rt_axis0, r_axis0 * rt_axis0 + r_axis1 * rt_axis1);
       if (mGCode.gc_state.modal.motion == GCode.MOTION_MODE_CW_ARC)
       { // Correct atan2 output per direction
-        if (angular_travel >= 0) { angular_travel -= (float)(2 * Math.PI); }
+        if (angular_travel >= 0) { angular_travel -= (float)(2 * System.Math.PI); }
       }
       else
       {
-        if (angular_travel <= 0) { angular_travel += (float)(2 * Math.PI); }
+        if (angular_travel <= 0) { angular_travel += (float)(2 * System.Math.PI); }
       }
 
       // NOTE: Segment end points are on the arc, which can lead to the arc diameter being smaller by up to
       // (2x) settings.arc_tolerance. For 99% of users, this is just fine. If a different arc segment fit
       // is desired, i.e. least-squares, midpoint on arc, just change the mm_per_arc_segment calculation.
       // For the intended uses of Grbl, this value shouldn't exceed 2000 for the strictest of cases.
-      ushort segments = (ushort)Math.Floor(Math.Abs(0.5 * angular_travel * radius) /
-                                           Math.Sqrt(settings.arc_tolerance * (2 * radius - settings.arc_tolerance)));
+      ushort segments = (ushort)System.Math.Floor(System.Math.Abs(0.5 * angular_travel * radius) /
+                                           System.Math.Sqrt(settings.arc_tolerance * (2 * radius - settings.arc_tolerance)));
 
       if (segments != 0)
       {
@@ -165,8 +165,8 @@ namespace bitLab.LaserCat.Grbl
           {
             // Arc correction to radius vector. Computed only every N_ARC_CORRECTION increments. ~375 usec
             // Compute exact location by applying transformation matrix from initial radius vector(=-offset).
-            cos_Ti = (float)Math.Cos(i * theta_per_segment);
-            sin_Ti = (float)Math.Sin(i * theta_per_segment);
+            cos_Ti = (float)System.Math.Cos(i * theta_per_segment);
+            sin_Ti = (float)System.Math.Sin(i * theta_per_segment);
             r_axis0 = -offset[axis_0] * cos_Ti + offset[axis_1] * sin_Ti;
             r_axis1 = -offset[axis_0] * sin_Ti - offset[axis_1] * cos_Ti;
             count = 0;
@@ -201,9 +201,9 @@ namespace bitLab.LaserCat.Grbl
     {
       if (sys.state == STATE_CHECK_MODE) { return; }
 
-      ushort i = (ushort)Math.Floor(1000 / DWELL_TIME_STEP * seconds);
+      ushort i = (ushort)System.Math.Floor(1000 / DWELL_TIME_STEP * seconds);
       protocol_buffer_synchronize();
-      delay_ms((ushort)Math.Floor(1000 * seconds - i * DWELL_TIME_STEP)); // Delay millisecond remainder.
+      delay_ms((ushort)System.Math.Floor(1000 * seconds - i * DWELL_TIME_STEP)); // Delay millisecond remainder.
       while (i-- > 0)
       {
         // NOTE: Check and execute runtime commands during dwell every <= DWELL_TIME_STEP milliseconds.

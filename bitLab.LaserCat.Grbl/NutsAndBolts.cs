@@ -28,7 +28,7 @@ namespace bitLab.LaserCat.Grbl
 
     public int trunc(float x)
     {
-      return (int)Math.Truncate(x);
+      return (int)System.Math.Truncate(x);
     }
 
     private const int MAX_INT_DIGITS = 8;
@@ -130,12 +130,12 @@ namespace bitLab.LaserCat.Grbl
     {
       //SB!Copied from wikipedia
       double t;
-      x = Math.Abs(x);
-      y = Math.Abs(y);
-      t = Math.Min(x, y);
-      x = Math.Max(x, y);
+      x = System.Math.Abs(x);
+      y = System.Math.Abs(y);
+      t = System.Math.Min(x, y);
+      x = System.Math.Max(x, y);
       t = t / x;
-      return (float)(x * Math.Sqrt(1 + t * t));
+      return (float)(x * System.Math.Sqrt(1 + t * t));
     }
 
     public void copyArray(float[] dst, float[] src)

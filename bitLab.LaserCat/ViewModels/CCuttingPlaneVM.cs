@@ -32,14 +32,10 @@ namespace bitLab.LaserCat.ViewModels
 
       double scale;
       if (mCuttingPlaneSize.x / mCuttingPlaneSize.y > worldWidth / worldHeight)
-      {
         //The first dimension to hit the border is height, because cuttingplane has a wider aspect than world
         scale = mCuttingPlaneSize.y / worldHeight;
-      }
       else
-      {
         scale = mCuttingPlaneSize.x / worldWidth;
-      }
 
       mWorldToCuttingPlaneTransform = new ScaleTranslateTransform(new DblPoint2(scale, -scale),
                                                                   new DblPoint2(mCuttingPlaneSize.x / 2,
@@ -100,8 +96,7 @@ namespace bitLab.LaserCat.ViewModels
       switch (e.PlannerBlocksChangedState)
       {
         case EPlannerBlockChangedState.BlockAdded:
-          var line = Grbl.plan_lines.Last();
-          AddLineToList(mPlannedLines, new DblPoint2(line.end[0], line.end[1])); 
+          AddLineToList(mPlannedLines, e.Target); 
           break;
         case EPlannerBlockChangedState.BlockRemoved:
           RemovePlannedLine(); 

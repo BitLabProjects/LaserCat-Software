@@ -5,14 +5,16 @@ Fase 4: Conquistare il mondo
 
 Fase 1.
 1.1 Convertire Grbl in C#                                                     [Ok]    Lasciato alcuni TODO da convertire a necessità
-1.2 Implementare un simulatore
-- 1.2.1 Mostrare a video lo stato interno di Grbl:
-        - Planner Buffer, Segment Buffer (livello di riempimento, altro?)
-        - Stato dei moduli: stepper, coolant, limits, ecc..
-        - Stato della struttura sys (capire cosa è interessante)
-        - Lunghezza percorsa e mancante, velocità corrente, ...
-- 1.2.2 Piano cartesiano con:
-        - Puntino della posizione corrente
-        - Linee eseguite dal planner in blu
-        - Linee correntemente nel planner in rosso
+1.2 Implementare un simulatore                                                [Ok]
+- 1.2.1 Mostrare a video lo stato interno di Grbl:                            [Ok]
+        - Planner Buffer, Segment Buffer (livello di riempimento, altro?)     [Ok]
+        - Stato dei moduli: stepper, coolant, limits, ecc...                  [Future]
+        - Stato della struttura sys (capire cosa è interessante)              [Ok]
+        - Lunghezza percorsa e mancante, velocità corrente, ...               [Ok]
+- 1.2.2 Piano cartesiano con:                                                 [Ok]
+        - Puntino della posizione corrente                                    [Ok]
+        - Linee eseguite dal planner in blu                                   [Ok]
+        - Linee correntemente nel planner in rosso                            [Ok]
+        
+Fase 2.
         

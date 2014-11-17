@@ -1,4 +1,5 @@
-﻿using System;
+﻿using bitLab.Math;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,7 @@ namespace bitLab.LaserCat.Grbl
 	public class CPlannerBlocksChangedEventArgs : EventArgs
 	{
 		public EPlannerBlockChangedState PlannerBlocksChangedState;
+    public DblPoint2 Target;
 	}
 
 	unsafe public partial class GrblFirmware
@@ -30,28 +32,15 @@ namespace bitLab.LaserCat.Grbl
 
 		//SB! Added event to notify planner blocks changes
 		public event EventHandler<CPlannerBlocksChangedEventArgs> PlannerBlocksChanged;
-		private void RaisePlannerBlocksChanged(CPlannerBlocksChangedEventArgs plannerState)
+    private void RaisePlannerBlocksChanged(EPlannerBlockChangedState state)
+    {
+      RaisePlannerBlocksChanged(state, new DblPoint2());
+    }
+    private void RaisePlannerBlocksChanged(EPlannerBlockChangedState state, DblPoint2 target)
 		{
 			if (PlannerBlocksChanged != null)
-				PlannerBlocksChanged(this, plannerState);
+        PlannerBlocksChanged(this, new CPlannerBlocksChangedEventArgs() { PlannerBlocksChangedState = state, Target = target });
 		}
-		public struct plan_line_t
-		{
-			public float[] start;
-			public float[] end;
-			public plan_line_t(float sx, float sy, float sz, float ex, float ey, float ez)
-			{
-				start = new float[NutsAndBolts.N_AXIS];
-				end = new float[NutsAndBolts.N_AXIS];
-				start[0] = sx;
-				start[1] = sy;
-				start[2] = sz;
-				end[0] = ex;
-				end[1] = ey;
-				end[2] = ez;
-			}
-		}
-		public List<plan_line_t> plan_lines = new List<plan_line_t>();
 
 		public struct plan_block_t
 		{
@@ -86,7 +75,6 @@ namespace bitLab.LaserCat.Grbl
 				line_number = 0;
 			}
 		} ;
-
 
 		public const float SOME_LARGE_VALUE = 1.0E+38f; // Used by rapids and acceleration maximization calculations. Just needs
 		// to be larger than any feasible (mm/min)^2 or mm/sec^2 value.
@@ -311,10 +299,7 @@ namespace bitLab.LaserCat.Grbl
 			block_buffer_head = 0; // Empty = tail
 			next_buffer_head = 1; // plan_next_block_index(block_buffer_head)
 			block_buffer_planned = 0; // = block_buffer_tail;
-			plan_lines.Clear();
-			CPlannerBlocksChangedEventArgs plannerState = new CPlannerBlocksChangedEventArgs();
-			plannerState.PlannerBlocksChangedState = EPlannerBlockChangedState.Reset;
-			RaisePlannerBlocksChanged(plannerState);
+			RaisePlannerBlocksChanged(EPlannerBlockChangedState.Reset);
 		}
 
 
@@ -326,10 +311,7 @@ namespace bitLab.LaserCat.Grbl
 				// Push block_buffer_planned pointer, if encountered.
 				if (block_buffer_tail == block_buffer_planned) { block_buffer_planned = block_index; }
 				block_buffer_tail = block_index;
-				plan_lines.RemoveAt(0);
-				CPlannerBlocksChangedEventArgs plannerState = new CPlannerBlocksChangedEventArgs();
-				plannerState.PlannerBlocksChangedState = EPlannerBlockChangedState.BlockRemoved;
-				RaisePlannerBlocksChanged(plannerState);
+        RaisePlannerBlocksChanged(EPlannerBlockChangedState.BlockRemoved);
 			}
 		}
 
@@ -374,12 +356,12 @@ namespace bitLab.LaserCat.Grbl
 		public void plan_buffer_line(float[] target, float feed_rate, bool invert_feed_rate)
 		//#endif
 		{
-			plan_lines.Add(new plan_line_t(pl.position[0] * settings.steps_per_mm[0],
-																		 pl.position[1] * settings.steps_per_mm[1],
-																		 pl.position[2] * settings.steps_per_mm[2],
-																		 target[0] * settings.steps_per_mm[0],
-																		 target[1] * settings.steps_per_mm[1],
-																		 target[2] * settings.steps_per_mm[2]));
+      //plan_lines.Add(new plan_line_t(pl.position[0] * settings.steps_per_mm[0],
+      //                               pl.position[1] * settings.steps_per_mm[1],
+      //                               pl.position[2] * settings.steps_per_mm[2],
+      //                               target[0] * settings.steps_per_mm[0],
+      //                               target[1] * settings.steps_per_mm[1],
+      //                               target[2] * settings.steps_per_mm[2]));
 
 			// Prepare and initialize new block	
 			int blockIdx = block_buffer_head;
@@ -402,11 +384,11 @@ namespace bitLab.LaserCat.Grbl
 			for (idx = 0; idx < NutsAndBolts.N_AXIS; idx++)
 			{
 				// Calculate target position in absolute steps. This conversion should be consistent throughout.
-				target_steps[idx] = (int)Math.Round(target[idx] * settings.steps_per_mm[idx]);
+				target_steps[idx] = (int)System.Math.Round(target[idx] * settings.steps_per_mm[idx]);
 
 				// Number of steps for each axis and determine max step events
-				block_buffer[blockIdx].steps[idx] = (uint)Math.Abs(target_steps[idx] - pl.position[idx]);
-				block_buffer[blockIdx].step_event_count = (uint)Math.Max(block_buffer[blockIdx].step_event_count, block_buffer[blockIdx].steps[idx]);
+				block_buffer[blockIdx].steps[idx] = (uint)System.Math.Abs(target_steps[idx] - pl.position[idx]);
+				block_buffer[blockIdx].step_event_count = (uint)System.Math.Max(block_buffer[blockIdx].step_event_count, block_buffer[blockIdx].steps[idx]);
 
 				// Compute individual axes distance for move and prep unit vector calculations.
 				// NOTE: Computes true distance from converted step values.
@@ -419,7 +401,7 @@ namespace bitLab.LaserCat.Grbl
 				// Incrementally compute total move distance by Euclidean norm. First add square of each term.
 				block_buffer[blockIdx].millimeters += delta_mm * delta_mm;
 			}
-			block_buffer[blockIdx].millimeters = (float)Math.Sqrt(block_buffer[blockIdx].millimeters); // Complete millimeters calculation with sqrt()
+			block_buffer[blockIdx].millimeters = (float)System.Math.Sqrt(block_buffer[blockIdx].millimeters); // Complete millimeters calculation with sqrt()
 
 			// Bail if this is a zero-length block. Highly unlikely to occur.
 			if (block_buffer[blockIdx].step_event_count == 0) { return; }
@@ -442,11 +424,11 @@ namespace bitLab.LaserCat.Grbl
 				if (unit_vec[idx] != 0)
 				{  // Avoid divide by zero.
 					unit_vec[idx] *= inverse_millimeters;  // Complete unit vector calculation
-					inverse_unit_vec_value = (float)Math.Abs(1.0 / unit_vec[idx]); // Inverse to remove multiple float divides.
+					inverse_unit_vec_value = (float)System.Math.Abs(1.0 / unit_vec[idx]); // Inverse to remove multiple float divides.
 
 					// Check and limit feed rate against max individual axis velocities and accelerations
-					feed_rate = (float)Math.Min(feed_rate, settings.max_rate[idx] * inverse_unit_vec_value);
-					block_buffer[blockIdx].acceleration = (float)Math.Min(block_buffer[blockIdx].acceleration, settings.acceleration[idx] * inverse_unit_vec_value);
+					feed_rate = (float)System.Math.Min(feed_rate, settings.max_rate[idx] * inverse_unit_vec_value);
+					block_buffer[blockIdx].acceleration = (float)System.Math.Min(block_buffer[blockIdx].acceleration, settings.acceleration[idx] * inverse_unit_vec_value);
 
 					// Incrementally compute cosine of angle between previous and current path. Cos(theta) of the junction
 					// between the current move and the previous move is simply the dot product of the two unit vectors, 
@@ -490,11 +472,11 @@ namespace bitLab.LaserCat.Grbl
 					 change the overall maximum entry speed conditions of all blocks.
 				*/
 				// NOTE: Computed without any expensive trig, sin() or acos(), by trig half angle identity of cos(theta).
-				float sin_theta_d2 = (float)Math.Sqrt(0.5 * (1.0 - junction_cos_theta)); // Trig half angle identity. Always positive.
+				float sin_theta_d2 = (float)System.Math.Sqrt(0.5 * (1.0 - junction_cos_theta)); // Trig half angle identity. Always positive.
 
 				// TODO: Technically, the acceleration used in calculation needs to be limited by the minimum of the
 				// two junctions. However, this shouldn't be a significant problem except in extreme circumstances.
-				block_buffer[blockIdx].max_junction_speed_sqr = (float)Math.Max(MINIMUM_JUNCTION_SPEED * MINIMUM_JUNCTION_SPEED,
+				block_buffer[blockIdx].max_junction_speed_sqr = (float)System.Math.Max(MINIMUM_JUNCTION_SPEED * MINIMUM_JUNCTION_SPEED,
 																		 (block_buffer[blockIdx].acceleration * settings.junction_deviation * sin_theta_d2) / (1.0 - sin_theta_d2));
 			}
 
@@ -502,8 +484,8 @@ namespace bitLab.LaserCat.Grbl
 			block_buffer[blockIdx].nominal_speed_sqr = feed_rate * feed_rate; // (mm/min). Always > 0
 
 			// Compute the junction maximum entry based on the minimum of the junction speed and neighboring nominal speeds.
-			block_buffer[blockIdx].max_entry_speed_sqr = (float)Math.Min(block_buffer[blockIdx].max_junction_speed_sqr,
-																			 (float)Math.Min(block_buffer[blockIdx].nominal_speed_sqr, pl.previous_nominal_speed_sqr));
+			block_buffer[blockIdx].max_entry_speed_sqr = (float)System.Math.Min(block_buffer[blockIdx].max_junction_speed_sqr,
+																			 (float)System.Math.Min(block_buffer[blockIdx].nominal_speed_sqr, pl.previous_nominal_speed_sqr));
 
 			// Update previous path unit_vector and nominal speed (squared)
 			copyArray(pl.previous_unit_vec, unit_vec); // pl.previous_unit_vec[] = unit_vec[]
@@ -518,11 +500,9 @@ namespace bitLab.LaserCat.Grbl
 
 			// Finish up by recalculating the plan with the new block.
 			planner_recalculate();
-			CPlannerBlocksChangedEventArgs plannerState = new CPlannerBlocksChangedEventArgs();
-			plannerState.PlannerBlocksChangedState = EPlannerBlockChangedState.BlockAdded;
-			RaisePlannerBlocksChanged(plannerState);
-		}
-
+      RaisePlannerBlocksChanged(EPlannerBlockChangedState.BlockAdded, new DblPoint2(target[0] * settings.steps_per_mm[0],
+                                                                                    target[1] * settings.steps_per_mm[1]));
+		}                                                                               
 
 		// Reset the planner position vectors. Called by the system abort/initialization routine.
 		public void plan_sync_position()
@@ -551,9 +531,7 @@ namespace bitLab.LaserCat.Grbl
 			st_update_plan_block_parameters();
 			block_buffer_planned = block_buffer_tail;
 			planner_recalculate();
-			CPlannerBlocksChangedEventArgs plannerState = new CPlannerBlocksChangedEventArgs();
-			plannerState.PlannerBlocksChangedState = EPlannerBlockChangedState.Reset;
-			RaisePlannerBlocksChanged(plannerState);
+			RaisePlannerBlocksChanged(EPlannerBlockChangedState.Reset);
 		}
 	}
 }
