@@ -32,7 +32,7 @@ namespace bitLab.LaserCat.Grbl
       }
       return array;
     }
-    public st_block_t[] st_block_buffer = CreateStBlockArray(SEGMENT_BUFFER_SIZE-1);
+    public st_block_t[] st_block_buffer = CreateStBlockArray(SEGMENT_BUFFER_SIZE - 1);
 
     //SB! Added event to notify planner blocks changes
     public event EventHandler StepperSegmentBufferChanged;
@@ -316,15 +316,15 @@ namespace bitLab.LaserCat.Grbl
     // with probing and homing cycles that require true real-time positions.
     //ISR(TIMER1_COMPA_vect)
     public bool TIMER1_COMPA_vect()
-    {        
-    // SPINDLE_ENABLE_PORT ^= 1<<SPINDLE_ENABLE_BIT; // Debug: Used to time ISR
+    {
+      // SPINDLE_ENABLE_PORT ^= 1<<SPINDLE_ENABLE_BIT; // Debug: Used to time ISR
       if (busy) { return false; } // The busy-flag is used to avoid reentering this interrupt
 
       // Set the direction pins a couple of nanoseconds before we step the steppers
       DIRECTION_PORT = (DIRECTION_PORT & ~DIRECTION_MASK) | (st.dir_outbits & DIRECTION_MASK);
 
       // Then pulse the stepping pins
-      if (STEP_PULSE_DELAY!=0)
+      if (STEP_PULSE_DELAY != 0)
         st.step_bits = (byte)((STEP_PORT & ~STEP_MASK) | st.step_outbits); // Store out_bits to prevent overwriting.
       else  // Normal operation
         STEP_PORT = (STEP_PORT & ~STEP_MASK) | st.step_outbits;
@@ -336,17 +336,19 @@ namespace bitLab.LaserCat.Grbl
 
       busy = true;
       //TODO sei(); // Re-enable interrupts to allow Stepper Port Reset Interrupt to fire on-time. 
-             // NOTE: The remaining code in this ISR will finish before returning to main program.
+      // NOTE: The remaining code in this ISR will finish before returning to main program.
 
       // If there is no step segment, attempt to pop one from the stepper buffer
       if (st.exec_segmentIdx == -1)
       {
         // Anything in the buffer? If so, load and initialize next step segment.
-        if (segment_buffer_head != segment_buffer_tail) {
+        if (segment_buffer_head != segment_buffer_tail)
+        {
           // Initialize new step segment and load number of steps to execute
           st.exec_segmentIdx = segment_buffer_tail;
 
-          if (!ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING) {
+          if (!ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
+          {
             // With AMASS is disabled, set timer prescaler for segments with slow step frequencies (< 250Hz).
             //TODO TCCR1B = (TCCR1B & ~(0x07<<CS10)) | (segment_buffer[st.exec_segmentIdx].prescaler<<CS10);
           }
@@ -356,7 +358,8 @@ namespace bitLab.LaserCat.Grbl
           st.step_count = segment_buffer[st.exec_segmentIdx].n_step; // NOTE: Can sometimes be zero when moving slow.
           // If the new segment starts a new planner block, initialize stepper variables and counters.
           // NOTE: When the segment data index changes, this indicates a new planner block.
-          if ( st.exec_block_index != segment_buffer[st.exec_segmentIdx].st_block_index ) {
+          if (st.exec_block_index != segment_buffer[st.exec_segmentIdx].st_block_index)
+          {
             st.exec_block_index = segment_buffer[st.exec_segmentIdx].st_block_index;
             //SB! no longer necessary, we already have st.exec_block_index
             //st.exec_block = &st_block_buffer[st.exec_block_index];
@@ -364,24 +367,27 @@ namespace bitLab.LaserCat.Grbl
             // Initialize Bresenham line and distance counters
             st.counter_x = (st_block_buffer[st.exec_block_index].step_event_count >> 1);
             st.counter_y = st.counter_x;
-            st.counter_z = st.counter_x;        
+            st.counter_z = st.counter_x;
           }
 
-          st.dir_outbits = (byte)(st_block_buffer[st.exec_block_index].direction_bits ^ dir_port_invert_mask); 
+          st.dir_outbits = (byte)(st_block_buffer[st.exec_block_index].direction_bits ^ dir_port_invert_mask);
 
-          if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING) {
+          if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
+          {
             // With AMASS enabled, adjust Bresenham axis increment counters according to AMASS level.
             st.steps[NutsAndBolts.X_AXIS] = st_block_buffer[st.exec_block_index].steps[NutsAndBolts.X_AXIS] >> segment_buffer[st.exec_segmentIdx].amass_level;
             st.steps[NutsAndBolts.Y_AXIS] = st_block_buffer[st.exec_block_index].steps[NutsAndBolts.Y_AXIS] >> segment_buffer[st.exec_segmentIdx].amass_level;
             st.steps[NutsAndBolts.Z_AXIS] = st_block_buffer[st.exec_block_index].steps[NutsAndBolts.Z_AXIS] >> segment_buffer[st.exec_segmentIdx].amass_level;
           }
 
-        } else {
+        }
+        else
+        {
           // Segment buffer empty. Shutdown.
           st_go_idle();
           bit_true_atomic(ref sys.execute, EXEC_CYCLE_STOP); // Flag main program for cycle end
           return false; // Nothing to do but exit.
-        }  
+        }
       }
 
 
@@ -389,59 +395,63 @@ namespace bitLab.LaserCat.Grbl
       probe_state_monitor();
 
       // Reset step out bits.
-      st.step_outbits = 0; 
+      st.step_outbits = 0;
 
       // Execute step displacement profile by Bresenham line algorithm
       if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
         st.counter_x += st.steps[NutsAndBolts.X_AXIS];
       else
         st.counter_x += st_block_buffer[st.exec_block_index].steps[NutsAndBolts.X_AXIS];
-      
-      if (st.counter_x > st_block_buffer[st.exec_block_index].step_event_count) {
-        st.step_outbits |= (1<<X_STEP_BIT);
+
+      if (st.counter_x > st_block_buffer[st.exec_block_index].step_event_count)
+      {
+        st.step_outbits |= (1 << X_STEP_BIT);
         st.counter_x -= st_block_buffer[st.exec_block_index].step_event_count;
-        if ((st_block_buffer[st.exec_block_index].direction_bits & (1<<X_DIRECTION_BIT))!=0) { sys.position[NutsAndBolts.X_AXIS]--; }
+        if ((st_block_buffer[st.exec_block_index].direction_bits & (1 << X_DIRECTION_BIT)) != 0) { sys.position[NutsAndBolts.X_AXIS]--; }
         else { sys.position[NutsAndBolts.X_AXIS]++; }
       }
       if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
         st.counter_y += st.steps[NutsAndBolts.Y_AXIS];
       else
         st.counter_y += st_block_buffer[st.exec_block_index].steps[NutsAndBolts.Y_AXIS];
-      
-      if (st.counter_y > st_block_buffer[st.exec_block_index].step_event_count) {
-        st.step_outbits |= (1<<Y_STEP_BIT);
+
+      if (st.counter_y > st_block_buffer[st.exec_block_index].step_event_count)
+      {
+        st.step_outbits |= (1 << Y_STEP_BIT);
         st.counter_y -= st_block_buffer[st.exec_block_index].step_event_count;
-        if ((st_block_buffer[st.exec_block_index].direction_bits & (1<<Y_DIRECTION_BIT))!=0) { sys.position[NutsAndBolts.Y_AXIS]--; }
+        if ((st_block_buffer[st.exec_block_index].direction_bits & (1 << Y_DIRECTION_BIT)) != 0) { sys.position[NutsAndBolts.Y_AXIS]--; }
         else { sys.position[NutsAndBolts.Y_AXIS]++; }
       }
       if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
         st.counter_z += st.steps[NutsAndBolts.Z_AXIS];
       else
         st.counter_z += st_block_buffer[st.exec_block_index].steps[NutsAndBolts.Z_AXIS];
-      
-      if (st.counter_z > st_block_buffer[st.exec_block_index].step_event_count) {
-        st.step_outbits |= (1<<Z_STEP_BIT);
+
+      if (st.counter_z > st_block_buffer[st.exec_block_index].step_event_count)
+      {
+        st.step_outbits |= (1 << Z_STEP_BIT);
         st.counter_z -= st_block_buffer[st.exec_block_index].step_event_count;
-        if ((st_block_buffer[st.exec_block_index].direction_bits & (1<<Z_DIRECTION_BIT))!=0) { sys.position[NutsAndBolts.Z_AXIS]--; }
+        if ((st_block_buffer[st.exec_block_index].direction_bits & (1 << Z_DIRECTION_BIT)) != 0) { sys.position[NutsAndBolts.Z_AXIS]--; }
         else { sys.position[NutsAndBolts.Z_AXIS]++; }
-      }  
+      }
 
       // During a homing cycle, lock out and prevent desired axes from moving.
-      if (sys.state == STATE_HOMING) { st.step_outbits &= sys.homing_axis_lock; }   
+      if (sys.state == STATE_HOMING) { st.step_outbits &= sys.homing_axis_lock; }
 
       st.step_count--; // Decrement step events count 
       var hasFinishedASegment = false;
-      if (st.step_count == 0) {
+      if (st.step_count == 0)
+      {
         // Segment is complete. Discard current segment and advance segment indexing.
         st.exec_segmentIdx = -1;
-        if ( ++segment_buffer_tail == SEGMENT_BUFFER_SIZE) { segment_buffer_tail = 0; }
+        if (++segment_buffer_tail == SEGMENT_BUFFER_SIZE) { segment_buffer_tail = 0; }
         hasFinishedASegment = true;
         RaiseStepperSegmentBufferChanged();
       }
 
       st.step_outbits ^= step_port_invert_mask;  // Apply step port invert mask    
       busy = false;
-    // SPINDLE_ENABLE_PORT ^= 1<<SPINDLE_ENABLE_BIT; // Debug: Used to time ISR
+      // SPINDLE_ENABLE_PORT ^= 1<<SPINDLE_ENABLE_BIT; // Debug: Used to time ISR
       return hasFinishedASegment;
     }
 
@@ -712,243 +722,242 @@ namespace bitLab.LaserCat.Grbl
         }
 
         // Initialize new segment
-        fixed (segment_t* prep_segment = &segment_buffer[segment_buffer_head])
+        //SB!Replaced prep_segment pointer with array access
+        //fixed (segment_t* prep_segment = &segment_buffer[segment_buffer_head])
+
+
+        // Set new segment to point to the current segment data block.
+        segment_buffer[segment_buffer_head].st_block_index = prep.st_block_index;
+
+        /*------------------------------------------------------------------------------------
+            Compute the average velocity of this new segment by determining the total distance
+          traveled over the segment time DT_SEGMENT. The following code first attempts to create 
+          a full segment based on the current ramp conditions. If the segment time is incomplete 
+          when terminating at a ramp state change, the code will continue to loop through the
+          progressing ramp states to fill the remaining segment execution time. However, if 
+          an incomplete segment terminates at the end of the velocity profile, the segment is 
+          considered completed despite having a truncated execution time less than DT_SEGMENT.
+            The velocity profile is always assumed to progress through the ramp sequence:
+          acceleration ramp, cruising state, and deceleration ramp. Each ramp's travel distance
+          may range from zero to the length of the block. Velocity profiles can end either at 
+          the end of planner block (typical) or mid-block at the end of a forced deceleration, 
+          such as from a feed hold.
+        */
+        float dt_max = DT_SEGMENT; // Maximum segment time
+        float dt = 0.0f; // Initialize segment time
+        float time_var = dt_max; // Time worker variable
+        float mm_var; // mm-Distance worker variable
+        float speed_var; // Speed worker variable   
+        float mm_remaining = block_buffer[pl_blockIdx].millimeters; // New segment distance from end of block.
+        float minimum_mm = mm_remaining - prep.req_mm_increment; // Guarantee at least one step.
+        if (minimum_mm < 0.0) { minimum_mm = 0.0f; }
+
+        do
         {
-
-
-          // Set new segment to point to the current segment data block.
-          prep_segment->st_block_index = prep.st_block_index;
-
-          /*------------------------------------------------------------------------------------
-              Compute the average velocity of this new segment by determining the total distance
-            traveled over the segment time DT_SEGMENT. The following code first attempts to create 
-            a full segment based on the current ramp conditions. If the segment time is incomplete 
-            when terminating at a ramp state change, the code will continue to loop through the
-            progressing ramp states to fill the remaining segment execution time. However, if 
-            an incomplete segment terminates at the end of the velocity profile, the segment is 
-            considered completed despite having a truncated execution time less than DT_SEGMENT.
-              The velocity profile is always assumed to progress through the ramp sequence:
-            acceleration ramp, cruising state, and deceleration ramp. Each ramp's travel distance
-            may range from zero to the length of the block. Velocity profiles can end either at 
-            the end of planner block (typical) or mid-block at the end of a forced deceleration, 
-            such as from a feed hold.
-          */
-          float dt_max = DT_SEGMENT; // Maximum segment time
-          float dt = 0.0f; // Initialize segment time
-          float time_var = dt_max; // Time worker variable
-          float mm_var; // mm-Distance worker variable
-          float speed_var; // Speed worker variable   
-          float mm_remaining = block_buffer[pl_blockIdx].millimeters; // New segment distance from end of block.
-          float minimum_mm = mm_remaining - prep.req_mm_increment; // Guarantee at least one step.
-          if (minimum_mm < 0.0) { minimum_mm = 0.0f; }
-
-          do
+          switch (prep.ramp_type)
           {
-            switch (prep.ramp_type)
-            {
-              case RAMP_ACCEL:
-                // NOTE: Acceleration ramp only computes during first do-while loop.
-                speed_var = block_buffer[pl_blockIdx].acceleration * time_var;
-                mm_remaining -= time_var * (prep.current_speed + 0.5f * speed_var);
-                if (mm_remaining < prep.accelerate_until)
-                { // End of acceleration ramp.
-                  // Acceleration-cruise, acceleration-deceleration ramp junction, or end of block.
-                  mm_remaining = prep.accelerate_until; // NOTE: 0.0 at EOB
-                  time_var = 2.0f * (block_buffer[pl_blockIdx].millimeters - mm_remaining) / (prep.current_speed + prep.maximum_speed);
-                  if (mm_remaining == prep.decelerate_after) { prep.ramp_type = RAMP_DECEL; }
-                  else { prep.ramp_type = RAMP_CRUISE; }
-                  prep.current_speed = prep.maximum_speed;
-                }
-                else
-                { // Acceleration only. 
-                  prep.current_speed += speed_var;
-                }
-                break;
-              case RAMP_CRUISE:
-                // NOTE: mm_var used to retain the last mm_remaining for incomplete segment time_var calculations.
-                // NOTE: If maximum_speed*time_var value is too low, round-off can cause mm_var to not change. To 
-                //   prevent this, simply enforce a minimum speed threshold in the planner.
-                mm_var = mm_remaining - prep.maximum_speed * time_var;
-                if (mm_var < prep.decelerate_after)
-                { // End of cruise. 
-                  // Cruise-deceleration junction or end of block.
-                  time_var = (mm_remaining - prep.decelerate_after) / prep.maximum_speed;
-                  mm_remaining = prep.decelerate_after; // NOTE: 0.0 at EOB
-                  prep.ramp_type = RAMP_DECEL;
-                }
-                else
-                { // Cruising only.         
+            case RAMP_ACCEL:
+              // NOTE: Acceleration ramp only computes during first do-while loop.
+              speed_var = block_buffer[pl_blockIdx].acceleration * time_var;
+              mm_remaining -= time_var * (prep.current_speed + 0.5f * speed_var);
+              if (mm_remaining < prep.accelerate_until)
+              { // End of acceleration ramp.
+                // Acceleration-cruise, acceleration-deceleration ramp junction, or end of block.
+                mm_remaining = prep.accelerate_until; // NOTE: 0.0 at EOB
+                time_var = 2.0f * (block_buffer[pl_blockIdx].millimeters - mm_remaining) / (prep.current_speed + prep.maximum_speed);
+                if (mm_remaining == prep.decelerate_after) { prep.ramp_type = RAMP_DECEL; }
+                else { prep.ramp_type = RAMP_CRUISE; }
+                prep.current_speed = prep.maximum_speed;
+              }
+              else
+              { // Acceleration only. 
+                prep.current_speed += speed_var;
+              }
+              break;
+            case RAMP_CRUISE:
+              // NOTE: mm_var used to retain the last mm_remaining for incomplete segment time_var calculations.
+              // NOTE: If maximum_speed*time_var value is too low, round-off can cause mm_var to not change. To 
+              //   prevent this, simply enforce a minimum speed threshold in the planner.
+              mm_var = mm_remaining - prep.maximum_speed * time_var;
+              if (mm_var < prep.decelerate_after)
+              { // End of cruise. 
+                // Cruise-deceleration junction or end of block.
+                time_var = (mm_remaining - prep.decelerate_after) / prep.maximum_speed;
+                mm_remaining = prep.decelerate_after; // NOTE: 0.0 at EOB
+                prep.ramp_type = RAMP_DECEL;
+              }
+              else
+              { // Cruising only.         
+                mm_remaining = mm_var;
+              }
+              break;
+            default: // case RAMP_DECEL:
+              // NOTE: mm_var used as a misc worker variable to prevent errors when near zero speed.
+              speed_var = block_buffer[pl_blockIdx].acceleration * time_var; // Used as delta speed (mm/min)
+              if (prep.current_speed > speed_var)
+              { // Check if at or below zero speed.
+                // Compute distance from end of segment to end of block.
+                mm_var = mm_remaining - time_var * (prep.current_speed - 0.5f * speed_var); // (mm)
+                if (mm_var > prep.mm_complete)
+                { // Deceleration only.
                   mm_remaining = mm_var;
+                  prep.current_speed -= speed_var;
+                  break; // Segment complete. Exit switch-case statement. Continue do-while loop.
                 }
-                break;
-              default: // case RAMP_DECEL:
-                // NOTE: mm_var used as a misc worker variable to prevent errors when near zero speed.
-                speed_var = block_buffer[pl_blockIdx].acceleration * time_var; // Used as delta speed (mm/min)
-                if (prep.current_speed > speed_var)
-                { // Check if at or below zero speed.
-                  // Compute distance from end of segment to end of block.
-                  mm_var = mm_remaining - time_var * (prep.current_speed - 0.5f * speed_var); // (mm)
-                  if (mm_var > prep.mm_complete)
-                  { // Deceleration only.
-                    mm_remaining = mm_var;
-                    prep.current_speed -= speed_var;
-                    break; // Segment complete. Exit switch-case statement. Continue do-while loop.
-                  }
-                } // End of block or end of forced-deceleration.
-                time_var = 2.0f * (mm_remaining - prep.mm_complete) / (prep.current_speed + prep.exit_speed);
-                mm_remaining = prep.mm_complete;
-                break;
+              } // End of block or end of forced-deceleration.
+              time_var = 2.0f * (mm_remaining - prep.mm_complete) / (prep.current_speed + prep.exit_speed);
+              mm_remaining = prep.mm_complete;
+              break;
+          }
+          dt += time_var; // Add computed ramp time to total segment time.
+          if (dt < dt_max) { time_var = dt_max - dt; } // **Incomplete** At ramp junction.
+          else
+          {
+            if (mm_remaining > minimum_mm)
+            { // Check for very slow segments with zero steps.
+              // Increase segment time to ensure at least one step in segment. Override and loop
+              // through distance calculations until minimum_mm or mm_complete.
+              dt_max += DT_SEGMENT;
+              time_var = dt_max - dt;
             }
-            dt += time_var; // Add computed ramp time to total segment time.
-            if (dt < dt_max) { time_var = dt_max - dt; } // **Incomplete** At ramp junction.
             else
             {
-              if (mm_remaining > minimum_mm)
-              { // Check for very slow segments with zero steps.
-                // Increase segment time to ensure at least one step in segment. Override and loop
-                // through distance calculations until minimum_mm or mm_complete.
-                dt_max += DT_SEGMENT;
-                time_var = dt_max - dt;
-              }
-              else
-              {
-                break; // **Complete** Exit loop. Segment execution time maxed.
-              }
-            }
-          } while (mm_remaining > prep.mm_complete); // **Complete** Exit loop. Profile complete.
-
-
-          /* -----------------------------------------------------------------------------------
-             Compute segment step rate, steps to execute, and apply necessary rate corrections.
-             NOTE: Steps are computed by direct scalar conversion of the millimeter distance 
-             remaining in the block, rather than incrementally tallying the steps executed per
-             segment. This helps in removing floating point round-off issues of several additions. 
-             However, since floats have only 7.2 significant digits, long moves with extremely 
-             high step counts can exceed the precision of floats, which can lead to lost steps.
-             Fortunately, this scenario is highly unlikely and unrealistic in CNC machines
-             supported by Grbl (i.e. exceeding 10 meters axis travel at 200 step/mm).
-          */
-          float steps_remaining = prep.step_per_mm * mm_remaining; // Convert mm_remaining to steps
-          short n_steps_remaining = (short)System.Math.Ceiling(steps_remaining); // Round-up current steps remaining
-          short last_n_steps_remaining = (short)System.Math.Ceiling(prep.steps_remaining); // Round-up last steps remaining
-          prep_segment->n_step = (short)(last_n_steps_remaining - n_steps_remaining); // Compute number of steps to execute.
-
-          // Bail if we are at the end of a feed hold and don't have a step to execute.
-          if (prep_segment->n_step == 0)
-          {
-            if (sys.state == STATE_HOLD)
-            {
-
-              // Less than one step to decelerate to zero speed, but already very close. AMASS 
-              // requires full steps to execute. So, just bail.
-              prep.current_speed = 0.0f;
-              prep.dt_remainder = 0.0f;
-              prep.steps_remaining = n_steps_remaining;
-              block_buffer[pl_blockIdx].millimeters = prep.steps_remaining / prep.step_per_mm; // Update with full steps.
-              plan_cycle_reinitialize();
-              sys.setState(STATE_QUEUED);
-              return; // Segment not generated, but current step data still retained.
+              break; // **Complete** Exit loop. Segment execution time maxed.
             }
           }
+        } while (mm_remaining > prep.mm_complete); // **Complete** Exit loop. Profile complete.
 
-          // Compute segment step rate. Since steps are integers and mm distances traveled are not,
-          // the end of every segment can have a partial step of varying magnitudes that are not 
-          // executed, because the stepper ISR requires whole steps due to the AMASS algorithm. To
-          // compensate, we track the time to execute the previous segment's partial step and simply
-          // apply it with the partial step distance to the current segment, so that it minutely
-          // adjusts the whole segment rate to keep step output exact. These rate adjustments are 
-          // typically very small and do not adversely effect performance, but ensures that Grbl
-          // outputs the exact acceleration and velocity profiles as computed by the planner.
-          dt += prep.dt_remainder; // Apply previous segment partial step execute time
-          float inv_rate = dt / (last_n_steps_remaining - steps_remaining); // Compute adjusted step rate inverse
-          prep.dt_remainder = (n_steps_remaining - steps_remaining) * inv_rate; // Update segment partial step time
 
-          // Compute CPU cycles per step for the prepped segment.
-          uint cycles = (uint)System.Math.Ceiling((NutsAndBolts.TICKS_PER_MICROSECOND * 1000000.0 * 60) * inv_rate); // (cycles/step)    
+        /* -----------------------------------------------------------------------------------
+           Compute segment step rate, steps to execute, and apply necessary rate corrections.
+           NOTE: Steps are computed by direct scalar conversion of the millimeter distance 
+           remaining in the block, rather than incrementally tallying the steps executed per
+           segment. This helps in removing floating point round-off issues of several additions. 
+           However, since floats have only 7.2 significant digits, long moves with extremely 
+           high step counts can exceed the precision of floats, which can lead to lost steps.
+           Fortunately, this scenario is highly unlikely and unrealistic in CNC machines
+           supported by Grbl (i.e. exceeding 10 meters axis travel at 200 step/mm).
+        */
+        float steps_remaining = prep.step_per_mm * mm_remaining; // Convert mm_remaining to steps
+        short n_steps_remaining = (short)System.Math.Ceiling(steps_remaining); // Round-up current steps remaining
+        short last_n_steps_remaining = (short)System.Math.Ceiling(prep.steps_remaining); // Round-up last steps remaining
+        segment_buffer[segment_buffer_head].n_step = (short)(last_n_steps_remaining - n_steps_remaining); // Compute number of steps to execute.
 
-          if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
+        // Bail if we are at the end of a feed hold and don't have a step to execute.
+        if (segment_buffer[segment_buffer_head].n_step == 0)
+        {
+          if (sys.state == STATE_HOLD)
           {
-            // Compute step timing and multi-axis smoothing level.
-            // NOTE: AMASS overdrives the timer with each level, so only one prescalar is required.
-            if (cycles < AMASS_LEVEL1) { prep_segment->amass_level = 0; }
-            else
-            {
-              if (cycles < AMASS_LEVEL2) { prep_segment->amass_level = 1; }
-              else if (cycles < AMASS_LEVEL3) { prep_segment->amass_level = 2; }
-              else { prep_segment->amass_level = 3; }
-              cycles >>= prep_segment->amass_level;
-              prep_segment->n_step <<= prep_segment->amass_level;
-            }
-            if (cycles < (1 << 16)) { prep_segment->cycles_per_tick = (ushort)cycles; } // < 65536 (4.1ms @ 16MHz)
-            else { prep_segment->cycles_per_tick = 0xffff; } // Just set the slowest speed possible.
+
+            // Less than one step to decelerate to zero speed, but already very close. AMASS 
+            // requires full steps to execute. So, just bail.
+            prep.current_speed = 0.0f;
+            prep.dt_remainder = 0.0f;
+            prep.steps_remaining = n_steps_remaining;
+            block_buffer[pl_blockIdx].millimeters = prep.steps_remaining / prep.step_per_mm; // Update with full steps.
+            plan_cycle_reinitialize();
+            sys.setState(STATE_QUEUED);
+            return; // Segment not generated, but current step data still retained.
+          }
+        }
+
+        // Compute segment step rate. Since steps are integers and mm distances traveled are not,
+        // the end of every segment can have a partial step of varying magnitudes that are not 
+        // executed, because the stepper ISR requires whole steps due to the AMASS algorithm. To
+        // compensate, we track the time to execute the previous segment's partial step and simply
+        // apply it with the partial step distance to the current segment, so that it minutely
+        // adjusts the whole segment rate to keep step output exact. These rate adjustments are 
+        // typically very small and do not adversely effect performance, but ensures that Grbl
+        // outputs the exact acceleration and velocity profiles as computed by the planner.
+        dt += prep.dt_remainder; // Apply previous segment partial step execute time
+        float inv_rate = dt / (last_n_steps_remaining - steps_remaining); // Compute adjusted step rate inverse
+        prep.dt_remainder = (n_steps_remaining - steps_remaining) * inv_rate; // Update segment partial step time
+
+        // Compute CPU cycles per step for the prepped segment.
+        uint cycles = (uint)System.Math.Ceiling((NutsAndBolts.TICKS_PER_MICROSECOND * 1000000.0 * 60) * inv_rate); // (cycles/step)    
+
+        if (ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
+        {
+          // Compute step timing and multi-axis smoothing level.
+          // NOTE: AMASS overdrives the timer with each level, so only one prescalar is required.
+          if (cycles < AMASS_LEVEL1) { segment_buffer[segment_buffer_head].amass_level = 0; }
+          else
+          {
+            if (cycles < AMASS_LEVEL2) { segment_buffer[segment_buffer_head].amass_level = 1; }
+            else if (cycles < AMASS_LEVEL3) { segment_buffer[segment_buffer_head].amass_level = 2; }
+            else { segment_buffer[segment_buffer_head].amass_level = 3; }
+            cycles >>= segment_buffer[segment_buffer_head].amass_level;
+            segment_buffer[segment_buffer_head].n_step <<= segment_buffer[segment_buffer_head].amass_level;
+          }
+          if (cycles < (1 << 16)) { segment_buffer[segment_buffer_head].cycles_per_tick = (ushort)cycles; } // < 65536 (4.1ms @ 16MHz)
+          else { segment_buffer[segment_buffer_head].cycles_per_tick = 0xffff; } // Just set the slowest speed possible.
+        }
+        else
+        {
+          // Compute step timing and timer prescalar for normal step generation.
+          if (cycles < (1 << 16))
+          { // < 65536  (4.1ms @ 16MHz)
+            segment_buffer[segment_buffer_head].prescaler = 1; // prescaler: 0
+            segment_buffer[segment_buffer_head].cycles_per_tick = (ushort)cycles;
+          }
+          else if (cycles < (1UL << 19))
+          { // < 524288 (32.8ms@16MHz)
+            segment_buffer[segment_buffer_head].prescaler = 2; // prescaler: 8
+            segment_buffer[segment_buffer_head].cycles_per_tick = (ushort)(cycles >> 3);
           }
           else
           {
-            // Compute step timing and timer prescalar for normal step generation.
-            if (cycles < (1 << 16))
-            { // < 65536  (4.1ms @ 16MHz)
-              prep_segment->prescaler = 1; // prescaler: 0
-              prep_segment->cycles_per_tick = (ushort)cycles;
-            }
-            else if (cycles < (1UL << 19))
-            { // < 524288 (32.8ms@16MHz)
-              prep_segment->prescaler = 2; // prescaler: 8
-              prep_segment->cycles_per_tick = (ushort)(cycles >> 3);
+            segment_buffer[segment_buffer_head].prescaler = 3; // prescaler: 64
+            if (cycles < (1UL << 22))
+            { // < 4194304 (262ms@16MHz)
+              segment_buffer[segment_buffer_head].cycles_per_tick = (ushort)(cycles >> 6);
             }
             else
-            {
-              prep_segment->prescaler = 3; // prescaler: 64
-              if (cycles < (1UL << 22))
-              { // < 4194304 (262ms@16MHz)
-                prep_segment->cycles_per_tick = (ushort)(cycles >> 6);
-              }
-              else
-              { // Just set the slowest speed possible. (Around 4 step/sec.)
-                prep_segment->cycles_per_tick = 0xffff;
-              }
-            }
-          }
-
-
-          // Segment complete! Increment segment buffer indices.
-          segment_buffer_head = segment_next_head;
-          if (++segment_next_head == SEGMENT_BUFFER_SIZE) { segment_next_head = 0; }
-          RaiseStepperSegmentBufferChanged();
-
-          // Setup initial conditions for next segment.
-          if (mm_remaining > prep.mm_complete)
-          {
-            // Normal operation. Block incomplete. Distance remaining in block to be executed.
-            block_buffer[pl_blockIdx].millimeters = mm_remaining;
-            prep.steps_remaining = steps_remaining;
-          }
-          else
-          {
-            // End of planner block or forced-termination. No more distance to be executed.
-            if (mm_remaining > 0.0)
-            { // At end of forced-termination.
-              // Reset prep parameters for resuming and then bail.
-              // NOTE: Currently only feed holds qualify for this scenario. May change with overrides.       
-              prep.current_speed = 0.0f;
-              prep.dt_remainder = 0.0f;
-              prep.steps_remaining = (float)System.Math.Ceiling(steps_remaining);
-              block_buffer[pl_blockIdx].millimeters = prep.steps_remaining / prep.step_per_mm; // Update with full steps.
-              plan_cycle_reinitialize();
-              sys.setState(STATE_QUEUED); // End cycle.        
-
-              return; // Bail!
-              // TODO: Try to move QUEUED setting into cycle re-initialize.
-
-            }
-            else
-            { // End of planner block
-              // The planner block is complete. All steps are set to be executed in the segment buffer.
-              //pl_block = null;
-              pl_blockIdx = -1;
-              plan_discard_current_block();
+            { // Just set the slowest speed possible. (Around 4 step/sec.)
+              segment_buffer[segment_buffer_head].cycles_per_tick = 0xffff;
             }
           }
         }
+
+        // Segment complete! Increment segment buffer indices.
+        segment_buffer_head = segment_next_head;
+        if (++segment_next_head == SEGMENT_BUFFER_SIZE) { segment_next_head = 0; }
+        RaiseStepperSegmentBufferChanged();
+
+        // Setup initial conditions for next segment.
+        if (mm_remaining > prep.mm_complete)
+        {
+          // Normal operation. Block incomplete. Distance remaining in block to be executed.
+          block_buffer[pl_blockIdx].millimeters = mm_remaining;
+          prep.steps_remaining = steps_remaining;
+        }
+        else
+        {
+          // End of planner block or forced-termination. No more distance to be executed.
+          if (mm_remaining > 0.0)
+          { // At end of forced-termination.
+            // Reset prep parameters for resuming and then bail.
+            // NOTE: Currently only feed holds qualify for this scenario. May change with overrides.       
+            prep.current_speed = 0.0f;
+            prep.dt_remainder = 0.0f;
+            prep.steps_remaining = (float)System.Math.Ceiling(steps_remaining);
+            block_buffer[pl_blockIdx].millimeters = prep.steps_remaining / prep.step_per_mm; // Update with full steps.
+            plan_cycle_reinitialize();
+            sys.setState(STATE_QUEUED); // End cycle.        
+
+            return; // Bail!
+            // TODO: Try to move QUEUED setting into cycle re-initialize.
+
+          }
+          else
+          { // End of planner block
+            // The planner block is complete. All steps are set to be executed in the segment buffer.
+            //pl_block = null;
+            pl_blockIdx = -1;
+            plan_discard_current_block();
+          }
+        }
+
       }
     }
 
