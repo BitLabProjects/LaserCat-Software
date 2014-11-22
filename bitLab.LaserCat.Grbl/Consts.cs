@@ -47,27 +47,16 @@ namespace bitLab.LaserCat.Grbl
     //public int SERIAL_RX =     USART_RX_vect; //USART_RX_vect
     //public int SERIAL_UDRE =   USART_UDRE_vect; //USART_UDRE_vect
 
-    // Define step pulse output pins. NOTE: All step bit pins must be on the same port.
-    public int STEP_DDR; //DDRD
-    public int STEP_PORT; //PORTD
-    public const int X_STEP_BIT = 2; // Uno Digital Pin 2
-    public const int Y_STEP_BIT = 3; // Uno Digital Pin 3
-    public const int Z_STEP_BIT = 4; // Uno Digital Pin 4
-    public int STEP_MASK = ((1 << X_STEP_BIT) | (1 << Y_STEP_BIT) | (1 << Z_STEP_BIT)); // All step bits
-
-    // Define step direction output pins. NOTE: All direction pins must be on the same port.
-    public int DIRECTION_DDR; //DDRD
-    public int DIRECTION_PORT; //PORTD
+    //TODO Capire come mai queste costanti sono usate non solo da CLaserCatHardware
     public const int X_DIRECTION_BIT = 5; // Uno Digital Pin 5
     public const int Y_DIRECTION_BIT = 6; // Uno Digital Pin 6
     public const int Z_DIRECTION_BIT = 7; // Uno Digital Pin 7
-    public int DIRECTION_MASK = ((1 << X_DIRECTION_BIT) | (1 << Y_DIRECTION_BIT) | (1 << Z_DIRECTION_BIT)); // All direction bits
+    public const int DIRECTION_MASK = ((1 << X_DIRECTION_BIT) | (1 << Y_DIRECTION_BIT) | (1 << Z_DIRECTION_BIT)); // All direction bits
+    public const int X_STEP_BIT = 2; // Uno Digital Pin 2
+    public const int Y_STEP_BIT = 3; // Uno Digital Pin 3
+    public const int Z_STEP_BIT = 4; // Uno Digital Pin 4
+    public const int STEP_MASK = ((1 << X_STEP_BIT) | (1 << Y_STEP_BIT) | (1 << Z_STEP_BIT)); // All step bits
 
-    // Define stepper driver enable/disable output pin.
-    public int STEPPERS_DISABLE_DDR; //DDRB
-    public int STEPPERS_DISABLE_PORT; //PORTB
-    public const int STEPPERS_DISABLE_BIT = 0; // Uno Digital Pin 8
-    public int STEPPERS_DISABLE_MASK = (1 << STEPPERS_DISABLE_BIT);
 
     // Define homing/hard limit switch input pins and limit interrupt vectors. 
     // NOTE: All limit bit pins must be on the same port, but not on a port with other input pins (pinout).
@@ -142,7 +131,7 @@ namespace bitLab.LaserCat.Grbl
     public int SPINDLE_PWM_BIT; // Shared with SPINDLE_ENABLE.
   }
 
-  public class NutsAndBolts
+  public partial class NutsAndBolts
   {
     public const int N_AXIS = 3; // Number of axes
     public const int X_AXIS = 0; // Axis indexing value. Must start with 0 and be continuous.

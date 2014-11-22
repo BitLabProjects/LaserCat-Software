@@ -203,13 +203,13 @@ namespace bitLab.LaserCat.Grbl
 
       ushort i = (ushort)System.Math.Floor(1000 / DWELL_TIME_STEP * seconds);
       protocol_buffer_synchronize();
-      delay_ms((ushort)System.Math.Floor(1000 * seconds - i * DWELL_TIME_STEP)); // Delay millisecond remainder.
+      NutsAndBolts.delay_ms((ushort)System.Math.Floor(1000 * seconds - i * DWELL_TIME_STEP)); // Delay millisecond remainder.
       while (i-- > 0)
       {
         // NOTE: Check and execute runtime commands during dwell every <= DWELL_TIME_STEP milliseconds.
         protocol_execute_runtime();
         if (sys.abort != 0) { return; }
-        delay_ms((ushort)DWELL_TIME_STEP); // Delay DWELL_TIME_STEP increment
+        NutsAndBolts.delay_ms((ushort)DWELL_TIME_STEP); // Delay DWELL_TIME_STEP increment
       }
     }
 

@@ -104,7 +104,7 @@ namespace bitLab.LaserCat.Grbl
           printPgmString(PSTR("Probe fail")); break;
       }
       printPgmString(PSTR("\r\n"));
-      delay_ms(500); // Force delay to ensure message clears serial write buffer.
+      NutsAndBolts.delay_ms(500); // Force delay to ensure message clears serial write buffer.
     }
 
     // Prints feedback messages. This serves as a centralized method to provide additional

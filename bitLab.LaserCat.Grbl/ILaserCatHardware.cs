@@ -48,8 +48,8 @@ namespace bitLab.LaserCat.Grbl
     public byte flags; // Contains default boolean settings
 
     //Previously these were locals of stepper.cs
-    byte step_port_invert_mask;
-    byte dir_port_invert_mask;
+    public byte step_port_invert_mask;
+    public byte dir_port_invert_mask;
   }
 
   //SB!Implementation guidelines:
@@ -72,6 +72,10 @@ namespace bitLab.LaserCat.Grbl
     void WakeUp(bool setupAndEnableMotors);
     void GoIdle(bool delayAndDisableSteppers);
     void StorePlannerBlock(byte blockIndex, st_block_t block);
-    void StoreSegment(byte segmentIndex, segment_t segment);
+    bool GetHasMoreSegmentBuffer();
+    void StoreSegment(segment_t segment);
+
+    //TODO Rimuovere
+    void RunStepperMotor();
   }
 }

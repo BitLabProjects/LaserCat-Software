@@ -113,12 +113,6 @@ namespace bitLab.LaserCat.Grbl
       return true;
     }
 
-    // Delays variable-defined milliseconds. Compiler compatibility fix for _delay_ms().
-    public void delay_ms(ushort ms)
-    {
-      //TODO
-    }
-
     // Delays variable-defined microseconds. Compiler compatibility fix for _delay_us().
     public void delay_us(uint us)
     {
@@ -152,6 +146,17 @@ namespace bitLab.LaserCat.Grbl
     {
       for (int i = 0; i < dst.Length; i++)
         dst[i] = 0.0f;
+    }
+  }
+
+  public partial class NutsAndBolts
+  {
+    public static bool bit_istrue(int x, int mask) { return (x & mask) != 0; }
+
+    // Delays variable-defined milliseconds. Compiler compatibility fix for _delay_ms().
+    public static void delay_ms(ushort ms)
+    {
+      //TODO
     }
   }
 }
