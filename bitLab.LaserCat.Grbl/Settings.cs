@@ -42,9 +42,9 @@ namespace bitLab.LaserCat.Grbl
     //#include "limits.h"
     //#include "stepper.h"
 
-    
-
     // Global persistent settings (Stored from byte EEPROM_ADDR_GLOBAL onwards)
+    //SB!Items marked with //x are used only by ILaserCatHardware and sent on initialization
+    //Items marked with //xx are used by the interface and the rest of Grbl (flags)
     public struct settings_t
     {
       // Axis settings
@@ -54,15 +54,15 @@ namespace bitLab.LaserCat.Grbl
       public float[] max_travel;
 
       // Remaining Grbl settings
-      public byte pulse_microseconds;
-      public byte step_invert_mask;
-      public byte dir_invert_mask;
-      public byte stepper_idle_lock_time; // If max value 255, steppers do not disable.
+      public byte pulse_microseconds; //x
+      public byte step_invert_mask; //x
+      public byte dir_invert_mask; //x
+      public byte stepper_idle_lock_time;  //x // If max value 255, steppers do not disable.
       public byte status_report_mask; // Mask to indicate desired report data.
       public float junction_deviation;
       public float arc_tolerance;
 
-      public byte flags;  // Contains default boolean settings
+      public byte flags;  //xx // Contains default boolean settings
 
       public byte homing_dir_mask;
       public float homing_feed_rate;

@@ -39,8 +39,38 @@ namespace bitLab.LaserCat.Grbl
     public byte prescaler;      // Without AMASS, a prescaler is required to adjust for slow timing.
   };
 
+  public struct LaserCatSettings
+  {
+    public byte pulse_microseconds;
+    public byte step_invert_mask;
+    public byte dir_invert_mask; 
+    public byte stepper_idle_lock_time; // If max value 255, steppers do not disable.
+    public byte flags; // Contains default boolean settings
+
+    //Previously these were locals of stepper.cs
+    byte step_port_invert_mask;
+    byte dir_port_invert_mask;
+  }
+
+  //SB!Implementation guidelines:
+  //1) sys.position is written only by the stepper interrupt, read by GCode, Planner and Probe to sync the position
+  //Solution: Add a method to read the position from the hardware
+  //2) bit_true_atomic(ref sys.execute, EXEC_CYCLE_STOP)
+  //Solution: TODO analysis
+  //3) Call to GoIdle, don't know the value for delayAndDisableSteppers
+  //Solution: TODO analysis, maybe we don't need to disable them at all? can disable the interrupts be sufficient?
+  //4) probe_state_monitor()
+  //Solution: Ignore until Probing is implemented
+  //5) if (sys.state == STATE_HOMING) ...
+  //Solution: Ignore until Limits is implemented
+
   public interface ILaserCatHardware
   {
+    void Init();
+    void Reset();
+    void SetSettings(LaserCatSettings settings);
+    void WakeUp(bool setupAndEnableMotors);
+    void GoIdle(bool delayAndDisableSteppers);
     void StorePlannerBlock(byte blockIndex, st_block_t block);
     void StoreSegment(byte segmentIndex, segment_t segment);
   }
