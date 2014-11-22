@@ -467,13 +467,13 @@ namespace bitLab.LaserCat.Grbl
     // This interrupt is enabled by ISR_TIMER1_COMPAREA when it sets the motor port bits to execute
     // a step. This ISR resets the motor port after a short period (settings.pulse_microseconds) 
     // completing one step cycle.
-    //TODO
     //ISR(TIMER0_OVF_vect)
-    //{
-    //  // Reset stepping pins (leave the direction pins)
-    //  STEP_PORT = (STEP_PORT & ~STEP_MASK) | (step_port_invert_mask & STEP_MASK); 
-    //  TCCR0B = 0; // Disable Timer0 to prevent re-entering this interrupt when it's not needed. 
-    //}
+    void TIMER0_OVF_vect()
+    {
+      // Reset stepping pins (leave the direction pins)
+      STEP_PORT = (STEP_PORT & ~STEP_MASK) | (step_port_invert_mask & STEP_MASK);
+      //TODO TCCR0B = 0; // Disable Timer0 to prevent re-entering this interrupt when it's not needed. 
+    }
 
     //TODO
     //#ifdef STEP_PULSE_DELAY

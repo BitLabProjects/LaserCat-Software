@@ -17,4 +17,8 @@ Fase 1.
         - Linee correntemente nel planner in rosso                            [Ok]
         
 Fase 2.
-        
+2.1 Estrarre su interfaccia (ILaserCatHardware) l'impostazione di:
+    - lista st_block_buffer
+    - lista segment_buffer
+2.2 Implementare l'interfaccia con una classe CLaserCatHardware
+    - Portare nella classe tutto il necessario di stepper.cs
