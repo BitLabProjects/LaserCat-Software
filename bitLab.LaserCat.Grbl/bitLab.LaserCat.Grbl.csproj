@@ -48,6 +48,7 @@
     <Compile Include="Eeprom.cs" />
     <Compile Include="GCode.cs" />
     <Compile Include="Grbl.cs" />
+    <Compile Include="ILaserCatHardware.cs" />
     <Compile Include="ISerialPort.cs" />
     <Compile Include="Limits.cs" />
     <Compile Include="MotionControl.cs" />
