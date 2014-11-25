@@ -91,6 +91,7 @@ namespace bitLab.LaserCat.Grbl
       return array;
     }
     public st_block_t[] st_block_buffer = CreateStBlockArray(GrblFirmware.SEGMENT_BUFFER_SIZE - 1);
+    private st_block_t currentStBlock;
 
     //SB! Added event to notify planner blocks changes
     public event EventHandler StepperSegmentBufferChanged;
@@ -142,8 +143,8 @@ namespace bitLab.LaserCat.Grbl
         segment_buffer_head = segment_next_head;
         if (++segment_next_head == GrblFirmware.SEGMENT_BUFFER_SIZE) { segment_next_head = 0; }
         recalcSegmentBufferCount();
-        RaiseStepperSegmentBufferChanged();
       }
+      RaiseStepperSegmentBufferChanged();
     }
 
     public void SetSettings(LaserCatSettings settings)
@@ -330,10 +331,7 @@ namespace bitLab.LaserCat.Grbl
     {
       while (!mQuitMotorsTask)
       {
-        lock (this)
-        {
-          ExecuteMotors();
-        }
+        ExecuteMotors();
       }
     }
 
@@ -351,7 +349,6 @@ namespace bitLab.LaserCat.Grbl
         while (mLastTime < newValue)
         {
           mLastTime += 1;
-          mTimerValueRegister += 1;
           if (mTimerValueRegister == mTimerPeriodRegister)
           {
             mTimerValueRegister = 0;
@@ -362,6 +359,8 @@ namespace bitLab.LaserCat.Grbl
             if (TIMER1_COMPA_vect())
               break;
           }
+          else
+            mTimerValueRegister += 1;
         }
       }
     }
@@ -402,6 +401,13 @@ namespace bitLab.LaserCat.Grbl
           // Initialize new step segment and load number of steps to execute
           st.exec_segmentIdx = segment_buffer_tail;
 
+          //SB!Local copy of shared variables
+          segment_t currentSegment;
+          lock (this)
+          {
+            currentSegment = segment_buffer[st.exec_segmentIdx];
+          }
+
           if (!GrblFirmware.ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
           {
             // With AMASS is disabled, set timer prescaler for segments with slow step frequencies (< 250Hz).
@@ -410,31 +416,35 @@ namespace bitLab.LaserCat.Grbl
 
           // Initialize step segment timing per step and load number of steps to execute.
           //SB! Here Grbl used OCR1A 
-          mTimerPeriodRegister = segment_buffer[st.exec_segmentIdx].cycles_per_tick;
+          mTimerPeriodRegister = currentSegment.cycles_per_tick;
           Debug.WriteLine("Period: " + mTimerPeriodRegister);
-          st.step_count = segment_buffer[st.exec_segmentIdx].n_step; // NOTE: Can sometimes be zero when moving slow.
+          st.step_count = currentSegment.n_step; // NOTE: Can sometimes be zero when moving slow.
           // If the new segment starts a new planner block, initialize stepper variables and counters.
           // NOTE: When the segment data index changes, this indicates a new planner block.
-          if (st.exec_block_index != segment_buffer[st.exec_segmentIdx].st_block_index)
+          if (st.exec_block_index != currentSegment.st_block_index)
           {
-            st.exec_block_index = segment_buffer[st.exec_segmentIdx].st_block_index;
-            //SB! no longer necessary, we already have st.exec_block_index
+            st.exec_block_index = currentSegment.st_block_index;
+            //SB! no longer necessary, we already have st.exec_block_index. Create a copy to avoid lock problems
             //st.exec_block = &st_block_buffer[st.exec_block_index];
+            lock (this)
+            {
+              currentStBlock = st_block_buffer[st.exec_block_index];
+            }
 
             // Initialize Bresenham line and distance counters
-            st.counter_x = (st_block_buffer[st.exec_block_index].step_event_count >> 1);
+            st.counter_x = (currentStBlock.step_event_count >> 1);
             st.counter_y = st.counter_x;
             st.counter_z = st.counter_x;
           }
 
-          st.dir_outbits = (byte)(st_block_buffer[st.exec_block_index].direction_bits ^ settings.dir_port_invert_mask);
+          st.dir_outbits = (byte)(currentStBlock.direction_bits ^ settings.dir_port_invert_mask);
 
           if (GrblFirmware.ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
           {
             // With AMASS enabled, adjust Bresenham axis increment counters according to AMASS level.
-            st.steps[NutsAndBolts.X_AXIS] = st_block_buffer[st.exec_block_index].steps[NutsAndBolts.X_AXIS] >> segment_buffer[st.exec_segmentIdx].amass_level;
-            st.steps[NutsAndBolts.Y_AXIS] = st_block_buffer[st.exec_block_index].steps[NutsAndBolts.Y_AXIS] >> segment_buffer[st.exec_segmentIdx].amass_level;
-            st.steps[NutsAndBolts.Z_AXIS] = st_block_buffer[st.exec_block_index].steps[NutsAndBolts.Z_AXIS] >> segment_buffer[st.exec_segmentIdx].amass_level;
+            st.steps[NutsAndBolts.X_AXIS] = currentStBlock.steps[NutsAndBolts.X_AXIS] >> currentSegment.amass_level;
+            st.steps[NutsAndBolts.Y_AXIS] = currentStBlock.steps[NutsAndBolts.Y_AXIS] >> currentSegment.amass_level;
+            st.steps[NutsAndBolts.Z_AXIS] = currentStBlock.steps[NutsAndBolts.Z_AXIS] >> currentSegment.amass_level;
           }
 
         }
@@ -461,37 +471,37 @@ namespace bitLab.LaserCat.Grbl
       if (GrblFirmware.ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
         st.counter_x += st.steps[NutsAndBolts.X_AXIS];
       else
-        st.counter_x += st_block_buffer[st.exec_block_index].steps[NutsAndBolts.X_AXIS];
+        st.counter_x += currentStBlock.steps[NutsAndBolts.X_AXIS];
 
-      if (st.counter_x > st_block_buffer[st.exec_block_index].step_event_count)
+      if (st.counter_x > currentStBlock.step_event_count)
       {
         st.step_outbits |= (1 << GrblFirmware.X_STEP_BIT);
-        st.counter_x -= st_block_buffer[st.exec_block_index].step_event_count;
-        if ((st_block_buffer[st.exec_block_index].direction_bits & (1 << GrblFirmware.X_DIRECTION_BIT)) != 0) { sys.position[NutsAndBolts.X_AXIS]--; }
+        st.counter_x -= currentStBlock.step_event_count;
+        if ((currentStBlock.direction_bits & (1 << GrblFirmware.X_DIRECTION_BIT)) != 0) { sys.position[NutsAndBolts.X_AXIS]--; }
         else { sys.position[NutsAndBolts.X_AXIS]++; }
       }
       if (GrblFirmware.ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
         st.counter_y += st.steps[NutsAndBolts.Y_AXIS];
       else
-        st.counter_y += st_block_buffer[st.exec_block_index].steps[NutsAndBolts.Y_AXIS];
+        st.counter_y += currentStBlock.steps[NutsAndBolts.Y_AXIS];
 
-      if (st.counter_y > st_block_buffer[st.exec_block_index].step_event_count)
+      if (st.counter_y > currentStBlock.step_event_count)
       {
         st.step_outbits |= (1 << GrblFirmware.Y_STEP_BIT);
-        st.counter_y -= st_block_buffer[st.exec_block_index].step_event_count;
-        if ((st_block_buffer[st.exec_block_index].direction_bits & (1 << GrblFirmware.Y_DIRECTION_BIT)) != 0) { sys.position[NutsAndBolts.Y_AXIS]--; }
+        st.counter_y -= currentStBlock.step_event_count;
+        if ((currentStBlock.direction_bits & (1 << GrblFirmware.Y_DIRECTION_BIT)) != 0) { sys.position[NutsAndBolts.Y_AXIS]--; }
         else { sys.position[NutsAndBolts.Y_AXIS]++; }
       }
       if (GrblFirmware.ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
         st.counter_z += st.steps[NutsAndBolts.Z_AXIS];
       else
-        st.counter_z += st_block_buffer[st.exec_block_index].steps[NutsAndBolts.Z_AXIS];
+        st.counter_z += currentStBlock.steps[NutsAndBolts.Z_AXIS];
 
-      if (st.counter_z > st_block_buffer[st.exec_block_index].step_event_count)
+      if (st.counter_z > currentStBlock.step_event_count)
       {
         st.step_outbits |= (1 << GrblFirmware.Z_STEP_BIT);
-        st.counter_z -= st_block_buffer[st.exec_block_index].step_event_count;
-        if ((st_block_buffer[st.exec_block_index].direction_bits & (1 << GrblFirmware.Z_DIRECTION_BIT)) != 0) { sys.position[NutsAndBolts.Z_AXIS]--; }
+        st.counter_z -= currentStBlock.step_event_count;
+        if ((currentStBlock.direction_bits & (1 << GrblFirmware.Z_DIRECTION_BIT)) != 0) { sys.position[NutsAndBolts.Z_AXIS]--; }
         else { sys.position[NutsAndBolts.Z_AXIS]++; }
       }
 
@@ -504,10 +514,13 @@ namespace bitLab.LaserCat.Grbl
       {
         // Segment is complete. Discard current segment and advance segment indexing.
         st.exec_segmentIdx = -1;
-        if (++segment_buffer_tail == GrblFirmware.SEGMENT_BUFFER_SIZE) { segment_buffer_tail = 0; }
-        hasFinishedASegment = true;
-        recalcSegmentBufferCount();
+        lock (this)
+        {
+          if (++segment_buffer_tail == GrblFirmware.SEGMENT_BUFFER_SIZE) { segment_buffer_tail = 0; }
+          recalcSegmentBufferCount();
+        }
         RaiseStepperSegmentBufferChanged();
+        hasFinishedASegment = true;
       }
 
       st.step_outbits ^= settings.step_port_invert_mask;  // Apply step port invert mask    
