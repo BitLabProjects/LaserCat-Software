@@ -116,8 +116,17 @@ namespace bitLab.LaserCat.Grbl
 
       st_generate_step_dir_invert_masks();
 
-      //TODO chiamata a mLaserCatHardware.SetSettings(...);
       mLaserCatHardware.Reset();
+
+      LaserCatSettings lcSettings = new LaserCatSettings();
+      lcSettings.dir_invert_mask = settings.dir_invert_mask;
+      lcSettings.flags = settings.flags;
+      lcSettings.pulse_microseconds = settings.pulse_microseconds;
+      lcSettings.step_invert_mask = settings.step_invert_mask;
+      lcSettings.stepper_idle_lock_time = settings.stepper_idle_lock_time;
+      lcSettings.step_port_invert_mask = step_port_invert_mask;
+      lcSettings.dir_port_invert_mask = dir_port_invert_mask;
+      mLaserCatHardware.SetSettings(lcSettings);
     }
 
 
@@ -125,7 +134,6 @@ namespace bitLab.LaserCat.Grbl
     public void stepper_init()
     {
       mLaserCatHardware.Init();
-      
     }
 
     // Called by planner_recalculate() when the executing block is updated by the new plan.

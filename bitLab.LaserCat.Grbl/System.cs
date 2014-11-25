@@ -228,6 +228,7 @@ namespace bitLab.LaserCat.Grbl
             { // Store global setting.
               if (!read_float(line, ref char_counter, ref value)) { return (STATUS_BAD_NUMBER_FORMAT); }
               if (line[char_counter] != 0) { return (STATUS_INVALID_STATEMENT); }
+              //TODO update the settings in ILaserCatHardware after a settings change
               return (settings_store_global_setting((byte)parameter, value));
             }
           }

@@ -12,7 +12,6 @@ namespace bitLab.LaserCat.Grbl
     public int STEP_DDR; //DDRD
     public int STEP_PORT; //PORTD
 
-
     // Define step direction output pins. NOTE: All direction pins must be on the same port.
     public int DIRECTION_DDR; //DDRD
     public int DIRECTION_PORT; //PORTD
