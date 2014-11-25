@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  public class CLaserCatHardwareSimulator: ILaserCatHardware
+  public class CLaserCatHardwareSimulator : ILaserCatHardware
   {
     // Define step pulse output pins. NOTE: All step bit pins must be on the same port.
     public int STEP_DDR; //DDRD
@@ -103,14 +104,21 @@ namespace bitLab.LaserCat.Grbl
     //SB! Returns the number of active blocks are in the segment buffer.
     public int stepper_get_segment_buffer_count()
     {
-      if (segment_buffer_head >= segment_buffer_tail) { return segment_buffer_head - segment_buffer_tail; }
-      return GrblFirmware.SEGMENT_BUFFER_SIZE - (segment_buffer_tail - segment_buffer_head - 1);
+      return segment_buffer_count;
+    }
+    private void recalcSegmentBufferCount()
+    {
+      if (segment_buffer_head >= segment_buffer_tail) 
+        segment_buffer_count = segment_buffer_head - segment_buffer_tail;
+      else
+        segment_buffer_count = GrblFirmware.SEGMENT_BUFFER_SIZE - (segment_buffer_tail - segment_buffer_head - 1);
     }
 
     // Step segment ring buffer indices
     byte segment_buffer_tail;
     byte segment_buffer_head;
     byte segment_next_head;
+    int segment_buffer_count;
 
     public CLaserCatHardwareSimulator()
     {
@@ -118,16 +126,23 @@ namespace bitLab.LaserCat.Grbl
 
     public void StorePlannerBlock(byte blockIndex, st_block_t block)
     {
-      st_block_buffer[blockIndex] = block;
+      lock (this)
+      {
+        st_block_buffer[blockIndex] = block;
+      }
     }
 
     public void StoreSegment(segment_t segment)
     {
-      // Segment complete! Increment segment buffer indices.
-      segment_buffer[segment_buffer_head] = segment;
-      segment_buffer_head = segment_next_head;
-      if (++segment_next_head == GrblFirmware.SEGMENT_BUFFER_SIZE) { segment_next_head = 0; }
-      RaiseStepperSegmentBufferChanged();
+      lock (this)
+      {
+        // Segment complete! Increment segment buffer indices.
+        segment_buffer[segment_buffer_head] = segment;
+        segment_buffer_head = segment_next_head;
+        if (++segment_next_head == GrblFirmware.SEGMENT_BUFFER_SIZE) { segment_next_head = 0; }
+        recalcSegmentBufferCount();
+        RaiseStepperSegmentBufferChanged();
+      }
     }
 
     public void SetSettings(LaserCatSettings settings)
@@ -164,7 +179,7 @@ namespace bitLab.LaserCat.Grbl
         // Enable Stepper Driver Interrupt
         //SB!
         //TODO TIMSK1 |= (1<<OCIE1A);
-        mEnableMotors = true;
+        EnableMotors();
       }
     }
 
@@ -200,7 +215,7 @@ namespace bitLab.LaserCat.Grbl
     {
       // Disable Stepper Driver Interrupt. Allow Stepper Port Reset Interrupt to finish, if active.
       //SB!
-      mEnableMotors = false;
+      DisableMotors();
       //TODO
       //TIMSK1 &= ~(1<<OCIE1A); // Disable Timer1 interrupt
       //TCCR1B = (TCCR1B & ~((1<<CS12) | (1<<CS11))) | (1<<CS10); // Reset clock to no prescaling.
@@ -222,6 +237,7 @@ namespace bitLab.LaserCat.Grbl
 
     public void Reset()
     {
+      Debug.Assert(mMotorsTask == null);
       st = new stepper_t(true);
       st.exec_segmentIdx = -1;
       busy = false;
@@ -232,6 +248,7 @@ namespace bitLab.LaserCat.Grbl
       segment_buffer_tail = 0;
       segment_buffer_head = 0; // empty = tail
       segment_next_head = 1;
+      recalcSegmentBufferCount();
       RaiseStepperSegmentBufferChanged();
     }
 
@@ -288,7 +305,40 @@ namespace bitLab.LaserCat.Grbl
     */
     bool mEnableMotors;
     int mLastTime;
-    void ILaserCatHardware.RunStepperMotor()
+
+    private Task mMotorsTask;
+    private bool mQuitMotorsTask;
+    private void EnableMotors()
+    {
+      if (mMotorsTask != null)
+        throw new InvalidOperationException("Motors already started");
+      mEnableMotors = true;
+      mQuitMotorsTask = false;
+      mMotorsTask = Task.Factory.StartNew(MotorsTaskMain);
+    }
+
+    private void DisableMotors()
+    {
+      if (mMotorsTask == null)
+        return;
+      mEnableMotors = false;
+      mQuitMotorsTask = true;
+      mMotorsTask.Wait();
+      mMotorsTask = null;
+    }
+
+    private void MotorsTaskMain()
+    {
+      while (!mQuitMotorsTask)
+      {
+        lock (this)
+        {
+          ExecuteMotors();
+        }
+      }
+    }
+
+    private void ExecuteMotors()
     {
       if (mLastTime == 0)
         mLastTime = Environment.TickCount;
@@ -303,11 +353,12 @@ namespace bitLab.LaserCat.Grbl
               //When that happens, quit executing the ISR, otherwise we might finish the segment buffer within the 100
               //cycles and the main loop would not have a chance to refill it, which leads to a halt.
               //Normally in Grbl this interrupt executes every 33.3us, and the main loop much more often.
-              if (TIMER1_COMPA_vect())
+              if (TIMER1_COMPA_vect()) 
                 break;
         }
       }
     }
+
     // TODO: Replace direct updating of the int32 position counters in the ISR somehow. Perhaps use smaller
     // int8 variables and update position counters only when a segment completes. This can get complicated 
     // with probing and homing cycles that require true real-time positions.
@@ -446,6 +497,7 @@ namespace bitLab.LaserCat.Grbl
         st.exec_segmentIdx = -1;
         if (++segment_buffer_tail == GrblFirmware.SEGMENT_BUFFER_SIZE) { segment_buffer_tail = 0; }
         hasFinishedASegment = true;
+        recalcSegmentBufferCount();
         RaiseStepperSegmentBufferChanged();
       }
 

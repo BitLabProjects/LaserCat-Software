@@ -74,8 +74,5 @@ namespace bitLab.LaserCat.Grbl
     void StorePlannerBlock(byte blockIndex, st_block_t block);
     bool GetHasMoreSegmentBuffer();
     void StoreSegment(segment_t segment);
-
-    //TODO Rimuovere
-    void RunStepperMotor();
   }
 }
