@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bitLab.LaserCat", "bitLab.LaserCat\bitLab.LaserCat.csproj", "{C13FCF02-027A-4BE4-9C56-D35A0DC7A677}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "bitLab.LaserCat.Grbl", "bitLab.LaserCat.Grbl\bitLab.LaserCat.Grbl.csproj", "{EBD51F58-1FD6-40AC-A0E2-432B7965A4C0}"
@@ -40,5 +42,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 EndGlobal

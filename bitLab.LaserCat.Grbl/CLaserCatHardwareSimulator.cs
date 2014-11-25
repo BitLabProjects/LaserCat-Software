@@ -1,4 +1,5 @@
-﻿using System;
+﻿using bitLab.Logging;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -108,7 +109,7 @@ namespace bitLab.LaserCat.Grbl
     }
     private void recalcSegmentBufferCount()
     {
-      if (segment_buffer_head >= segment_buffer_tail) 
+      if (segment_buffer_head >= segment_buffer_tail)
         segment_buffer_count = segment_buffer_head - segment_buffer_tail;
       else
         segment_buffer_count = GrblFirmware.SEGMENT_BUFFER_SIZE - (segment_buffer_tail - segment_buffer_head - 1);
@@ -153,8 +154,10 @@ namespace bitLab.LaserCat.Grbl
     public void WakeUp(bool setupAndEnableMotors)
     {
       // Enable stepper drivers.
-      if (NutsAndBolts.bit_istrue(settings.flags, GrblFirmware.BITFLAG_INVERT_ST_ENABLE)) { STEPPERS_DISABLE_PORT |= (1 << STEPPERS_DISABLE_BIT); }
-      else { STEPPERS_DISABLE_PORT &= ~(1 << STEPPERS_DISABLE_BIT); }
+      if (NutsAndBolts.bit_istrue(settings.flags, GrblFirmware.BITFLAG_INVERT_ST_ENABLE))
+      { STEPPERS_DISABLE_PORT |= (1 << STEPPERS_DISABLE_BIT); }
+      else
+      { STEPPERS_DISABLE_PORT &= ~(1 << STEPPERS_DISABLE_BIT); }
 
       if (setupAndEnableMotors)
       {
@@ -310,6 +313,7 @@ namespace bitLab.LaserCat.Grbl
       if (mMotorsTask != null)
         throw new InvalidOperationException("Motors already started");
       mQuitMotorsTask = false;
+      mTimerPeriodRegister = 10000;
       mMotorsTask = Task.Factory.StartNew(MotorsTaskMain);
     }
 
@@ -333,23 +337,31 @@ namespace bitLab.LaserCat.Grbl
       }
     }
 
-    int mLastTime;
+    Int64 mLastTime;
+    Int64 mTimerPeriodRegister;
+    Int64 mTimerValueRegister;
+    HiResTimer mTimer = new HiResTimer();
     private void ExecuteMotors()
     {
       if (mLastTime == 0)
-        mLastTime = Environment.TickCount;
+        mLastTime = mTimer.Value;
       else
       {
-        if (Environment.TickCount - mLastTime > 1)
+        var newValue = mTimer.Value;
+        while (mLastTime < newValue)
         {
-          mLastTime = Environment.TickCount;
-          for (var i = 0; i < 500; i++)
+          mLastTime += 1;
+          mTimerValueRegister += 1;
+          if (mTimerValueRegister == mTimerPeriodRegister)
+          {
+            mTimerValueRegister = 0;
             //SB! TIMER1_COMPA_vect returns true when a segment has been finished
             //When that happens, quit executing the ISR, otherwise we might finish the segment buffer within the 100
             //cycles and the main loop would not have a chance to refill it, which leads to a halt.
             //Normally in Grbl this interrupt executes every 33.3us, and the main loop much more often.
-            if (TIMER1_COMPA_vect()) 
+            if (TIMER1_COMPA_vect())
               break;
+          }
         }
       }
     }
@@ -397,7 +409,9 @@ namespace bitLab.LaserCat.Grbl
           }
 
           // Initialize step segment timing per step and load number of steps to execute.
-          //TODO OCR1A = segment_buffer[st.exec_segmentIdx].cycles_per_tick;
+          //SB! Here Grbl used OCR1A 
+          mTimerPeriodRegister = segment_buffer[st.exec_segmentIdx].cycles_per_tick;
+          Debug.WriteLine("Period: " + mTimerPeriodRegister);
           st.step_count = segment_buffer[st.exec_segmentIdx].n_step; // NOTE: Can sometimes be zero when moving slow.
           // If the new segment starts a new planner block, initialize stepper variables and counters.
           // NOTE: When the segment data index changes, this indicates a new planner block.

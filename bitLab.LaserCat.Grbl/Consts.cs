@@ -142,8 +142,9 @@ namespace bitLab.LaserCat.Grbl
     public const float MM_PER_INCH = (25.40f);
     public const float INCH_PER_MM = (0.0393701f);
 
-    //TODO 
-    public const int F_CPU = 48000000;
+    //SB!25/11/14 Simulator uses one tick per microsecond
+    //TODO Understand how this relates to the actual hardware, does the planner need to know?
+    public const int F_CPU = 1000000;
     public const int TICKS_PER_MICROSECOND = (F_CPU / 1000000);
   }
 
@@ -223,7 +224,7 @@ namespace bitLab.LaserCat.Grbl
         Copyright (c) 2011-2012 Sungeun K. Jeon
     */
 
-    public static int SEGMENT_BUFFER_SIZE = 10;
+    public static int SEGMENT_BUFFER_SIZE = 1000;
 
     // Some useful constants.
     public float DT_SEGMENT = (1.0f / (ACCELERATION_TICKS_PER_SECOND * 60.0f)); // min/segment 
