@@ -303,16 +303,12 @@ namespace bitLab.LaserCat.Grbl
        ISR is 5usec typical and 25usec maximum, well below requirement.
        NOTE: This ISR expects at least one step to be executed per segment.
     */
-    bool mEnableMotors;
-    int mLastTime;
-
     private Task mMotorsTask;
     private bool mQuitMotorsTask;
     private void EnableMotors()
     {
       if (mMotorsTask != null)
         throw new InvalidOperationException("Motors already started");
-      mEnableMotors = true;
       mQuitMotorsTask = false;
       mMotorsTask = Task.Factory.StartNew(MotorsTaskMain);
     }
@@ -321,7 +317,6 @@ namespace bitLab.LaserCat.Grbl
     {
       if (mMotorsTask == null)
         return;
-      mEnableMotors = false;
       mQuitMotorsTask = true;
       mMotorsTask.Wait();
       mMotorsTask = null;
@@ -338,6 +333,7 @@ namespace bitLab.LaserCat.Grbl
       }
     }
 
+    int mLastTime;
     private void ExecuteMotors()
     {
       if (mLastTime == 0)
@@ -348,13 +344,12 @@ namespace bitLab.LaserCat.Grbl
         {
           mLastTime = Environment.TickCount;
           for (var i = 0; i < 500; i++)
-            if (mEnableMotors)
-              //SB! TIMER1_COMPA_vect returns true when a segment has been finished
-              //When that happens, quit executing the ISR, otherwise we might finish the segment buffer within the 100
-              //cycles and the main loop would not have a chance to refill it, which leads to a halt.
-              //Normally in Grbl this interrupt executes every 33.3us, and the main loop much more often.
-              if (TIMER1_COMPA_vect()) 
-                break;
+            //SB! TIMER1_COMPA_vect returns true when a segment has been finished
+            //When that happens, quit executing the ISR, otherwise we might finish the segment buffer within the 100
+            //cycles and the main loop would not have a chance to refill it, which leads to a halt.
+            //Normally in Grbl this interrupt executes every 33.3us, and the main loop much more often.
+            if (TIMER1_COMPA_vect()) 
+              break;
         }
       }
     }
