@@ -40,6 +40,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CLaserCatHardwarePIC.cs" />
     <Compile Include="CLaserCatHardwareSimulator.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Consts.cs" />
