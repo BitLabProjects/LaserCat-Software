@@ -16,6 +16,7 @@ namespace bitLab.LaserCat.Model
     private int mCurrentGCodeLineIndex;
     private CInMemorySerialPort mSerialPort;
     private CLaserCatHardwareSimulator mLaserCatHardwareSimulator;
+		private CLaserCatHardwarePIC mLaserCatHardwarePIC;
     private GrblFirmware mGrbl;
     private Task mGrblTask;
 
@@ -24,7 +25,9 @@ namespace bitLab.LaserCat.Model
       mGCodeLines = new List<String>();
       mSerialPort = new CInMemorySerialPort();
       mLaserCatHardwareSimulator = new CLaserCatHardwareSimulator();
-      mGrbl = new GrblFirmware(new GCode(), mSerialPort, mLaserCatHardwareSimulator);
+			mLaserCatHardwarePIC = new CLaserCatHardwarePIC("COM5");
+      mGrbl = new GrblFirmware(new GCode(), mSerialPort,  mLaserCatHardwareSimulator);
+			//mGrbl = new GrblFirmware(new GCode(), mSerialPort, mLaserCatHardwarePIC);
       mCurrentGCodeLineIndex = -1;
     }
 

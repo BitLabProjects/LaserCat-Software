@@ -7,14 +7,14 @@ using System.IO.Ports;
 
 namespace bitLab.LaserCat.Grbl
 {
-	class CLaserCatHardwarePIC : ILaserCatHardware
+	public class CLaserCatHardwarePIC : ILaserCatHardware
 	{
 		private SerialPort mSerialPort;
 		private String mPortName;
 
 		private Queue<byte> mReceiveBuffer;
 
-		private const char START_CHAR = '§';
+		private const char START_CHAR = '#';
 		private enum EReadingState { WaitingForStartChar, WaitingForReadLength, Reading };
 		private EReadingState mReadingState;
 		private int mCharToRead;
@@ -26,7 +26,7 @@ namespace bitLab.LaserCat.Grbl
 				CommandParsed(this, EventArgs.Empty);
 		}
 
-		CLaserCatHardwarePIC(string portName)
+		public CLaserCatHardwarePIC(string portName)
 		{
 			mReadingState = EReadingState.WaitingForStartChar;
 			mCharToRead = 0;
@@ -38,6 +38,7 @@ namespace bitLab.LaserCat.Grbl
 			mSerialPort.DataBits = 8;
 			mSerialPort.StopBits = StopBits.One;
 			mSerialPort.DataReceived += ReceiveFromPIC;
+			mSerialPort.Open();
 		}
 
 		public void Init()
@@ -55,7 +56,7 @@ namespace bitLab.LaserCat.Grbl
 		public void SetSettings(LaserCatSettings settings)
 		{
 			//TODO
-			SendToPIC("Init");
+			SendToPIC(String.Format("Settings,{0},{1}",settings.dir_invert_mask,settings.pulse_microseconds));
 		}
 
 		public void WakeUp(bool setupAndEnableMotors)
@@ -83,7 +84,7 @@ namespace bitLab.LaserCat.Grbl
 		public bool GetHasMoreSegmentBuffer()
 		{
 			//TODO
-			return true;			
+			return true;
 		}
 
 		public void StoreSegment(segment_t segment)
@@ -115,7 +116,7 @@ namespace bitLab.LaserCat.Grbl
 		{
 			SerialPort sp = (SerialPort)sender;
 			int bufferLength = sp.BytesToRead;
-			byte[] buffer = new byte[255];
+			byte[] buffer = new byte[bufferLength];
 			sp.Read(buffer, 0, bufferLength);
 
 			int i;
@@ -133,6 +134,7 @@ namespace bitLab.LaserCat.Grbl
 					case EReadingState.WaitingForReadLength:
 						{
 							mCharToRead = Convert.ToInt32(currChar);
+							mReadingState = EReadingState.Reading;
 						}
 						break;
 					case EReadingState.Reading:
@@ -157,6 +159,17 @@ namespace bitLab.LaserCat.Grbl
 		private void ParseCommand()
 		{
 			//TODO
+			String message = System.Text.Encoding.Default.GetString(mReceiveBuffer.ToArray());
+
+			if (message.StartsWith("Init")) message = "INIZIALIZZAZIONE";
+			if (message.StartsWith("Reset")) message = "RESET";
+			if (message.StartsWith("Settings")) message = "IMPOSTAZIONE";
+			if (message.StartsWith("WakeUp")) message = "SVEGLIA";
+			if (message.StartsWith("GoIdle")) message = "RIPOSA";
+			if (message.StartsWith("StoreBlock")) message = "BLOCCO RICEVUTO";
+			if (message.StartsWith("StoreSegment")) message = "SEGMENTO RICEVUTO";
+
+			Logging.Log.LogInfo(message);
 			RaiseCommandParsed();
 		}
 
