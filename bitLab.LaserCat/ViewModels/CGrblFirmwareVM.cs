@@ -53,7 +53,7 @@ namespace bitLab.LaserCat.ViewModels
     {
       get
       {
-        return String.Format("X:{0:0.000}, Y:{1:0.000}, Z:{2:0.000}", LaserCatHardwareSimulator.sys.position[0], LaserCatHardwareSimulator.sys.position[1], LaserCatHardwareSimulator.sys.position[2]);
+        return String.Format("X:{0:0.000}, Y:{1:0.000}, Z:{2:0.000}", Grbl.sys.position[0], Grbl.sys.position[1], Grbl.sys.position[2]);
       }
     }
     public int PlannerBlockCount { get { return Grbl.plan_get_block_buffer_count(); } }

@@ -245,18 +245,11 @@ namespace bitLab.LaserCat.Grbl
 				if (mLastCommandReceived == OKPOSITION_COMMAND)
 				{
 					message = mLastCommandSent + ":OK";
-					mPositionX = mReceiveBuffer.ElementAt(1) +
-											 mReceiveBuffer.ElementAt(2) << 8 +
-											 mReceiveBuffer.ElementAt(3) << 16 +
-											 mReceiveBuffer.ElementAt(4) << 24;
-					mPositionY = mReceiveBuffer.ElementAt(5) +
-											 mReceiveBuffer.ElementAt(6) << 8 +
-											 mReceiveBuffer.ElementAt(7) << 16 +
-											 mReceiveBuffer.ElementAt(8) << 24;
-					mPositionZ = mReceiveBuffer.ElementAt(9) +
-											 mReceiveBuffer.ElementAt(10) << 8 +
-											 mReceiveBuffer.ElementAt(11) << 16 +
-											 mReceiveBuffer.ElementAt(12) << 24;
+          int index = 1;
+          //SB!Extracted and corrected, << has higher precedence than +, () needed
+          mPositionX = QueueReadInt32(mReceiveBuffer, ref index);
+          mPositionY = QueueReadInt32(mReceiveBuffer, ref index);
+          mPositionZ = QueueReadInt32(mReceiveBuffer, ref index);
 				}
 			}
 
@@ -273,6 +266,16 @@ namespace bitLab.LaserCat.Grbl
 			RaiseCommandParsed();
 			CommandReceived.Set();
 		}
+
+    private int QueueReadInt32(Queue<byte> queue, ref int index)
+    {
+      var i = index;
+      index += 4;
+      return ((int)mReceiveBuffer.ElementAt(i)) +
+             ((int)mReceiveBuffer.ElementAt(i + 1) << 8) +
+             ((int)mReceiveBuffer.ElementAt(i + 1) << 16) +
+             ((int)mReceiveBuffer.ElementAt(i + 1) << 24);
+    }
 
 		private byte mGetSubByteByIndex(int param, int index)
 		{
