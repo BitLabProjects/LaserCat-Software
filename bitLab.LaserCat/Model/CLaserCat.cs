@@ -25,9 +25,9 @@ namespace bitLab.LaserCat.Model
       mGCodeLines = new List<String>();
       mSerialPort = new CInMemorySerialPort();
       mLaserCatHardwareSimulator = new CLaserCatHardwareSimulator();
-			mLaserCatHardwarePIC = new CLaserCatHardwarePIC("COM5");
-      mGrbl = new GrblFirmware(new GCode(), mSerialPort,  mLaserCatHardwareSimulator);
-			//mGrbl = new GrblFirmware(new GCode(), mSerialPort, mLaserCatHardwarePIC);
+	  mLaserCatHardwarePIC = new CLaserCatHardwarePIC("COM8");
+      //mGrbl = new GrblFirmware(new GCode(), mSerialPort,  mLaserCatHardwareSimulator);
+      mGrbl = new GrblFirmware(new GCode(), mSerialPort, mLaserCatHardwarePIC);
       mCurrentGCodeLineIndex = -1;
     }
 

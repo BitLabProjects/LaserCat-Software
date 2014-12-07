@@ -241,6 +241,7 @@ namespace bitLab.LaserCat.Grbl
 
     public void Reset()
     {
+      GoIdle(false);
       Debug.Assert(mMotorsTask == null);
       st = new stepper_t(true);
       st.exec_segmentIdx = -1;

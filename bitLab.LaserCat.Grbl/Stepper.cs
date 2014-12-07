@@ -106,7 +106,7 @@ namespace bitLab.LaserCat.Grbl
     public void st_reset()
     {
       // Initialize stepper driver idle state.
-      st_go_idle();
+      //st_go_idle();
 
       // Initialize stepper algorithm variables.
       prep = new st_prep_t();
