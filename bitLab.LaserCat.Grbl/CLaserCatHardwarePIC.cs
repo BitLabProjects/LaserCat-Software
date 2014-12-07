@@ -18,12 +18,16 @@ namespace bitLab.LaserCat.Grbl
 		private const byte GOIDLE_COMMAND = 5;
 		private const byte STOREBLOCK_COMMAND = 6;
 		private const byte STORESEGMENT_COMMAND = 7;
+		private const byte ASKPOSITION_COMMAND = 10;
+		private const byte ASKHASMORESEGMENTBUFFER_COMMAND = 12;
 
 		//RECEIVE COMMANDS
 		private const byte OK_COMMAND = 8;
 		private const byte ERROR_COMMAND = 9;
+		private const byte OKPOSITION_COMMAND = 11;
+		private const byte OKSEGMENTBUFFER_COMMAND = 13;
 
-		private const int REPLY_TIMEOUT_MSEC = 1000;
+		private const int REPLY_TIMEOUT_MSEC = 0;
 
 		private SerialPort mSerialPort;
 		private String mPortName;
@@ -37,6 +41,11 @@ namespace bitLab.LaserCat.Grbl
 
 		private byte mLastCommandReceived = 0;
 		private byte mLastCommandSent = 0;
+		private Int32 mPositionX;
+		private Int32 mPositionY;
+		private Int32 mPositionZ;
+		private bool mHasMoreSegmentBuffer;
+
 		private AutoResetEvent CommandReceived;
 
 		public event EventHandler CommandParsed;
@@ -92,7 +101,6 @@ namespace bitLab.LaserCat.Grbl
 
 		public void WakeUp(bool setupAndEnableMotors)
 		{
-			//TODO
 			mLastCommandSent = WAKEUP_COMMAND;
 			byte[] data = { mLastCommandSent, Convert.ToByte(setupAndEnableMotors) };
 			SendToPIC(data);
@@ -100,7 +108,6 @@ namespace bitLab.LaserCat.Grbl
 
 		public void GoIdle(bool delayAndDisableSteppers)
 		{
-			//TODO
 			mLastCommandSent = GOIDLE_COMMAND;
 			byte[] data = { mLastCommandSent, Convert.ToByte(delayAndDisableSteppers) };
 			SendToPIC(data);
@@ -108,7 +115,6 @@ namespace bitLab.LaserCat.Grbl
 
 		public void StorePlannerBlock(byte blockIndex, st_block_t block)
 		{
-			//TODO
 			mLastCommandSent = STOREBLOCK_COMMAND;
 
 			List<byte> dataList = new List<byte>();
@@ -117,10 +123,10 @@ namespace bitLab.LaserCat.Grbl
 			dataList.Add(blockIndex);
 			dataList.Add(block.direction_bits);
 
-			int i,j;
+			int i, j;
 			for (i = 0; i <= 2; i++)
 			{
-				for (j = 0; j <= 3;j++)
+				for (j = 0; j <= 3; j++)
 				{
 					dataList.Add(mGetSubByteByIndex(Convert.ToInt32(block.steps[i]), j));
 				}
@@ -134,37 +140,48 @@ namespace bitLab.LaserCat.Grbl
 			SendToPIC(dataList.ToArray());
 		}
 
-		public bool GetHasMoreSegmentBuffer()
+		public bool AskHasMoreSegmentBuffer()
 		{
-			//TODO
-			return true;
+			mLastCommandSent = ASKHASMORESEGMENTBUFFER_COMMAND;
+			byte[] data = { mLastCommandSent };
+			SendToPIC(data);
+			return mHasMoreSegmentBuffer;
 		}
 
 		public void StoreSegment(segment_t segment)
 		{
-			//TODO
-			mLastCommandSent = SETSETTINGS_COMMAND;
+			mLastCommandSent = STORESEGMENT_COMMAND;
 
-			byte n_stepHI = (byte)((segment.n_step & (255<<8))>>8);
-			byte n_stepLO = (byte)(segment.n_step & 255);
+			byte n_stepHI = mGetSubByteByIndex(Convert.ToInt32(segment.n_step), 1);
+			byte n_stepLO = mGetSubByteByIndex(Convert.ToInt32(segment.n_step), 0);
 
-			byte cycles_per_tickHI = (byte)((segment.cycles_per_tick & (255 << 8)) >> 8);
-			byte cycles_per_tickLO = (byte)(segment.cycles_per_tick & 255);
+			byte cycles_per_tickHI = mGetSubByteByIndex(Convert.ToInt32(segment.cycles_per_tick), 1);
+			byte cycles_per_tickLO = mGetSubByteByIndex(Convert.ToInt32(segment.cycles_per_tick), 0);
 
 			byte[] data = { mLastCommandSent,
-                      n_stepHI, n_stepLO,
+                      n_stepLO, n_stepHI,
                       segment.st_block_index,
-                      cycles_per_tickHI, cycles_per_tickLO, 
+                      cycles_per_tickLO, cycles_per_tickHI, 
                       segment.amass_level,
                       segment.prescaler};
 			SendToPIC(data);
 		}
 
+		public Int32[] AskPosition()
+		{
+			mLastCommandSent = ASKPOSITION_COMMAND;
+			byte[] data = { mLastCommandSent };
+			SendToPIC(data);
+			Int32[] position = { mPositionX, mPositionY, mPositionZ };
+			return position;
+		}
+
+
 		private void SendToPIC(byte[] data)
 		{
 			var dataToSend = FormatCommandForSend(data);
 			mSerialPort.Write(dataToSend, 0, dataToSend.Length);
-			CommandReceived.WaitOne(REPLY_TIMEOUT_MSEC);
+			CommandReceived.WaitOne();
 		}
 
 		private byte[] FormatCommandForSend(byte[] data)
@@ -221,8 +238,33 @@ namespace bitLab.LaserCat.Grbl
 		{
 			//TODO
 			String message = "";
-
 			mLastCommandReceived = mReceiveBuffer.ElementAt(0);
+
+			if (mLastCommandSent == ASKPOSITION_COMMAND)
+			{
+				if (mLastCommandReceived == OKPOSITION_COMMAND)
+				{
+					message = mLastCommandSent + ":OK";
+					mPositionX = mReceiveBuffer.ElementAt(1) +
+											 mReceiveBuffer.ElementAt(2) << 8 +
+											 mReceiveBuffer.ElementAt(3) << 16 +
+											 mReceiveBuffer.ElementAt(4) << 24;
+					mPositionY = mReceiveBuffer.ElementAt(5) +
+											 mReceiveBuffer.ElementAt(6) << 8 +
+											 mReceiveBuffer.ElementAt(7) << 16 +
+											 mReceiveBuffer.ElementAt(8) << 24;
+					mPositionZ = mReceiveBuffer.ElementAt(9) +
+											 mReceiveBuffer.ElementAt(10) << 8 +
+											 mReceiveBuffer.ElementAt(11) << 16 +
+											 mReceiveBuffer.ElementAt(12) << 24;
+				}
+			}
+
+			if (mLastCommandSent == ASKHASMORESEGMENTBUFFER_COMMAND && mLastCommandReceived == OKSEGMENTBUFFER_COMMAND)
+			{
+				message = mLastCommandSent + ":OK";
+				mHasMoreSegmentBuffer = Convert.ToBoolean(mReceiveBuffer.ElementAt(1));
+			}
 
 			if (mLastCommandReceived == OK_COMMAND) message = mLastCommandSent + ":OK";
 			if (mLastCommandReceived == ERROR_COMMAND) message = mLastCommandSent + ":ERRORE";
@@ -234,7 +276,7 @@ namespace bitLab.LaserCat.Grbl
 
 		private byte mGetSubByteByIndex(int param, int index)
 		{
-			byte subByte = (byte)((param & (255 << 8*index)) >> 8*index);
+			byte subByte = (byte)((param & (255 << 8 * index)) >> 8 * index);
 			return subByte;
 		}
 

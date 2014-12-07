@@ -72,7 +72,8 @@ namespace bitLab.LaserCat.Grbl
     void WakeUp(bool setupAndEnableMotors);
     void GoIdle(bool delayAndDisableSteppers);
     void StorePlannerBlock(byte blockIndex, st_block_t block);
-    bool GetHasMoreSegmentBuffer();
+    bool AskHasMoreSegmentBuffer();
     void StoreSegment(segment_t segment);
+		Int32[] AskPosition();
   }
 }

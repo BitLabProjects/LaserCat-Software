@@ -564,10 +564,16 @@ namespace bitLab.LaserCat.Grbl
     //#endif
 
 
-    public bool GetHasMoreSegmentBuffer()
+    public bool AskHasMoreSegmentBuffer()
     {
       return segment_buffer_tail != segment_next_head;
     }
 
-  }
+
+
+		public int[] AskPosition()
+		{
+			throw new NotImplementedException();
+		}
+	}
 }

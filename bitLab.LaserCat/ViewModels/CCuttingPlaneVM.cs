@@ -82,7 +82,8 @@ namespace bitLab.LaserCat.ViewModels
     {
       //SB! Save original coordinates and normalize them in the property getter so that we can dinamically size the 
       //drawing surface
-      mSysPosition = new DblPoint2(LaserCatHardwareSimulator.sys.position[0], LaserCatHardwareSimulator.sys.position[1]);
+      //mSysPosition = new DblPoint2(LaserCatHardwareSimulator.sys.position[0], LaserCatHardwareSimulator.sys.position[1]);
+			mSysPosition = new DblPoint2(Grbl.sys.position[0], Grbl.sys.position[1]);
       mSysPositionTransformed = mWorldToCuttingPlaneTransform.Apply(mSysPosition);
       Notify("CurrX");
       Notify("CurrY");
