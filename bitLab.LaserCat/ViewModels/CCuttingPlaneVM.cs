@@ -58,7 +58,6 @@ namespace bitLab.LaserCat.ViewModels
     }
 
     private GrblFirmware Grbl { get { return CLaserCat.Instance.GrblFirmware; } }
-    private CLaserCatHardwareSimulator LaserCatHardwareSimulator { get { return CLaserCat.Instance.LaserCatHardwareSimulator; } }
 
     private DblPoint2 mCuttingPlaneSize;
     private ScaleTranslateTransform mWorldToCuttingPlaneTransform;

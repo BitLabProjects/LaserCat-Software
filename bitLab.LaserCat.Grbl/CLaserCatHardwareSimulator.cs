@@ -104,7 +104,7 @@ namespace bitLab.LaserCat.Grbl
     public segment_t[] segment_buffer = new segment_t[GrblFirmware.SEGMENT_BUFFER_SIZE];
 
     //SB! Returns the number of active blocks are in the segment buffer.
-    public int stepper_get_segment_buffer_count()
+    int ILaserCatHardware.GetSegmentBufferCount()
     {
       return segment_buffer_count;
     }

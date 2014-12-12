@@ -25,14 +25,14 @@ namespace bitLab.LaserCat.Model
       mGCodeLines = new List<String>();
       mSerialPort = new CInMemorySerialPort();
       mLaserCatHardwareSimulator = new CLaserCatHardwareSimulator();
-	  mLaserCatHardwarePIC = new CLaserCatHardwarePIC("COM8");
+	    mLaserCatHardwarePIC = new CLaserCatHardwarePIC("COM6");
       //mGrbl = new GrblFirmware(new GCode(), mSerialPort,  mLaserCatHardwareSimulator);
       mGrbl = new GrblFirmware(new GCode(), mSerialPort, mLaserCatHardwarePIC);
       mCurrentGCodeLineIndex = -1;
     }
 
     public GrblFirmware GrblFirmware { get { return mGrbl; } }
-    public CLaserCatHardwareSimulator LaserCatHardwareSimulator { get { return mLaserCatHardwareSimulator; } }
+    public ILaserCatHardware LaserCatHardwareSimulator { get { return mLaserCatHardwareSimulator; } }
 
     private bool CheckGrblIsStarted()
     {

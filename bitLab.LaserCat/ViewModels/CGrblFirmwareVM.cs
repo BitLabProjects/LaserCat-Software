@@ -24,20 +24,15 @@ namespace bitLab.LaserCat.ViewModels
       mStatusPollingTimer.Tick += mStatusPollingTimer_Tick;
       mStatusPollingTimer.Start();
       Grbl.PlannerBlocksChanged += mGrbl_PlannerBlocksChanged;
-      LaserCatHardwareSimulator.StepperSegmentBufferChanged += GrblFirmware_StepperSegmentBufferChanged;
     }
 
     private void mStatusPollingTimer_Tick(object sender, EventArgs e)
     {
       Notify("CurrentPositionString");
       Notify("StepperSpeed");
-			CuttingPlaneVM.Update();
-    }
-
-    private void GrblFirmware_StepperSegmentBufferChanged(object sender, EventArgs e)
-    {
       Notify("StepperSegmentBufferCount");
       Notify("StepperSegmentBufferMaxSize");
+			CuttingPlaneVM.Update();
     }
 
     private void mGrbl_PlannerBlocksChanged(object sender, EventArgs e)
@@ -47,7 +42,7 @@ namespace bitLab.LaserCat.ViewModels
     }
 
     private GrblFirmware Grbl { get { return CLaserCat.Instance.GrblFirmware; } }
-    private CLaserCatHardwareSimulator LaserCatHardwareSimulator { get { return CLaserCat.Instance.LaserCatHardwareSimulator; } }
+    private ILaserCatHardware LaserCatHardwareSimulator { get { return CLaserCat.Instance.LaserCatHardwareSimulator; } }
 
     public string CurrentPositionString
     {
@@ -58,7 +53,7 @@ namespace bitLab.LaserCat.ViewModels
     }
     public int PlannerBlockCount { get { return Grbl.plan_get_block_buffer_count(); } }
     public int PlannerBlockMaxSize { get { return GrblFirmware.BLOCK_BUFFER_SIZE; } }
-    public int StepperSegmentBufferCount { get { return LaserCatHardwareSimulator.stepper_get_segment_buffer_count(); } }
+    public int StepperSegmentBufferCount { get { return LaserCatHardwareSimulator.GetSegmentBufferCount(); } }
     public int StepperSegmentBufferMaxSize { get { return GrblFirmware.SEGMENT_BUFFER_SIZE; } }
     public float StepperSpeed { get { return Grbl.st_get_realtime_rate(); } }
   }

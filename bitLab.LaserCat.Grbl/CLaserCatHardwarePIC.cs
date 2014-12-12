@@ -44,6 +44,7 @@ namespace bitLab.LaserCat.Grbl
 		private Int32 mPositionX;
 		private Int32 mPositionY;
 		private Int32 mPositionZ;
+    private Int32 mSegmentBufferCount;
 		private bool mHasMoreSegmentBuffer;
 
 		private AutoResetEvent CommandReceived;
@@ -68,11 +69,12 @@ namespace bitLab.LaserCat.Grbl
 			mSerialPort.DataBits = 8;
 			mSerialPort.StopBits = StopBits.One;
 			mSerialPort.DataReceived += ReceiveFromPIC;
-			mSerialPort.Open();
 		}
 
 		public void Init()
 		{
+      mSerialPort.Open();
+
 			mLastCommandSent = INIT_COMMAND;
 			byte[] data = { mLastCommandSent };
 			SendToPIC(data);
@@ -167,6 +169,11 @@ namespace bitLab.LaserCat.Grbl
 			SendToPIC(data);
 		}
 
+    public int GetSegmentBufferCount()
+    {
+      return mSegmentBufferCount;
+    }
+
 		public Int32[] AskPosition()
 		{
 			mLastCommandSent = ASKPOSITION_COMMAND;
@@ -175,7 +182,6 @@ namespace bitLab.LaserCat.Grbl
 			Int32[] position = { mPositionX, mPositionY, mPositionZ };
 			return position;
 		}
-
 
 		private void SendToPIC(byte[] data)
 		{
@@ -282,7 +288,5 @@ namespace bitLab.LaserCat.Grbl
 			byte subByte = (byte)((param & (255 << 8 * index)) >> 8 * index);
 			return subByte;
 		}
-
-
-	}
+  }
 }
