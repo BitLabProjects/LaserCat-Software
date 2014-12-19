@@ -1,10 +1,10 @@
 ( Made using CamBam - http://www.cambam.co.uk )
 ( drawing 11/18/2014 1:38:35 PM )
 ( T0 : 0.0 )
-G21 G90 G64 G40
+(G21 G90 G64 G40)
 G0 Z3.0
 ( T0 : 0.0 )
-T0 M6
+(T0 M6)
 ( Profile1 )
 G17
 M3 S1000
