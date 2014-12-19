@@ -288,5 +288,10 @@ namespace bitLab.LaserCat.Grbl
 			byte subByte = (byte)((param & (255 << 8 * index)) >> 8 * index);
 			return subByte;
 		}
+
+    public bool Connect(string COMPort)
+    {
+      throw new NotImplementedException();
+    }
   }
 }

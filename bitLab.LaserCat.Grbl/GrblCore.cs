@@ -11,10 +11,13 @@ namespace bitLab.LaserCat.Grbl
   {
     private GrblFirmware mGrbl;
     private GCode mGCode;
-    public GrblCore(GrblFirmware grbl, GCode gcode)
+    private ILaserCatHardware mHardware;
+    public GrblCore(GrblFirmware grbl, GCode gcode, ILaserCatHardware hardware)
     {
       mGrbl = grbl;
       mGCode = gcode;
+      mHardware = hardware;
+      mIsConnected = false;
     }
 
     private enum EGrblState
@@ -23,6 +26,7 @@ namespace bitLab.LaserCat.Grbl
       GCodeLoaded
     }
     private EGrblState mState;
+    private bool mIsConnected;
 
     public void initGrblState()
     {
@@ -47,13 +51,14 @@ namespace bitLab.LaserCat.Grbl
     #endregion
 
     #region Message dispatch
-    public void handleMessage(GrblFirmware.TGrblMessage msg)
+    public void handleMessage(TGrblMessage msg)
     {
       switch (msg.Message)
       {
-        case GrblFirmware.EGrblMessage.LoadGCode:
-          loadGCode(msg.Param0 as List<string>);
-          break;
+        case EGrblMessage.LoadGCode: 
+          loadGCode((List<string>)msg.Param0); break;
+        case EGrblMessage.ConnectToMachine:
+          connectToMachine((TMachineConnectionSettings)msg.Param0); break;
       }
     }
     #endregion
@@ -85,6 +90,26 @@ namespace bitLab.LaserCat.Grbl
       Log.LogInfo("- Parsed {0} GCode lines", GCodeLines.Count);
       Log.LogInfo("- Planned {0} segments", mGrbl.plan_get_block_buffer_count());
       changeState(EGrblState.GCodeLoaded);
+    }
+
+    private void connectToMachine(TMachineConnectionSettings settings)
+    {
+      if (!checkAllowedEntryState(new EGrblState[] { EGrblState.Idle, EGrblState.GCodeLoaded }))
+        return;
+
+      if (mIsConnected)
+      {
+        Log.LogInfo("Machine already connected");
+        return;
+      }
+
+      Log.LogInfo("Connecting to machine on port {0}...", settings.COMPort);
+      if (mHardware.Connect(settings.COMPort)) {
+        mIsConnected = true;
+        Log.LogInfo("Connected");
+      }
+      else 
+        Log.LogInfo("Connection failed");
     }
     #endregion
   }

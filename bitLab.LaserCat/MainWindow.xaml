@@ -31,11 +31,10 @@
           <Setter Property="Margin" Value="0 0 0 5" />
         </Style>
       </StackPanel.Resources>
+      <Button Content="Start Grbl" Command="{Binding GrblStart}" Margin="0 0 0 10" />
       <Button Content="Load test GCode" Command="{Binding LoadTestGCode}" />
       <Button Content="Load bitLab logo" Command="{Binding LoadBitLabLogo}" />
-      <Button Content="Start Grbl" Command="{Binding GrblStart}" Margin="0 10 0 5" />
-      <Button Content="Send GCode Line" Command="{Binding SendGCodeLine}" Margin="0 10 0 5" />
-      <Button Content="Send All GCode" Command="{Binding SendAllGCode}" />
+      <Button Content="Connect" Command="{Binding Connect}" Margin="0 10 0 5" />
     </StackPanel>
   </Grid>
 </Window>

@@ -575,5 +575,10 @@ namespace bitLab.LaserCat.Grbl
 		{
       return sys.position;
 		}
-	}
+
+    public bool Connect(string COMPort)
+    {
+      return true;
+    }
+  }
 }

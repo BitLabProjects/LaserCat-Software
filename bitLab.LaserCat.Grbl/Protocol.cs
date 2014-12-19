@@ -8,17 +8,24 @@ using System.Collections.Concurrent;
 
 namespace bitLab.LaserCat.Grbl
 {
+  public enum EGrblMessage
+  {
+    LoadGCode,
+    ConnectToMachine
+  }
+  public struct TMachineConnectionSettings
+  {
+    public string COMPort;
+  }
+
+  internal struct TGrblMessage
+  {
+    public EGrblMessage Message;
+    public object Param0;
+  }
+
 	public partial class GrblFirmware
 	{
-    public enum EGrblMessage
-    {
-      LoadGCode
-    }
-    internal struct TGrblMessage
-    {
-      public EGrblMessage Message;
-      public object Param0;
-    }
     private BlockingCollection<TGrblMessage> mMessageQueue;
 
     public void SendMessage(EGrblMessage message, object param0)
@@ -29,7 +36,7 @@ namespace bitLab.LaserCat.Grbl
     public void protocol_main_loop()
     {
       mMessageQueue = new BlockingCollection<TGrblMessage>();
-      var core = new GrblCore(this, mGCode);
+      var core = new GrblCore(this, mGCode, mLaserCatHardware);
       core.initGrblState();
 
       try

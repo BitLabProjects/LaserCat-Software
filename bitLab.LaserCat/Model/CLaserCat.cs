@@ -11,9 +11,6 @@ namespace bitLab.LaserCat.Model
 {
   class CLaserCat
   {
-    private string mCurrentGCodeFile;
-    private List<string> mGCodeLines;
-    private int mCurrentGCodeLineIndex;
     private CInMemorySerialPort mGCodeSerialPort;
     private CLaserCatHardwareSimulator mLaserCatHardwareSimulator;
 		private CLaserCatHardwarePIC mLaserCatHardwarePIC;
@@ -22,13 +19,11 @@ namespace bitLab.LaserCat.Model
 
     private CLaserCat()
     {
-      mGCodeLines = new List<String>();
       mGCodeSerialPort = new CInMemorySerialPort();
       mLaserCatHardwareSimulator = new CLaserCatHardwareSimulator();
 	    mLaserCatHardwarePIC = new CLaserCatHardwarePIC("COM6");
       //mGrbl = new GrblFirmware(new GCode(), mSerialPort,  mLaserCatHardwareSimulator);
       mGrbl = new GrblFirmware(new GCode(), mGCodeSerialPort, mLaserCatHardwareSimulator);
-      mCurrentGCodeLineIndex = -1;
     }
 
     public GrblFirmware GrblFirmware { get { return mGrbl; } }
@@ -40,28 +35,6 @@ namespace bitLab.LaserCat.Model
         return true;
       Log.LogError("Could not complete operation: Grbl is not started");
       return false;
-    }
-
-    private bool IsGCodeCompleted()
-    {
-      return mCurrentGCodeLineIndex + 1 >= mGCodeLines.Count;
-    }
-
-    public void LoadGCode(string fullFileName)
-    {
-      mCurrentGCodeFile = fullFileName;
-      if (!File.Exists(fullFileName))
-      {
-        Log.LogError(String.Format("The file '{0}' does not exist", fullFileName));
-        return;
-      }
-
-      mCurrentGCodeLineIndex = -1;
-      mGCodeLines.Clear();
-      mGCodeLines.AddRange(File.ReadAllLines(mCurrentGCodeFile));
-      Log.LogInfo(String.Format("Loaded GCode file '{0}'", fullFileName));
-      Log.LogInfo("Statistics");
-      Log.LogInfo(String.Format(" Lines: {0}", mGCodeLines.Count));
     }
 
     public void GrblStart()
@@ -84,29 +57,25 @@ namespace bitLab.LaserCat.Model
       Log.LogInfo("Grbl started");
     }
 
-    public void SendGCodeLine()
+    public void LoadGCode(string fullFileName)
     {
       if (!CheckGrblIsStarted()) return;
 
-      if (IsGCodeCompleted())
+      if (!File.Exists(fullFileName))
       {
-        Log.LogError("Last GCode line reached");
+        Log.LogError(String.Format("The file '{0}' does not exist", fullFileName));
         return;
       }
 
-      mCurrentGCodeLineIndex += 1;
-      Log.LogInfo(String.Format("Adding GCode line '{0}'", mGCodeLines[mCurrentGCodeLineIndex]));
-      mGCodeSerialPort.AddLineToInputBuffer(mGCodeLines[mCurrentGCodeLineIndex] + '\n');
+      var GCodeLines = File.ReadAllLines(fullFileName).ToList();
+      mGrbl.SendMessage(Grbl.EGrblMessage.LoadGCode, GCodeLines);
     }
 
-    public void SendAllGCode()
+    public void Connect()
     {
       if (!CheckGrblIsStarted()) return;
 
-      //while (!IsGCodeCompleted()) { SendGCodeLine(); }
-      mGrbl.SendMessage(Grbl.GrblFirmware.EGrblMessage.LoadGCode, mGCodeLines);
-
-      Log.LogInfo("GCode completed");
+      mGrbl.SendMessage(EGrblMessage.ConnectToMachine, new TMachineConnectionSettings() { COMPort = "COM6" });
     }
 
     #region Singleton
