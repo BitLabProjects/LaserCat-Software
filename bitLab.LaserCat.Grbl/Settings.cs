@@ -105,14 +105,6 @@ namespace bitLab.LaserCat.Grbl
       //memcpy_to_eeprom_with_checksum(addr, (byte*)line, LINE_BUFFER_SIZE);
     }
 
-
-    // Method to store build info into EEPROM
-    public void settings_store_build_info(char[] line)
-    {
-      memcpy_to_eeprom_with_checksum(EEPROM_ADDR_BUILD_INFO, line, LINE_BUFFER_SIZE);
-    }
-
-
     // Method to store coord data parameters into EEPROM
     public void settings_write_coord_data(byte coord_select, float[] coord_data)
     {
@@ -184,15 +176,6 @@ namespace bitLab.LaserCat.Grbl
     }
 
 
-    // Helper function to clear the EEPROM space containing the startup lines.
-    public void settings_clear_startup_lines()
-    {
-      if (N_STARTUP_LINE > 0)
-        eeprom_put_char(EEPROM_ADDR_STARTUP_BLOCK, 0);
-      if (N_STARTUP_LINE > 1)
-        eeprom_put_char(EEPROM_ADDR_STARTUP_BLOCK + (LINE_BUFFER_SIZE + 1), 0);
-    }
-
 
     // Helper function to clear the EEPROM space containing the user build info string.
     public void settings_clear_build_info() { eeprom_put_char(EEPROM_ADDR_BUILD_INFO, 0); }
@@ -214,21 +197,6 @@ namespace bitLab.LaserCat.Grbl
       //}
       //return (true);
     }
-
-
-    // Reads startup line from EEPROM. Updated pointed line string data.
-    public bool settings_read_build_info(char[] line)
-    {
-      if (!(memcpy_from_eeprom_with_checksum(line, EEPROM_ADDR_BUILD_INFO, LINE_BUFFER_SIZE)))
-      {
-        // Reset line with default value
-        line[0] = '\0'; // Empty line
-        settings_store_build_info(line);
-        return (false);
-      }
-      return (true);
-    }
-
 
     // Read selected coordinate data from EEPROM. Updates pointed coord_data value.
     public bool settings_read_coord_data(byte coord_select, float[] coord_data)
