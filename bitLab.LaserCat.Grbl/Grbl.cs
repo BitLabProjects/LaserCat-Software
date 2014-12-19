@@ -24,7 +24,7 @@ namespace bitLab.LaserCat.Grbl
       // Initialize system upon power-up.
       serial_init();   // Setup serial baud rate and interrupts
       settings_init(); // Load grbl settings from EEPROM
-      stepper_init();  // Configure stepper pins and interrupt timers
+      //stepper_init();  // Configure stepper pins and interrupt timers
       system_init();   // Configure pinout pins and pin-change interrupt
   
       sys = new system_t(true); // Clear all system variables
@@ -57,7 +57,6 @@ namespace bitLab.LaserCat.Grbl
         //TODO limits_init(); 
         probe_init();
         plan_reset(); // Clear block buffer and planner variables
-        st_reset(); // Clear stepper subsystem variables.
 
         // Sync cleared gcode and planner positions to current system position.
         plan_sync_position();

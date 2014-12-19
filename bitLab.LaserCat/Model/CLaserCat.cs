@@ -78,6 +78,11 @@ namespace bitLab.LaserCat.Model
       mGrbl.SendMessage(EGrblMessage.ConnectToMachine, new TMachineConnectionSettings() { COMPort = "COM6" });
     }
 
+    public void Play()
+    {
+      mGrbl.SendMessage(EGrblMessage.Play, null);
+    }
+
     #region Singleton
     private static CLaserCat mInstance;
     public static CLaserCat Instance { get { return mInstance; } }

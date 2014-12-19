@@ -11,7 +11,8 @@ namespace bitLab.LaserCat.Grbl
   public enum EGrblMessage
   {
     LoadGCode,
-    ConnectToMachine
+    ConnectToMachine,
+    Play,
   }
   public struct TMachineConnectionSettings
   {

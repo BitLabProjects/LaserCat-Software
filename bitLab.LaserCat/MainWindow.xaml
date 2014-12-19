@@ -35,6 +35,7 @@
       <Button Content="Load test GCode" Command="{Binding LoadTestGCode}" />
       <Button Content="Load bitLab logo" Command="{Binding LoadBitLabLogo}" />
       <Button Content="Connect" Command="{Binding Connect}" Margin="0 10 0 5" />
+      <Button Content="Play" Command="{Binding Play}" />
     </StackPanel>
   </Grid>
 </Window>

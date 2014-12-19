@@ -90,11 +90,11 @@ namespace bitLab.LaserCat.Grbl
 		}
 
 		//static plan_block_t[] block_buffer = CreateBlockBufferArray(BLOCK_BUFFER_SIZE);  // A ring buffer for motion instructions
-    static List<plan_block_t> block_buffer = new List<plan_block_t>();
-		static byte block_buffer_tail;     // Index of the block to process now
-		static byte block_buffer_head;     // Index of the next block to be pushed
-		static byte next_buffer_head;      // Index of the next buffer head
-		static byte block_buffer_planned;  // Index of the optimally planned block
+    List<plan_block_t> block_buffer = new List<plan_block_t>();
+		int block_buffer_tail;     // Index of the block to process now
+		int block_buffer_head;     // Index of the next block to be pushed
+		int next_buffer_head;      // Index of the next buffer head
+		int block_buffer_planned;  // Index of the optimally planned block
 
 		// Define planner variables
 		public struct planner_t
@@ -116,14 +116,14 @@ namespace bitLab.LaserCat.Grbl
 
 
 		// Returns the index of the next block in the ring buffer. Also called by stepper segment buffer.
-		public byte plan_next_block_index(byte block_index)
+		public int plan_next_block_index(int block_index)
 		{
-      return (byte)(block_index + 1);
+      return block_index + 1;
 		}
 
 
 		// Returns the index of the previous block in the ring buffer
-		static byte plan_prev_block_index(byte block_index)
+		int plan_prev_block_index(int block_index)
 		{
 			block_index--;
 			return (block_index);
@@ -198,7 +198,7 @@ namespace bitLab.LaserCat.Grbl
 		public void planner_recalculate()
 		{
 			// Initialize block index to the last block in the planner buffer.
-			byte block_index = plan_prev_block_index(block_buffer_head);
+			int block_index = plan_prev_block_index(block_buffer_head);
 
 			// Bail. Can't do anything with one only one plan-able block.
 			if (block_index == block_buffer_planned) { return; }
@@ -305,7 +305,7 @@ namespace bitLab.LaserCat.Grbl
 		{
 			if (block_buffer_head != block_buffer_tail)
 			{ // Discard non-empty buffer.
-				byte block_index = plan_next_block_index(block_buffer_tail);
+				int block_index = plan_next_block_index(block_buffer_tail);
 				// Push block_buffer_planned pointer, if encountered.
 				if (block_buffer_tail == block_buffer_planned) { block_buffer_planned = block_index; }
 				block_buffer_tail = block_index;
@@ -324,7 +324,7 @@ namespace bitLab.LaserCat.Grbl
 
 		float plan_get_exec_block_exit_speed()
 		{
-			byte block_index = plan_next_block_index(block_buffer_tail);
+			int block_index = plan_next_block_index(block_buffer_tail);
 			if (block_index == block_buffer_head) { return (0.0f); }
 			return ((float)System.Math.Sqrt(block_buffer[block_index].entry_speed_sqr));
 		}

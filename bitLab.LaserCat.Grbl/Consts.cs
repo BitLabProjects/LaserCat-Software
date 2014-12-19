@@ -224,7 +224,7 @@ namespace bitLab.LaserCat.Grbl
         Copyright (c) 2011-2012 Sungeun K. Jeon
     */
 
-    public static int SEGMENT_BUFFER_SIZE = 6;
+    public static int SEGMENT_BUFFER_SIZE = 1000;
 
     // Some useful constants.
     public float DT_SEGMENT = (1.0f / (ACCELERATION_TICKS_PER_SECOND * 60.0f)); // min/segment 

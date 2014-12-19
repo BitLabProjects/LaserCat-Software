@@ -343,10 +343,10 @@ namespace bitLab.LaserCat.Grbl
     private void ExecuteMotors()
     {
       if (mLastTime == 0)
-        mLastTime = mTimer.Value;
+        mLastTime = mTimer.Value/10;
       else
       {
-        var newValue = mTimer.Value;
+        var newValue = mTimer.Value/10;
         while (mLastTime < newValue)
         {
           mLastTime += 1;
@@ -451,6 +451,7 @@ namespace bitLab.LaserCat.Grbl
         }
         else
         {
+          Log.LogError("Buffer underrun! Simulator going idle");
           //TODO
           //// Segment buffer empty. Shutdown.
           //st_go_idle();
@@ -563,13 +564,10 @@ namespace bitLab.LaserCat.Grbl
     //  }
     //#endif
 
-
     public bool AskHasMoreSegmentBuffer()
     {
       return segment_buffer_tail != segment_next_head;
     }
-
-
 
 		public int[] AskPosition()
 		{

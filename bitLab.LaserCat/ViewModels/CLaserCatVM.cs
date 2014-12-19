@@ -32,11 +32,13 @@ namespace bitLab.LaserCat.ViewModels
       });
       GrblStart = new CDelegateCommand((obj) => { CLaserCat.Instance.GrblStart(); });
       Connect = new CDelegateCommand((obj) => { CLaserCat.Instance.Connect(); });
+      Play = new CDelegateCommand((obj) => { CLaserCat.Instance.Play(); });
     }
 
     public CDelegateCommand LoadTestGCode { get; set; }
     public CDelegateCommand LoadBitLabLogo { get; set; }
     public CDelegateCommand GrblStart { get; set; }
-    public CDelegateCommand Connect { get; set; } 
+    public CDelegateCommand Connect { get; set; }
+    public CDelegateCommand Play { get; set; } 
   }
 }

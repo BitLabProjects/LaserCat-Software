@@ -129,13 +129,6 @@ namespace bitLab.LaserCat.Grbl
       mLaserCatHardware.SetSettings(lcSettings);
     }
 
-
-    // Initialize and start the stepper motor subsystem
-    public void stepper_init()
-    {
-      mLaserCatHardware.Init();
-    }
-
     // Called by planner_recalculate() when the executing block is updated by the new plan.
     public void st_update_plan_block_parameters()
     {
