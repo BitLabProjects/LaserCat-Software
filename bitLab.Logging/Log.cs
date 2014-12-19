@@ -32,14 +32,14 @@ namespace bitLab.Logging
       Instance.mListeners.Add(listener);
     }
 
-    public static void LogInfo(string message)
+    public static void LogInfo(string message, params object[] args)
     {
-      DispatchLogMessage(new LogMessage(DateTime.Now, message, ELogMessageType.Info));
+      DispatchLogMessage(new LogMessage(DateTime.Now, String.Format(message, args), ELogMessageType.Info));
     }
 
-    public static void LogError(string message)
+    public static void LogError(string message, params object[] args)
     {
-      DispatchLogMessage(new LogMessage(DateTime.Now, message, ELogMessageType.Error));
+      DispatchLogMessage(new LogMessage(DateTime.Now, String.Format(message, args), ELogMessageType.Error));
     }
 
     private static void DispatchLogMessage(LogMessage message)

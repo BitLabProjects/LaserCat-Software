@@ -19,19 +19,19 @@ namespace bitLab.LaserCat.Grbl
 		// such as settings, initiating the homing cycle, and toggling switch states.
 		public void protocol_execute_line(string line)
 		{
-			//protocol_execute_runtime(); // Runtime command check point.
-			//if (sys.abort != 0) { return; } // Bail to calling function upon system abort  
+      ////protocol_execute_runtime(); // Runtime command check point.
+      ////if (sys.abort != 0) { return; } // Bail to calling function upon system abort  
 
-			if (string.IsNullOrWhiteSpace(line))
-			{
-				// Empty or comment line. Send status message for syncing purposes.
-				report_status_message(STATUS_OK);
-			}
-			else
-			{
-				// Parse and execute g-code block!
-				report_status_message(mGCode.gc_execute_line(line));
-			}
+      //if (string.IsNullOrWhiteSpace(line))
+      //{
+      //  // Empty or comment line. Send status message for syncing purposes.
+      //  report_status_message(STATUS_OK);
+      //}
+      //else
+      //{
+      //  // Parse and execute g-code block!
+      //  report_status_message(mGCode.gc_execute_line(line));
+      //}
 		}
 
     public enum EGrblMessage
@@ -108,11 +108,24 @@ namespace bitLab.LaserCat.Grbl
 
       Log.LogInfo("Resetting planner and parsing GCode...");
       plan_reset();
-      foreach(var line in GCodeLines)
-        mGCode.gc_execute_line(line);
+      int idxLine = 1;
+      foreach (var line in GCodeLines)
+      {
+        var result = mGCode.gc_execute_line(line);
+        if (result != GrblFirmware.STATUS_OK)
+        {
+          Log.LogInfo("GCode parse error: ");
+          Log.LogInfo(" - Line {0}: {1} ", idxLine, line);
+          Log.LogInfo(" - Error: {0} ", getStatusMessage(result));
+          changeState(EGrblState.Idle);
+          return;
+        }
+        idxLine++;
+      }
+        
       Log.LogInfo("Parsing GCode completed:");
-      Log.LogInfo(string.Format("- Parsed {0} GCode lines", GCodeLines.Count));
-      Log.LogInfo(string.Format("- Planned {0} segments", plan_get_block_buffer_count()));
+      Log.LogInfo("- Parsed {0} GCode lines", GCodeLines.Count);
+      Log.LogInfo("- Planned {0} segments", plan_get_block_buffer_count());
       changeState(EGrblState.GCodeLoaded);
     }
 
@@ -247,7 +260,7 @@ namespace bitLab.LaserCat.Grbl
             else if (char_counter >= (LINE_BUFFER_SIZE - 1))
             {
               // Detect line buffer overflow. Report error and reset line buffer.
-              report_status_message(STATUS_OVERFLOW);
+              //report_status_message(STATUS_OVERFLOW);
               iscomment = false;
               char_counter = 0;
             }

@@ -52,7 +52,7 @@ namespace bitLab.LaserCat.ViewModels
       }
     }
     public int PlannerBlockCount { get { return Grbl.plan_get_block_buffer_count(); } }
-    public int PlannerBlockMaxSize { get { return GrblFirmware.BLOCK_BUFFER_SIZE; } }
+    public int PlannerBlockMaxSize { get { return 1000; } }
     public int StepperSegmentBufferCount { get { return LaserCatHardwareSimulator.GetSegmentBufferCount(); } }
     public int StepperSegmentBufferMaxSize { get { return GrblFirmware.SEGMENT_BUFFER_SIZE; } }
     public float StepperSpeed { get { return Grbl.st_get_realtime_rate(); } }

@@ -44,13 +44,13 @@ namespace bitLab.LaserCat.Grbl
 
       // If the buffer is full: good! That means we are well ahead of the robot. 
       // Remain in this loop until there is room in the buffer.
-      do
-      {
-        protocol_execute_runtime(); // Check for any run-time commands
-        if (sys.abort != 0) { return; } // Bail, if system abort.
-        if (plan_check_full_buffer()) { protocol_auto_cycle_start(); } // Auto-cycle start when buffer is full.
-        else { break; }
-      } while (true);
+      //do
+      //{
+      //  protocol_execute_runtime(); // Check for any run-time commands
+      //  if (sys.abort != 0) { return; } // Bail, if system abort.
+      //  if (plan_check_full_buffer()) { protocol_auto_cycle_start(); } // Auto-cycle start when buffer is full.
+      //  else { break; }
+      //} while (true);
 
       //#ifdef USE_LINE_NUMBERS
       //  plan_buffer_line(target, feed_rate, invert_feed_rate, line_number);
@@ -199,19 +199,20 @@ namespace bitLab.LaserCat.Grbl
     // Execute dwell in seconds.
     public void mc_dwell(float seconds)
     {
-      throw new NotImplementedException();
-      if (sys.state == STATE_CHECK_MODE) { return; }
+      //TODO
+      //throw new NotImplementedException();
+      //if (sys.state == STATE_CHECK_MODE) { return; }
 
-      ushort i = (ushort)System.Math.Floor(1000 / DWELL_TIME_STEP * seconds);
-      protocol_buffer_synchronize();
-      NutsAndBolts.delay_ms((ushort)System.Math.Floor(1000 * seconds - i * DWELL_TIME_STEP)); // Delay millisecond remainder.
-      while (i-- > 0)
-      {
-        // NOTE: Check and execute runtime commands during dwell every <= DWELL_TIME_STEP milliseconds.
-        protocol_execute_runtime();
-        if (sys.abort != 0) { return; }
-        NutsAndBolts.delay_ms((ushort)DWELL_TIME_STEP); // Delay DWELL_TIME_STEP increment
-      }
+      //ushort i = (ushort)System.Math.Floor(1000 / DWELL_TIME_STEP * seconds);
+      //protocol_buffer_synchronize();
+      //NutsAndBolts.delay_ms((ushort)System.Math.Floor(1000 * seconds - i * DWELL_TIME_STEP)); // Delay millisecond remainder.
+      //while (i-- > 0)
+      //{
+      //  // NOTE: Check and execute runtime commands during dwell every <= DWELL_TIME_STEP milliseconds.
+      //  protocol_execute_runtime();
+      //  if (sys.abort != 0) { return; }
+      //  NutsAndBolts.delay_ms((ushort)DWELL_TIME_STEP); // Delay DWELL_TIME_STEP increment
+      //}
     }
 
 

@@ -28,7 +28,7 @@ namespace bitLab.LaserCat.Grbl
 		//    #define BLOCK_BUFFER_SIZE 18
 		//  #endif
 		//#endif
-		public const int BLOCK_BUFFER_SIZE = 18;
+		//public const int BLOCK_BUFFER_SIZE = 18;
 
 		//SB! Added event to notify planner blocks changes
 		public event EventHandler<CPlannerBlocksChangedEventArgs> PlannerBlocksChanged;
@@ -42,7 +42,7 @@ namespace bitLab.LaserCat.Grbl
         PlannerBlocksChanged(this, new CPlannerBlocksChangedEventArgs() { PlannerBlocksChangedState = state, Target = target });
 		}
 
-		public struct plan_block_t
+		public class plan_block_t
 		{
 			// Fields used by the bresenham algorithm for tracing the line
 			// NOTE: Used by stepper algorithm to execute the block correctly. Do not alter these values.
@@ -89,7 +89,8 @@ namespace bitLab.LaserCat.Grbl
 			return array;
 		}
 
-		static plan_block_t[] block_buffer = CreateBlockBufferArray(BLOCK_BUFFER_SIZE);  // A ring buffer for motion instructions
+		//static plan_block_t[] block_buffer = CreateBlockBufferArray(BLOCK_BUFFER_SIZE);  // A ring buffer for motion instructions
+    static List<plan_block_t> block_buffer = new List<plan_block_t>();
 		static byte block_buffer_tail;     // Index of the block to process now
 		static byte block_buffer_head;     // Index of the next block to be pushed
 		static byte next_buffer_head;      // Index of the next buffer head
@@ -117,16 +118,13 @@ namespace bitLab.LaserCat.Grbl
 		// Returns the index of the next block in the ring buffer. Also called by stepper segment buffer.
 		public byte plan_next_block_index(byte block_index)
 		{
-			block_index++;
-			if (block_index == BLOCK_BUFFER_SIZE) { block_index = 0; }
-			return (block_index);
+      return (byte)(block_index + 1);
 		}
 
 
 		// Returns the index of the previous block in the ring buffer
 		static byte plan_prev_block_index(byte block_index)
 		{
-			if (block_index == 0) { block_index = BLOCK_BUFFER_SIZE; }
 			block_index--;
 			return (block_index);
 		}
@@ -365,6 +363,7 @@ namespace bitLab.LaserCat.Grbl
 
 			// Prepare and initialize new block	
 			int blockIdx = block_buffer_head;
+      block_buffer.Add(new plan_block_t(true));
 			//plan_block_t *block = &block_buffer[block_buffer_head];
 			block_buffer[blockIdx].step_event_count = 0;
 			block_buffer[blockIdx].millimeters = 0;
@@ -519,8 +518,7 @@ namespace bitLab.LaserCat.Grbl
 		// Returns the number of active blocks are in the planner buffer.
 		public int plan_get_block_buffer_count()
 		{
-			if (block_buffer_head >= block_buffer_tail) { return block_buffer_head - block_buffer_tail; }
-			return BLOCK_BUFFER_SIZE - (block_buffer_tail - block_buffer_head - 1);
+      return block_buffer.Count;
 		}
 
 

@@ -231,7 +231,7 @@ namespace bitLab.LaserCat.Grbl
       //TODO Capire che cosa significa il coordinate system e calcolare i valori giusti, ora carica con 0
       if (!(mGrbl.settings_read_coord_data(gc_state.modal.coord_select, gc_state.coord_system)))
       { 
-        mGrbl.report_status_message(GrblFirmware.STATUS_SETTING_READ_FAIL); 
+        //mGrbl.report_status_message(GrblFirmware.STATUS_SETTING_READ_FAIL); 
       } 
     }
 
@@ -1197,7 +1197,7 @@ namespace bitLab.LaserCat.Grbl
       // refill and can only be resumed by the cycle start run-time command.
       gc_state.modal.program_flow = gc_block.modal.program_flow;
       if (gc_state.modal.program_flow != 0) {
-        mGrbl.protocol_buffer_synchronize(); // Finish all remaining buffered motions. Program paused when complete.
+        //TODO mGrbl.protocol_buffer_synchronize(); // Finish all remaining buffered motions. Program paused when complete.
         mGrbl.sys.auto_start = 0; // Disable auto cycle start. Forces pause until cycle start issued.
   
         // If complete, reset to reload defaults (G92.2,G54,G17,G90,G94,M48,G40,M5,M9). Otherwise,

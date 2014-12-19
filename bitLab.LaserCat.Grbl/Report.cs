@@ -19,54 +19,51 @@ namespace bitLab.LaserCat.Grbl
     // responses.
     // NOTE: In silent mode, all error codes are greater than zero.
     // TODO: Install silent mode to return only numeric values, primarily for GUIs.
-    public void report_status_message(byte status_code)
+    public string getStatusMessage(byte status_code)
     {
       if (status_code == 0)
       { // STATUS_OK
-        printPgmString(PSTR("ok\r\n"));
+        return "ok\r\n";
       }
       else
       {
-        printPgmString(PSTR("error: "));
         switch (status_code)
         {
           case STATUS_EXPECTED_COMMAND_LETTER:
-            printPgmString(PSTR("Expected command letter")); break;
+            return "Expected command letter"; 
           case STATUS_BAD_NUMBER_FORMAT:
-            printPgmString(PSTR("Bad number format")); break;
+            return "Bad number format"; 
           case STATUS_INVALID_STATEMENT:
-            printPgmString(PSTR("Invalid statement")); break;
+            return "Invalid statement"; 
           case STATUS_NEGATIVE_VALUE:
-            printPgmString(PSTR("Value < 0")); break;
+            return "Value < 0"; 
           case STATUS_SETTING_DISABLED:
-            printPgmString(PSTR("Setting disabled")); break;
+            return "Setting disabled"; 
           case STATUS_SETTING_STEP_PULSE_MIN:
-            printPgmString(PSTR("Value < 3 usec")); break;
+            return "Value < 3 usec"; 
           case STATUS_SETTING_READ_FAIL:
-            printPgmString(PSTR("EEPROM read fail. Using defaults")); break;
+            return "EEPROM read fail. Using defaults"; 
           case STATUS_IDLE_ERROR:
-            printPgmString(PSTR("Not idle")); break;
+            return "Not idle"; 
           case STATUS_ALARM_LOCK:
-            printPgmString(PSTR("Alarm lock")); break;
+            return "Alarm lock"; 
           case STATUS_SOFT_LIMIT_ERROR:
-            printPgmString(PSTR("Homing not enabled")); break;
+            return "Homing not enabled"; 
           case STATUS_OVERFLOW:
-            printPgmString(PSTR("Line overflow")); break;
+            return "Line overflow"; 
 
           // Common g-code parser errors.
           case STATUS_GCODE_MODAL_GROUP_VIOLATION:
-            printPgmString(PSTR("Modal group violation")); break;
+            return "Modal group violation"; 
           case STATUS_GCODE_UNSUPPORTED_COMMAND:
-            printPgmString(PSTR("Unsupported command")); break;
+            return "Unsupported command"; 
           case STATUS_GCODE_UNDEFINED_FEED_RATE:
-            printPgmString(PSTR("Undefined feed rate")); break;
+            return "Undefined feed rate"; 
           default:
             // Remaining g-code parser errors with error codes
-            printPgmString(PSTR("Invalid gcode ID:"));
-            print_uint8_base10(status_code); // Print error code for user reference
-            break;
+            return "Invalid gcode ID:" + print_uint8_base10(status_code);
+            
         }
-        printPgmString(PSTR("\r\n"));
       }
     }
 
