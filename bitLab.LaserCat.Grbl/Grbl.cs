@@ -29,7 +29,6 @@ namespace bitLab.LaserCat.Grbl
   
       sys = new system_t(true); // Clear all system variables
       sys.abort = 1;   // Set abort to complete initialization
-      //TODO sei(); // Enable interrupts
 
       // Check for power-up and set system alarm if homing is enabled to force homing cycle
       // by setting Grbl's alarm state. Alarm locks out all g-code commands, including the

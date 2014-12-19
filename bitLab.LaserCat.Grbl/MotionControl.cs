@@ -199,6 +199,7 @@ namespace bitLab.LaserCat.Grbl
     // Execute dwell in seconds.
     public void mc_dwell(float seconds)
     {
+      throw new NotImplementedException();
       if (sys.state == STATE_CHECK_MODE) { return; }
 
       ushort i = (ushort)System.Math.Floor(1000 / DWELL_TIME_STEP * seconds);

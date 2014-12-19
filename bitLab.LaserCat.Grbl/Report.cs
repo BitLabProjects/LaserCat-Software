@@ -70,24 +70,17 @@ namespace bitLab.LaserCat.Grbl
       }
     }
 
-    public void print_uint8_base10(byte n)
+    public string print_uint8_base10(byte n)
     {
-      //TODO
-      //if (n == 0) {
-      //  serial_write('0');
-      //  return;
-      //} 
-
-      //char[] buf = new char[3];
-      //byte i = 0;
-
-      //while (n > 0) {
-      //    buf[i++] = n % 10 + '0';
-      //    n /= 10;
-      //}
-
-      //for (; i > 0; i--)
-      //    serial_write(buf[i - 1]);
+      return n.ToString();
+    }
+    public string print_uint8_base10(ushort n)
+    {
+      return n.ToString();
+    }
+    public string print_uint8_base10(bool n)
+    {
+      return n.ToString();
     }
 
     // Prints alarm messages.
@@ -164,64 +157,69 @@ namespace bitLab.LaserCat.Grbl
 
     //TODO
     public void report_grbl_settings() {
-    //  // Print Grbl settings.
+      // Print Grbl settings.
 
-    //  //printPgmString(PSTR("$0=")); print_uint8_base10(settings.pulse_microseconds);
-    //  //printPgmString(PSTR(" (step pulse, usec)\r\n$1=")); print_uint8_base10(settings.stepper_idle_lock_time);
-    //  //printPgmString(PSTR(" (step idle delay, msec)\r\n$2=")); print_uint8_base10(settings.step_invert_mask); 
-    //  //printPgmString(PSTR(" (step port invert mask:")); print_uint8_base2(settings.step_invert_mask);  
-    //  //printPgmString(PSTR(")\r\n$3=")); print_uint8_base10(settings.dir_invert_mask); 
-    //  //printPgmString(PSTR(" (dir port invert mask:")); print_uint8_base2(settings.dir_invert_mask);  
-    //  //printPgmString(PSTR(")\r\n$4=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_INVERT_ST_ENABLE));
-    //  //printPgmString(PSTR(" (step enable invert, bool)\r\n$5=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_INVERT_LIMIT_PINS));
-    //  //printPgmString(PSTR(" (limit pins invert, bool)\r\n$6=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_INVERT_PROBE_PIN));
-    //  //printPgmString(PSTR(" (probe pin invert, bool)\r\n$10=")); print_uint8_base10(settings.status_report_mask);
-    //  //printPgmString(PSTR(" (status report mask:")); print_uint8_base2(settings.status_report_mask);
-    //  //printPgmString(PSTR(")\r\n$11=")); printFloat_SettingValue(settings.junction_deviation);
-    //  //printPgmString(PSTR(" (junction deviation, mm)\r\n$12=")); printFloat_SettingValue(settings.arc_tolerance);
-    //  //printPgmString(PSTR(" (arc tolerance, mm)\r\n$13=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_REPORT_INCHES));
-    //  //printPgmString(PSTR(" (report inches, bool)\r\n$14=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_AUTO_START));
-    //  //printPgmString(PSTR(" (auto start, bool)\r\n$20=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_SOFT_LIMIT_ENABLE));
-    //  //printPgmString(PSTR(" (soft limits, bool)\r\n$21=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_HARD_LIMIT_ENABLE));
-    //  //printPgmString(PSTR(" (hard limits, bool)\r\n$22=")); print_uint8_base10(bit_istrue(settings.flags,BITFLAG_HOMING_ENABLE));
-    //  //printPgmString(PSTR(" (homing cycle, bool)\r\n$23=")); print_uint8_base10(settings.homing_dir_mask);
-    //  //printPgmString(PSTR(" (homing dir invert mask:")); print_uint8_base2(settings.homing_dir_mask);  
-    //  //printPgmString(PSTR(")\r\n$24=")); printFloat_SettingValue(settings.homing_feed_rate);
-    //  //printPgmString(PSTR(" (homing feed, mm/min)\r\n$25=")); printFloat_SettingValue(settings.homing_seek_rate);
-    //  //printPgmString(PSTR(" (homing seek, mm/min)\r\n$26=")); print_uint8_base10(settings.homing_debounce_delay);
-    //  //printPgmString(PSTR(" (homing debounce, msec)\r\n$27=")); printFloat_SettingValue(settings.homing_pulloff);
-    //  //printPgmString(PSTR(" (homing pull-off, mm)\r\n"));
+      printPgmString("$0=" + print_uint8_base10(settings.pulse_microseconds));
+      printPgmString(" (step pulse, usec)\r\n$1=" + print_uint8_base10(settings.stepper_idle_lock_time));
+      printPgmString(" (step idle delay, msec)\r\n$2=" + print_uint8_base10(settings.step_invert_mask));
+      printPgmString(" (step port invert mask:" + print_uint8_base2(settings.step_invert_mask));
+      printPgmString(")\r\n$3=" + print_uint8_base10(settings.dir_invert_mask));
+      printPgmString(" (dir port invert mask:" + print_uint8_base2(settings.dir_invert_mask));
+      printPgmString(")\r\n$4=" + print_uint8_base10(bit_istrue(settings.flags, BITFLAG_INVERT_ST_ENABLE)));
+      printPgmString(" (step enable invert, bool)\r\n$5=" + print_uint8_base10(bit_istrue(settings.flags, BITFLAG_INVERT_LIMIT_PINS)));
+      printPgmString(" (limit pins invert, bool)\r\n$6=" + print_uint8_base10(bit_istrue(settings.flags, BITFLAG_INVERT_PROBE_PIN)));
+      printPgmString(" (probe pin invert, bool)\r\n$10=" + print_uint8_base10(settings.status_report_mask));
+      printPgmString(" (status report mask:" + print_uint8_base2(settings.status_report_mask));
+      printPgmString(")\r\n$11=" + printFloat_SettingValue(settings.junction_deviation));
+      printPgmString(" (junction deviation, mm)\r\n$12=" + printFloat_SettingValue(settings.arc_tolerance));
+      printPgmString(" (arc tolerance, mm)\r\n$13=" + print_uint8_base10(bit_istrue(settings.flags, BITFLAG_REPORT_INCHES)));
+      printPgmString(" (report inches, bool)\r\n$14=" + print_uint8_base10(bit_istrue(settings.flags, BITFLAG_AUTO_START)));
+      printPgmString(" (auto start, bool)\r\n$20=" + print_uint8_base10(bit_istrue(settings.flags, BITFLAG_SOFT_LIMIT_ENABLE)));
+      printPgmString(" (soft limits, bool)\r\n$21=" + print_uint8_base10(bit_istrue(settings.flags, BITFLAG_HARD_LIMIT_ENABLE)));
+      printPgmString(" (hard limits, bool)\r\n$22=" + print_uint8_base10(bit_istrue(settings.flags, BITFLAG_HOMING_ENABLE)));
+      printPgmString(" (homing cycle, bool)\r\n$23=" + print_uint8_base10(settings.homing_dir_mask));
+      printPgmString(" (homing dir invert mask:" + print_uint8_base2(settings.homing_dir_mask));
+      printPgmString(")\r\n$24=" + printFloat_SettingValue(settings.homing_feed_rate));
+      printPgmString(" (homing feed, mm/min)\r\n$25=" + printFloat_SettingValue(settings.homing_seek_rate));
+      printPgmString(" (homing seek, mm/min)\r\n$26=" + print_uint8_base10(settings.homing_debounce_delay));
+      printPgmString(" (homing debounce, msec)\r\n$27=" + printFloat_SettingValue(settings.homing_pulloff));
+      printPgmString(" (homing pull-off, mm)\r\n");
 
-    //  // Print axis settings
-    //  byte idx, set_idx;
-    //  byte val = AXIS_SETTINGS_START_VAL;
-    //  for (set_idx=0; set_idx<AXIS_N_SETTINGS; set_idx++) {
-    //    for (idx=0; idx<NutsAndBolts.N_AXIS; idx++) {
-    //      printPgmString(PSTR("$"));
-    //      print_uint8_base10(val+idx);
-    //      printPgmString(PSTR("="));
-    //      switch (set_idx) {
-    //        case 0: printFloat_SettingValue(settings.steps_per_mm[idx]); break;
-    //        case 1: printFloat_SettingValue(settings.max_rate[idx]); break;
-    //        case 2: printFloat_SettingValue(settings.acceleration[idx]/(60*60)); break;
-    //        case 3: printFloat_SettingValue(-settings.max_travel[idx]); break;
-    //      }
-    //      printPgmString(PSTR(" ("));
-    //      switch (idx) {
-    //        case NutsAndBolts.X_AXIS: printPgmString(PSTR("x")); break;
-    //        case NutsAndBolts.Y_AXIS: printPgmString(PSTR("y")); break;
-    //        case NutsAndBolts.Z_AXIS: printPgmString(PSTR("z")); break;
-    //      }
-    //      switch (set_idx) {
-    //        case 0: printPgmString(PSTR(", step/mm")); break;
-    //        case 1: printPgmString(PSTR(" max rate, mm/min")); break;
-    //        case 2: printPgmString(PSTR(" accel, mm/sec^2")); break;
-    //        case 3: printPgmString(PSTR(" max travel, mm")); break;
-    //      }      
-    //      printPgmString(PSTR(")\r\n"));
-    //    }
-    //    val += AXIS_SETTINGS_INCREMENT;
-    //  }  
+      // Print axis settings
+      byte idx, set_idx;
+      byte val = AXIS_SETTINGS_START_VAL;
+      for (set_idx = 0; set_idx < AXIS_N_SETTINGS; set_idx++)
+      {
+        for (idx = 0; idx < NutsAndBolts.N_AXIS; idx++)
+        {
+          printPgmString(PSTR("$"));
+          print_uint8_base10((byte)(val + idx));
+          printPgmString(PSTR("="));
+          switch (set_idx)
+          {
+            case 0: printFloat_SettingValue(settings.steps_per_mm[idx]); break;
+            case 1: printFloat_SettingValue(settings.max_rate[idx]); break;
+            case 2: printFloat_SettingValue(settings.acceleration[idx] / (60 * 60)); break;
+            case 3: printFloat_SettingValue(-settings.max_travel[idx]); break;
+          }
+          printPgmString(PSTR(" ("));
+          switch (idx)
+          {
+            case NutsAndBolts.X_AXIS: printPgmString(PSTR("x")); break;
+            case NutsAndBolts.Y_AXIS: printPgmString(PSTR("y")); break;
+            case NutsAndBolts.Z_AXIS: printPgmString(PSTR("z")); break;
+          }
+          switch (set_idx)
+          {
+            case 0: printPgmString(PSTR(", step/mm")); break;
+            case 1: printPgmString(PSTR(" max rate, mm/min")); break;
+            case 2: printPgmString(PSTR(" accel, mm/sec^2")); break;
+            case 3: printPgmString(PSTR(" max travel, mm")); break;
+          }
+          printPgmString(PSTR(")\r\n"));
+        }
+        val += AXIS_SETTINGS_INCREMENT;
+      }  
     }
 
 

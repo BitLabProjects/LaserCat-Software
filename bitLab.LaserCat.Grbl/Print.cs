@@ -16,7 +16,8 @@ namespace bitLab.LaserCat.Grbl
       if (s.Contains(newLineString))
       {
         var lines = s.Split(new string[] { newLineString }, StringSplitOptions.None);
-        for (var i = 0; i < lines.Length; i++) {
+        for (var i = 0; i < lines.Length; i++)
+        {
           //Se è l'ultimo split ed è vuoto significa che s finisce con \r\n, quindi invia il buffer
           if (i == lines.Length - 1 && string.IsNullOrEmpty(lines[i]))
             break;
@@ -30,6 +31,58 @@ namespace bitLab.LaserCat.Grbl
         printLineBuffer += s;
       }
     }
+
+    // Convert float to string by immediately converting to a long integer, which contains
+    // more digits than a float. Number of decimal places, which are tracked by a counter,
+    // may be set by the user. The integer is then efficiently converted to a string.
+    // NOTE: AVR '%' and '/' integer operations are very efficient. Bitshifting speed-up 
+    // techniques are actually just slightly slower. Found this out the hard way.
+    string printFloat(float n, int decimal_places)
+    {
+      string result = "";
+      if (n < 0)
+      {
+        result += "-";
+        n = -n;
+      }
+
+      int decimals = decimal_places;
+      while (decimals >= 2)
+      { // Quickly convert values expected to be E0 to E-4.
+        n *= 100;
+        decimals -= 2;
+      }
+      if (decimals != 0) { n *= 10; }
+      n += 0.5f; // Add rounding factor. Ensures carryover through entire value.
+
+      // Generate digits backwards and store in string.
+      char[] buf = new char[10];
+      byte i = 0;
+      uint a = (uint)n;
+      buf[decimal_places] = '.'; // Place decimal point, even if decimal places are zero.
+      while (a > 0)
+      {
+        if (i == decimal_places) { i++; } // Skip decimal point location
+        buf[i++] = (a % 10).ToString()[0]; // Get digit
+        a /= 10;
+      }
+      while (i < decimal_places)
+      {
+        buf[i++] = '0'; // Fill in zeros to decimal point for (n < 1)
+      }
+      if (i == decimal_places)
+      { // Fill in leading zero, if needed.
+        i++;
+        buf[i++] = '0';
+      }
+
+      // Print the generated string.
+      for (; i > 0; i--)
+        result += (buf[i - 1]);
+      return result;
+    }
+
+    string printFloat_SettingValue(float n) { return printFloat(n, N_DECIMAL_SETTINGVALUE); }
 
     public void serial_write(char data)
     {
@@ -58,7 +111,17 @@ namespace bitLab.LaserCat.Grbl
       //TODO UCSR0B |=  (1 << UDRIE0); 
     }
 
+    string print_uint8_base2(byte n)
+    {
+      string result = "";
 
+	    for (int i = 0; i < 8; i++) {
+		    result += ((n & 1) == 1) ? "1" : "0";
+		    n >>= 1;
+	    }
+
+      return result;
+    }
 
   }
 }

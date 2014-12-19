@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using bitLab.Logging;
+using System.Collections.Concurrent;
 
 namespace bitLab.LaserCat.Grbl
 {
@@ -13,32 +14,18 @@ namespace bitLab.LaserCat.Grbl
 
 		char[] line = new char[LINE_BUFFER_SIZE]; // Line to be executed. Zero-terminated.
 
-
 		// Directs and executes one line of formatted input from protocol_process. While mostly
 		// incoming streaming g-code blocks, this also directs and executes Grbl internal commands,
 		// such as settings, initiating the homing cycle, and toggling switch states.
-		public void protocol_execute_line(char[] line)
+		public void protocol_execute_line(string line)
 		{
-			protocol_execute_runtime(); // Runtime command check point.
-			if (sys.abort != 0) { return; } // Bail to calling function upon system abort  
+			//protocol_execute_runtime(); // Runtime command check point.
+			//if (sys.abort != 0) { return; } // Bail to calling function upon system abort  
 
-			if (line[0] == 0)
+			if (string.IsNullOrWhiteSpace(line))
 			{
 				// Empty or comment line. Send status message for syncing purposes.
 				report_status_message(STATUS_OK);
-
-			}
-			else if (line[0] == '$')
-			{
-				// Grbl '$' system command
-				report_status_message(system_execute_line(line));
-
-			}
-			else if (sys.state == STATE_ALARM)
-			{
-				// Everything else is gcode. Block if in alarm mode.
-				report_status_message(STATUS_ALARM_LOCK);
-
 			}
 			else
 			{
@@ -47,11 +34,92 @@ namespace bitLab.LaserCat.Grbl
 			}
 		}
 
+    public enum EGrblMessage
+    {
+      LoadGCode
+    }
+    private struct TGrblMessage
+    {
+      public EGrblMessage Message;
+      public object Param0;
+    }
+    private BlockingCollection<TGrblMessage> mMessageQueue;
+
+    public void SendMessage(EGrblMessage message, object param0)
+    {
+      mMessageQueue.Add(new TGrblMessage() { Message = message, Param0 = param0 });
+    }
+
+    public void protocol_main_loop()
+    {
+      mMessageQueue = new BlockingCollection<TGrblMessage>();
+      initGrblState();
+
+      try
+      {
+        while (true)
+          handleMessage(mMessageQueue.Take());
+      }
+      catch (InvalidOperationException)
+      {
+      }
+    }
+
+    private void handleMessage(TGrblMessage msg)
+    {
+      switch (msg.Message)
+      {
+        case EGrblMessage.LoadGCode:
+          loadGCode(msg.Param0 as List<string>);
+          break;
+      }
+    }
+
+    private enum EGrblState
+    {
+      Idle,
+      GCodeLoaded
+    }
+    private EGrblState mState;
+
+    private void initGrblState()
+    {
+      changeState(EGrblState.Idle);
+      Log.LogInfo("Grbl initialized");
+    }
+    private void changeState(EGrblState newState)
+    {
+      mState = newState;
+      Log.LogInfo("State changed to " + newState.ToString());
+    }
+
+    private bool checkAllowedEntryState(EGrblState[] allowedStates)
+    {
+      if (allowedStates.Contains(mState))
+        return true;
+      Log.LogInfo("Operation not allowed in this state");
+      return false;
+    }
+
+    private void loadGCode(List<string> GCodeLines)
+    {
+      if (!checkAllowedEntryState(new EGrblState[] { EGrblState.Idle, EGrblState.GCodeLoaded }))
+        return;
+
+      Log.LogInfo("Resetting planner and parsing GCode...");
+      plan_reset();
+      foreach(var line in GCodeLines)
+        mGCode.gc_execute_line(line);
+      Log.LogInfo("Parsing GCode completed:");
+      Log.LogInfo(string.Format("- Parsed {0} GCode lines", GCodeLines.Count));
+      Log.LogInfo(string.Format("- Planned {0} segments", plan_get_block_buffer_count()));
+      changeState(EGrblState.GCodeLoaded);
+    }
 
 		/* 
 			GRBL PRIMARY LOOP:
 		*/
-		public void protocol_main_loop()
+		public void protocol_main_loop_old()
 		{
 			// ------------------------------------------------------------
 			// Complete initialization procedures upon a power-up or reset.
@@ -60,7 +128,7 @@ namespace bitLab.LaserCat.Grbl
 			// Print welcome message   
 			report_init_message();
 
-			// Check for and report alarm state after a reset, error, or an initial power up.
+			/* TODO // Check for and report alarm state after a reset, error, or an initial power up.
 			if (sys.state == STATE_ALARM)
 			{
 				report_feedback_message(MESSAGE_ALARM_LOCK);
@@ -70,15 +138,13 @@ namespace bitLab.LaserCat.Grbl
 				// All systems go!
 				sys.setState(STATE_IDLE); // Set system to ready. Clear all state flags.
 				system_execute_startup(line); // Execute startup script.
-			}
+			}*/
 
 			// ---------------------------------------------------------------------------------  
 			// Primary loop! Upon a system abort, this exits back to main() to reset the system. 
 			// ---------------------------------------------------------------------------------  
 
-			bool iscomment = false;
-			byte char_counter = 0;
-			byte c;
+      readSerialReset();
 			for (; ; )
 			{
 
@@ -91,80 +157,15 @@ namespace bitLab.LaserCat.Grbl
 				// exceed 256 characters, but the Arduino Uno does not have the memory space for this.
 				// With a better processor, it would be very easy to pull this initial parsing out as a 
 				// seperate task to be shared by the g-code parser and Grbl's system commands.
-
-				while ((c = serial_read()) != SERIAL_NO_DATA)
-				{
-					if ((c == '\n') || (c == '\r'))
-					{ // End of line reached
-						line[char_counter] = '\0'; // Set string termination character.
-						protocol_execute_line(line); // Line is complete. Execute it!
-						iscomment = false;
-						char_counter = 0;
-					}
-					else
-					{
-						if (iscomment)
-						{
-							// Throw away all comment characters
-							if (c == ')')
-							{
-								// End of comment. Resume line.
-								iscomment = false;
-							}
-						}
-						else
-						{
-							if (c <= ' ')
-							{
-								// Throw away whitepace and control characters  
-							}
-							else if (c == '/')
-							{
-								// Block delete NOT SUPPORTED. Ignore character.
-								// NOTE: If supported, would simply need to check the system if block delete is enabled.
-							}
-							else if (c == '(')
-							{
-								// Enable comments flag and ignore all characters until ')' or EOL.
-								// NOTE: This doesn't follow the NIST definition exactly, but is good enough for now.
-								// In the future, we could simply remove the items within the comments, but retain the
-								// comment control characters, so that the g-code parser can error-check it.
-								iscomment = true;
-								// } else if (c == ';') {
-								// Comment character to EOL NOT SUPPORTED. LinuxCNC definition. Not NIST.
-
-								// TODO: Install '%' feature 
-								// } else if (c == '%') {
-								// Program start-end percent sign NOT SUPPORTED.
-								// NOTE: This maybe installed to tell Grbl when a program is running vs manual input,
-								// where, during a program, the system auto-cycle start will continue to execute 
-								// everything until the next '%' sign. This will help fix resuming issues with certain
-								// functions that empty the planner buffer to execute its task on-time.
-
-							}
-							else if (char_counter >= (LINE_BUFFER_SIZE - 1))
-							{
-								// Detect line buffer overflow. Report error and reset line buffer.
-								report_status_message(STATUS_OVERFLOW);
-								iscomment = false;
-								char_counter = 0;
-							}
-							else if (c >= 'a' && c <= 'z')
-							{ // Upcase lowercase
-								line[char_counter++] = Convert.ToChar(c - Convert.ToInt32('a') + Convert.ToInt32('A'));
-							}
-							else
-							{
-								line[char_counter++] = Convert.ToChar(c);
-							}
-						}
-					}
-				}
+        //if (readGCodeLineOrNull())
+        //{
+        //  protocol_execute_line(line); // Line is complete. Execute it!
+        //}				
 
 				// If there are no more characters in the serial read buffer to be processed and executed,
 				// this indicates that g-code streaming has either filled the planner buffer or has 
 				// completed. In either case, auto-cycle start, if enabled, any queued moves.
-				protocol_auto_cycle_start();
+				//protocol_auto_cycle_start();
 
 				if (mLastTime == 0)
 					mLastTime = mTimer.Value;
@@ -181,9 +182,88 @@ namespace bitLab.LaserCat.Grbl
 
 				if (sys.abort != 0) { return; } // Bail to main() program loop to reset system.
 			}
-
-			return; /* Never reached */
 		}
+
+    bool iscomment = false;
+    byte char_counter = 0;
+    private void readSerialReset()
+    {
+      iscomment = false;
+      char_counter = 0;
+    }
+    private string readGCodeLineOrNull()
+    {
+      while (mSerialPort.HasByte)
+      {
+        byte c = mSerialPort.ReadByte();
+        if ((c == '\n') || (c == '\r'))
+        { // End of line reached
+          line[char_counter] = '\0'; // Set string termination character.
+          iscomment = false;
+          char_counter = 0;
+          return new string(line);
+        }
+        else
+        {
+          if (iscomment)
+          {
+            // Throw away all comment characters
+            if (c == ')')
+            {
+              // End of comment. Resume line.
+              iscomment = false;
+            }
+          }
+          else
+          {
+            if (c <= ' ')
+            {
+              // Throw away whitepace and control characters  
+            }
+            else if (c == '/')
+            {
+              // Block delete NOT SUPPORTED. Ignore character.
+              // NOTE: If supported, would simply need to check the system if block delete is enabled.
+            }
+            else if (c == '(')
+            {
+              // Enable comments flag and ignore all characters until ')' or EOL.
+              // NOTE: This doesn't follow the NIST definition exactly, but is good enough for now.
+              // In the future, we could simply remove the items within the comments, but retain the
+              // comment control characters, so that the g-code parser can error-check it.
+              iscomment = true;
+              // } else if (c == ';') {
+              // Comment character to EOL NOT SUPPORTED. LinuxCNC definition. Not NIST.
+
+              // TODO: Install '%' feature 
+              // } else if (c == '%') {
+              // Program start-end percent sign NOT SUPPORTED.
+              // NOTE: This maybe installed to tell Grbl when a program is running vs manual input,
+              // where, during a program, the system auto-cycle start will continue to execute 
+              // everything until the next '%' sign. This will help fix resuming issues with certain
+              // functions that empty the planner buffer to execute its task on-time.
+
+            }
+            else if (char_counter >= (LINE_BUFFER_SIZE - 1))
+            {
+              // Detect line buffer overflow. Report error and reset line buffer.
+              report_status_message(STATUS_OVERFLOW);
+              iscomment = false;
+              char_counter = 0;
+            }
+            else if (c >= 'a' && c <= 'z')
+            { // Upcase lowercase
+              line[char_counter++] = Convert.ToChar(c - Convert.ToInt32('a') + Convert.ToInt32('A'));
+            }
+            else
+            {
+              line[char_counter++] = Convert.ToChar(c);
+            }
+          }
+        }
+      }
+      return null;
+    }
 
 		HiResTimer mTimer = new HiResTimer();
 		Int64 mLastTime;
@@ -201,61 +281,14 @@ namespace bitLab.LaserCat.Grbl
 		// limit switches, or the main program.
 		public void protocol_execute_runtime()
 		{
+      //SB!Runtime commands disabled
+      //return;
+
 			byte rt_exec = sys.execute; // Copy to avoid calling volatile multiple times
 			if (rt_exec != 0)
 			{ // Enter only if any bit flag is true
 
-				// System alarm. Everything has shutdown by something that has gone severely wrong. Report
-				// the source of the error to the user. If critical, Grbl disables by entering an infinite
-				// loop until system reset/abort.
-				if ((rt_exec & (EXEC_ALARM | EXEC_CRIT_EVENT)) != 0)
-				{
-					sys.setState(STATE_ALARM); // Set system alarm state
-
-					// Critical events. Hard/soft limit events identified by both critical event and alarm exec
-					// flags. Probe fail is identified by the critical event exec flag only.
-					if ((rt_exec & EXEC_CRIT_EVENT) != 0)
-					{
-						if ((rt_exec & EXEC_ALARM) != 0) { report_alarm_message(ALARM_LIMIT_ERROR); }
-						else { report_alarm_message(ALARM_PROBE_FAIL); }
-						report_feedback_message(MESSAGE_CRITICAL_EVENT);
-						bit_false_atomic(ref sys.execute, EXEC_RESET); // Disable any existing reset
-						do
-						{
-							// Nothing. Block EVERYTHING until user issues reset or power cycles. Hard limits
-							// typically occur while unattended or not paying attention. Gives the user time
-							// to do what is needed before resetting, like killing the incoming stream. The 
-							// same could be said about soft limits. While the position is not lost, the incoming
-							// stream could be still engaged and cause a serious crash if it continues afterwards.
-						} while (bit_isfalse(sys.execute, EXEC_RESET));
-
-						// Standard alarm event. Only abort during motion qualifies.
-					}
-					else
-					{
-						// Runtime abort command issued during a cycle, feed hold, or homing cycle. Message the
-						// user that position may have been lost and set alarm state to enable the alarm lockout
-						// to indicate the possible severity of the problem.
-						report_alarm_message(ALARM_ABORT_CYCLE);
-					}
-					bit_false_atomic(ref sys.execute, (byte)(EXEC_ALARM | EXEC_CRIT_EVENT));
-				}
-
-				// Execute system abort. 
-				if ((rt_exec & EXEC_RESET) != 0)
-				{
-					sys.abort = 1;  // Only place this is set true.
-					return; // Nothing else to do but exit.
-				}
-
-				// Execute and serial print status
-				if ((rt_exec & EXEC_STATUS_REPORT) != 0)
-				{
-					report_realtime_status();
-					bit_false_atomic(ref sys.execute, EXEC_STATUS_REPORT);
-				}
-
-				// Execute a feed hold with deceleration, only during cycle.
+        // Execute a feed hold with deceleration, only during cycle.
 				if ((rt_exec & EXEC_FEED_HOLD) != 0)
 				{
 					// !!! During a cycle, the segment buffer has just been reloaded and full. So the math involved

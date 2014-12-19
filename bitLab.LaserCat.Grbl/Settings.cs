@@ -242,6 +242,8 @@ namespace bitLab.LaserCat.Grbl
       //  return(false);
       //}
       //return(true);
+      for (int i = 0; i < coord_data.Length; i++)
+        coord_data[i] = 0.0f;
       return false;
     }
 
@@ -377,32 +379,9 @@ namespace bitLab.LaserCat.Grbl
     // Initialize the config subsystem
     public void settings_init()
     {
-      if (!read_global_settings())
-      {
-        report_status_message(STATUS_SETTING_READ_FAIL);
-
-        settings_restore_global_settings();
-
-        // Force clear startup lines and build info user data. Parameters should be ok.
-        // TODO: For next version, remove these clears. Only here because line buffer increased.
-        settings_clear_startup_lines();
-        settings_clear_build_info();
-
-        report_grbl_settings();
-      }
-
-      // Check all parameter data into a dummy variable. If error, reset to zero, otherwise do nothing.
-      float[] coord_data = new float[NutsAndBolts.N_AXIS];
-      byte i;
-      for (i = 0; i <= SETTING_INDEX_NCOORD; i++)
-      {
-        if (!settings_read_coord_data(i, coord_data))
-        {
-          report_status_message(STATUS_SETTING_READ_FAIL);
-        }
-      }
-      // NOTE: Startup lines are checked and executed by protocol_main_loop at the end of initialization.
-      // TODO: Build info should be checked here, but will wait until v1.0 to address this. Ok for now.
+      //SB!Simplified initialization by loading default settings and ignoring eeprom
+      settings_restore_global_settings();
+      //report_grbl_settings();
     }
 
 

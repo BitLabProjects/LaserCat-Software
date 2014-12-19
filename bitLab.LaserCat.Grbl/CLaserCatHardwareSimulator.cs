@@ -573,7 +573,7 @@ namespace bitLab.LaserCat.Grbl
 
 		public int[] AskPosition()
 		{
-			throw new NotImplementedException();
+      return sys.position;
 		}
 	}
 }

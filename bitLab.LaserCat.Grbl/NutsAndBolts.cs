@@ -36,7 +36,7 @@ namespace bitLab.LaserCat.Grbl
     // Read a floating point value from a string. Line points to the input buffer, char_counter 
     // is the indexer pointing to the current character of the line, while float_ptr is 
     // a pointer to the result variable. Returns true when it succeeds
-    public bool read_float(char[] line, ref byte char_counter, ref float float_ptr)
+    public bool read_float(string line, ref byte char_counter, ref float float_ptr)
     {
       //char *ptr = line + *char_counter;
       byte c;
@@ -73,6 +73,8 @@ namespace bitLab.LaserCat.Grbl
         } else {
           break;
         }
+        if (char_counter >= line.Length)
+          break;
         c = Convert.ToByte(line[char_counter++]);
       }
   
@@ -108,7 +110,7 @@ namespace bitLab.LaserCat.Grbl
 
       //SB!Increment is implicit because we're incrementing char_counter at each character read in the function, just go back one
       //*char_counter = ptr - line - 1; // Set char_counter to next statement
-      char_counter--;
+      //char_counter--;
   
       return true;
     }

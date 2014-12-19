@@ -228,6 +228,7 @@ namespace bitLab.LaserCat.Grbl
       gc_state.init();
   
       // Load default G54 coordinate system.
+      //TODO Capire che cosa significa il coordinate system e calcolare i valori giusti, ora carica con 0
       if (!(mGrbl.settings_read_coord_data(gc_state.modal.coord_select, gc_state.coord_system)))
       { 
         mGrbl.report_status_message(GrblFirmware.STATUS_SETTING_READ_FAIL); 
@@ -260,8 +261,12 @@ namespace bitLab.LaserCat.Grbl
     // characters have been removed. In this function, all units and positions are converted and 
     // exported to grbl's internal functions in terms of (mm, mm/min) and absolute machine 
     // coordinates, respectively.
-    public byte gc_execute_line(char[] line) 
+    public byte gc_execute_line(string line) 
     {
+      //Handle comments
+      if (line.Trim().StartsWith("("))
+        return GrblFirmware.STATUS_OK;
+
       /* -------------------------------------------------------------------------------------
          STEP 1: Initialize parser block struct and copy current g-code state modes. The parser
          updates these modes and commands as the block line is parser and will only be used and
@@ -300,7 +305,8 @@ namespace bitLab.LaserCat.Grbl
       byte mantissa = 0; // NOTE: For mantissa values > 255, variable type must be changed to ushort.
 
 
-      while (line[char_counter] != 0) { // Loop until no more g-code words in line.
+      while (char_counter < line.Length)
+      { // Loop until no more g-code words in line.
     
         // Import the next g-code word, expecting a letter followed by a value. Otherwise, error out.
         letter = Convert.ToChar(line[char_counter]);

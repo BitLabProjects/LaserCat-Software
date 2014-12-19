@@ -14,7 +14,7 @@ namespace bitLab.LaserCat.Model
     private string mCurrentGCodeFile;
     private List<string> mGCodeLines;
     private int mCurrentGCodeLineIndex;
-    private CInMemorySerialPort mSerialPort;
+    private CInMemorySerialPort mGCodeSerialPort;
     private CLaserCatHardwareSimulator mLaserCatHardwareSimulator;
 		private CLaserCatHardwarePIC mLaserCatHardwarePIC;
     private GrblFirmware mGrbl;
@@ -23,11 +23,11 @@ namespace bitLab.LaserCat.Model
     private CLaserCat()
     {
       mGCodeLines = new List<String>();
-      mSerialPort = new CInMemorySerialPort();
+      mGCodeSerialPort = new CInMemorySerialPort();
       mLaserCatHardwareSimulator = new CLaserCatHardwareSimulator();
 	    mLaserCatHardwarePIC = new CLaserCatHardwarePIC("COM6");
       //mGrbl = new GrblFirmware(new GCode(), mSerialPort,  mLaserCatHardwareSimulator);
-      mGrbl = new GrblFirmware(new GCode(), mSerialPort, mLaserCatHardwarePIC);
+      mGrbl = new GrblFirmware(new GCode(), mGCodeSerialPort, mLaserCatHardwareSimulator);
       mCurrentGCodeLineIndex = -1;
     }
 
@@ -96,14 +96,15 @@ namespace bitLab.LaserCat.Model
 
       mCurrentGCodeLineIndex += 1;
       Log.LogInfo(String.Format("Adding GCode line '{0}'", mGCodeLines[mCurrentGCodeLineIndex]));
-      mSerialPort.AddLineToInputBuffer(mGCodeLines[mCurrentGCodeLineIndex] + '\n');
+      mGCodeSerialPort.AddLineToInputBuffer(mGCodeLines[mCurrentGCodeLineIndex] + '\n');
     }
 
     public void SendAllGCode()
     {
       if (!CheckGrblIsStarted()) return;
 
-      while (!IsGCodeCompleted()) { SendGCodeLine(); }
+      //while (!IsGCodeCompleted()) { SendGCodeLine(); }
+      mGrbl.SendMessage(Grbl.GrblFirmware.EGrblMessage.LoadGCode, mGCodeLines);
 
       Log.LogInfo("GCode completed");
     }
