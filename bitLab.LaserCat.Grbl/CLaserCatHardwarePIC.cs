@@ -220,8 +220,8 @@ namespace bitLab.LaserCat.Grbl
 			dataToCheck.Add(Convert.ToByte(data.Length));
 			dataToSend.AddRange(data);
 			dataToCheck.AddRange(data);
-			dataToSend.Add(END_CHAR);
 			dataToSend.Add(CheckSum(dataToCheck));
+      dataToSend.Add(END_CHAR);
 			return dataToSend.ToArray();
 		}
 
@@ -259,6 +259,7 @@ namespace bitLab.LaserCat.Grbl
 						{
 							if (currChar == mLastSentPacketID) mReadingState = EReadingState.WaitingFor_Length;
 							else Debugger.Break();
+              mBufferToCheck.Clear();
 							mBufferToCheck.Add(mLastSentPacketID);
 						}
 						break;
@@ -340,8 +341,8 @@ namespace bitLab.LaserCat.Grbl
       index += 4;
       return ((int)mReceiveBuffer.ElementAt(i)) +
              ((int)mReceiveBuffer.ElementAt(i + 1) << 8) +
-             ((int)mReceiveBuffer.ElementAt(i + 1) << 16) +
-             ((int)mReceiveBuffer.ElementAt(i + 1) << 24);
+             ((int)mReceiveBuffer.ElementAt(i + 2) << 16) +
+             ((int)mReceiveBuffer.ElementAt(i + 3) << 24);
     }
 
 		private byte mGetSubByteByIndex(int param, int index)
