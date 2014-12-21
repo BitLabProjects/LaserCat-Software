@@ -214,6 +214,9 @@ namespace bitLab.LaserCat.Grbl
 			if (mLastSentPacketID == 255) mLastSentPacketID = 0;
 			else mLastSentPacketID++;
 
+      Debug.WriteLine("TX Packet id=" + mLastSentPacketID);
+      Debug.WriteLine("TX Data=" + string.Join(",", data));
+
 			dataToSend.Add(mLastSentPacketID);
 			dataToCheck.Add(mLastSentPacketID);
 			dataToSend.Add(Convert.ToByte(data.Length));
@@ -245,7 +248,7 @@ namespace bitLab.LaserCat.Grbl
 			int i;
 			for (i = 0; i < bufferLength; i++)
 			{
-				char currChar = Convert.ToChar(buffer[i]);
+				byte currChar = buffer[i];
 
 				switch (mReadingState)
 				{
@@ -259,15 +262,16 @@ namespace bitLab.LaserCat.Grbl
 						{
 							if (currChar == mLastSentPacketID) mReadingState = EReadingState.WaitingFor_Length;
 							else Debugger.Break();
+              Debug.WriteLine("RX Packet id=" + currChar);
               mBufferToCheck.Clear();
 							mBufferToCheck.Add(mLastSentPacketID);
 						}
 						break;
 					case EReadingState.WaitingFor_Length:
 						{
-							mCharToRead = Convert.ToInt32(currChar);
+							mCharToRead = currChar;
 							mReadingState = EReadingState.Reading_Data;
-							mBufferToCheck.Add((byte)currChar);
+							mBufferToCheck.Add(currChar);
 						}
 						break;
 					case EReadingState.Reading_Data:
@@ -307,6 +311,8 @@ namespace bitLab.LaserCat.Grbl
 			//TODO
 			String message = "";
 			mLastCommandReceived = mReceiveBuffer.ElementAt(0);
+
+      Debug.WriteLine("RX Data=" + string.Join(",", mReceiveBuffer));
 
 			if (mLastCommandSent == ASKPOSITION_COMMAND)
 			{
