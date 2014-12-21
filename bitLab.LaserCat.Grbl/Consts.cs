@@ -145,6 +145,7 @@ namespace bitLab.LaserCat.Grbl
     //SB!25/11/14 Simulator uses one tick per microsecond
     //TODO Understand how this relates to the actual hardware, does the planner need to know?
     public const int F_CPU = 1000000;
+    //public const int F_CPU = 48000000;
     public const int TICKS_PER_MICROSECOND = (F_CPU / 1000000);
   }
 

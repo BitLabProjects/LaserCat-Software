@@ -57,7 +57,7 @@ namespace bitLab.LaserCat.Grbl
 		private Int32 mPositionY;
 		private Int32 mPositionZ;
     private Int32 mSegmentBufferCount;
-		private bool mHasMoreSegmentBuffer;
+		private int mHasMoreSegmentBuffer;
 
 		private AutoResetEvent CommandReceived;
 
@@ -154,12 +154,13 @@ namespace bitLab.LaserCat.Grbl
 			SendToPIC(dataList.ToArray());
 		}
 
-		public bool AskHasMoreSegmentBuffer()
+		public int AskHasMoreSegmentBuffer()
 		{
 			mLastCommandSent = ASKHASMORESEGMENTBUFFER_COMMAND;
 			byte[] data = { mLastCommandSent };
 			Debug.WriteLine("AskHasMoreSegmentBuffer");
 			SendToPIC(data);
+      Debug.WriteLine("AskHasMoreSegmentBuffer=" + mHasMoreSegmentBuffer);
 			return mHasMoreSegmentBuffer;
 		}
 
@@ -170,6 +171,7 @@ namespace bitLab.LaserCat.Grbl
 			byte n_stepHI = mGetSubByteByIndex(Convert.ToInt32(segment.n_step), 1);
 			byte n_stepLO = mGetSubByteByIndex(Convert.ToInt32(segment.n_step), 0);
 
+      Debug.WriteLine("StoreSegment, cycles_per_tick={0}, stepIdx={1}, steps={2}", segment.cycles_per_tick, segment.st_block_index, segment.n_step);
 			byte cycles_per_tickHI = mGetSubByteByIndex(Convert.ToInt32(segment.cycles_per_tick), 1);
 			byte cycles_per_tickLO = mGetSubByteByIndex(Convert.ToInt32(segment.cycles_per_tick), 0);
 
@@ -205,6 +207,8 @@ namespace bitLab.LaserCat.Grbl
 			CommandReceived.WaitOne();
 		}
 
+    private const bool WriteDebugTxRxInfo = false;
+
 		private byte[] FormatCommandForSend(byte[] data)
 		{
 			List<byte> dataToSend = new List<byte>();
@@ -214,8 +218,10 @@ namespace bitLab.LaserCat.Grbl
 			if (mLastSentPacketID == 255) mLastSentPacketID = 0;
 			else mLastSentPacketID++;
 
-      Debug.WriteLine("TX Packet id=" + mLastSentPacketID);
-      Debug.WriteLine("TX Data=" + string.Join(",", data));
+      if (WriteDebugTxRxInfo) {
+        Debug.WriteLine("TX Packet id=" + mLastSentPacketID);
+        Debug.WriteLine("TX Data=" + string.Join(",", data));
+      }
 
 			dataToSend.Add(mLastSentPacketID);
 			dataToCheck.Add(mLastSentPacketID);
@@ -262,7 +268,9 @@ namespace bitLab.LaserCat.Grbl
 						{
 							if (currChar == mLastSentPacketID) mReadingState = EReadingState.WaitingFor_Length;
 							else Debugger.Break();
-              Debug.WriteLine("RX Packet id=" + currChar);
+              if (WriteDebugTxRxInfo) {
+                Debug.WriteLine("RX Packet id=" + currChar);
+              }
               mBufferToCheck.Clear();
 							mBufferToCheck.Add(mLastSentPacketID);
 						}
@@ -312,7 +320,9 @@ namespace bitLab.LaserCat.Grbl
 			String message = "";
 			mLastCommandReceived = mReceiveBuffer.ElementAt(0);
 
-      Debug.WriteLine("RX Data=" + string.Join(",", mReceiveBuffer));
+      if (WriteDebugTxRxInfo) {
+        Debug.WriteLine("RX Data=" + string.Join(",", mReceiveBuffer));
+      }
 
 			if (mLastCommandSent == ASKPOSITION_COMMAND)
 			{
@@ -330,7 +340,7 @@ namespace bitLab.LaserCat.Grbl
 			if (mLastCommandSent == ASKHASMORESEGMENTBUFFER_COMMAND && mLastCommandReceived == OKSEGMENTBUFFER_COMMAND)
 			{
 				message = mLastCommandSent + ":OK";
-				mHasMoreSegmentBuffer = Convert.ToBoolean(mReceiveBuffer.ElementAt(1));
+				mHasMoreSegmentBuffer = mReceiveBuffer.ElementAt(1) > 0 ? 1 : 0;
 			}
 
 			if (mLastCommandReceived == OK_COMMAND) message = mLastCommandSent + ":OK";
@@ -363,3 +373,33 @@ namespace bitLab.LaserCat.Grbl
     }
   }
 }
+
+
+
+/*
+
+AskHasMoreSegmentBuffer
+TX Packet id=124
+TX Data=12
+RX Packet id=124
+RX Data=13,1
+StoreSegment
+TX Packet id=125
+TX Data=7,88,0,1,42,20,3,0
+RX Packet id=125
+RX Data=8
+AskHasMoreSegmentBuffer
+TX Packet id=126
+TX Data=12
+RX Packet id=126
+RX Data=8
+RX Packet id=126
+StoreSegment
+TX Packet id=127
+TX Data=7,96,0,1,149,20,3,0
+RX Data=13,1
+AskHasMoreSegmentBuffer
+TX Packet id=128
+
+
+*/
