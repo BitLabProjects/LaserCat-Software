@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.IO.Ports;
+using System.Diagnostics;
 
 namespace bitLab.LaserCat.Grbl
 {
@@ -33,14 +34,25 @@ namespace bitLab.LaserCat.Grbl
 		private String mPortName;
 
 		private Queue<byte> mReceiveBuffer;
+		List<byte> mBufferToCheck = new List<byte>();
 
 		private const byte START_CHAR = 35;
-		private enum EReadingState { WaitingForStartChar, WaitingForReadLength, Reading };
+		private const byte END_CHAR = 36;
+		private enum EReadingState
+		{
+			WaitingFor_StartChar,
+			WaitingFor_PacketID,
+			WaitingFor_Length,
+			Reading_Data,
+			WaitingFor_CheckSum,
+			WaitingFor_EndChar,
+		};
 		private EReadingState mReadingState;
 		private int mCharToRead;
 
 		private byte mLastCommandReceived = 0;
 		private byte mLastCommandSent = 0;
+		private byte mLastSentPacketID = 255;
 		private Int32 mPositionX;
 		private Int32 mPositionY;
 		private Int32 mPositionZ;
@@ -59,7 +71,7 @@ namespace bitLab.LaserCat.Grbl
 		public CLaserCatHardwarePIC(string portName)
 		{
 			CommandReceived = new AutoResetEvent(false);
-			mReadingState = EReadingState.WaitingForStartChar;
+			mReadingState = EReadingState.WaitingFor_StartChar;
 			mCharToRead = 0;
 			mPortName = portName;
 			mReceiveBuffer = new Queue<byte>();
@@ -146,6 +158,7 @@ namespace bitLab.LaserCat.Grbl
 		{
 			mLastCommandSent = ASKHASMORESEGMENTBUFFER_COMMAND;
 			byte[] data = { mLastCommandSent };
+			Debug.WriteLine("AskHasMoreSegmentBuffer");
 			SendToPIC(data);
 			return mHasMoreSegmentBuffer;
 		}
@@ -166,6 +179,7 @@ namespace bitLab.LaserCat.Grbl
                       cycles_per_tickLO, cycles_per_tickHI, 
                       segment.amass_level,
                       segment.prescaler};
+			Debug.WriteLine("StoreSegment");
 			SendToPIC(data);
 		}
 
@@ -178,6 +192,7 @@ namespace bitLab.LaserCat.Grbl
 		{
 			mLastCommandSent = ASKPOSITION_COMMAND;
 			byte[] data = { mLastCommandSent };
+			Debug.WriteLine("AskPosition");
 			SendToPIC(data);
 			Int32[] position = { mPositionX, mPositionY, mPositionZ };
 			return position;
@@ -193,10 +208,31 @@ namespace bitLab.LaserCat.Grbl
 		private byte[] FormatCommandForSend(byte[] data)
 		{
 			List<byte> dataToSend = new List<byte>();
+			List<byte> dataToCheck = new List<byte>();
 			dataToSend.Add(START_CHAR);
+			
+			if (mLastSentPacketID == 255) mLastSentPacketID = 0;
+			else mLastSentPacketID++;
+
+			dataToSend.Add(mLastSentPacketID);
+			dataToCheck.Add(mLastSentPacketID);
 			dataToSend.Add(Convert.ToByte(data.Length));
+			dataToCheck.Add(Convert.ToByte(data.Length));
 			dataToSend.AddRange(data);
+			dataToCheck.AddRange(data);
+			dataToSend.Add(END_CHAR);
+			dataToSend.Add(CheckSum(dataToCheck));
 			return dataToSend.ToArray();
+		}
+
+		private byte CheckSum(List<Byte> data)
+		{
+			byte sum = 0;
+			foreach (byte d in data)
+			{
+				sum = (byte)(sum ^ d);
+			}
+			return sum;
 		}
 
 		private void ReceiveFromPIC(object sender, SerialDataReceivedEventArgs e)
@@ -213,27 +249,52 @@ namespace bitLab.LaserCat.Grbl
 
 				switch (mReadingState)
 				{
-					case EReadingState.WaitingForStartChar:
+					case EReadingState.WaitingFor_StartChar:
 						{
-							if (currChar == START_CHAR) mReadingState = EReadingState.WaitingForReadLength;
+							if (currChar == START_CHAR) mReadingState = EReadingState.WaitingFor_PacketID;
+							else Debugger.Break();
 						}
 						break;
-					case EReadingState.WaitingForReadLength:
+					case EReadingState.WaitingFor_PacketID:
+						{
+							if (currChar == mLastSentPacketID) mReadingState = EReadingState.WaitingFor_Length;
+							else Debugger.Break();
+							mBufferToCheck.Add(mLastSentPacketID);
+						}
+						break;
+					case EReadingState.WaitingFor_Length:
 						{
 							mCharToRead = Convert.ToInt32(currChar);
-							mReadingState = EReadingState.Reading;
+							mReadingState = EReadingState.Reading_Data;
+							mBufferToCheck.Add((byte)currChar);
 						}
 						break;
-					case EReadingState.Reading:
+					case EReadingState.Reading_Data:
 						{
 							mCharToRead--;
 							mReceiveBuffer.Enqueue(buffer[i]);
+							mBufferToCheck.Add(buffer[i]);
 							if (mCharToRead == 0)
 							{
-								mReadingState = EReadingState.WaitingForStartChar;
+								mReadingState = EReadingState.WaitingFor_CheckSum;
+							}
+						}
+						break;
+					case EReadingState.WaitingFor_CheckSum:
+						{
+							if (currChar == CheckSum(mBufferToCheck)) mReadingState = EReadingState.WaitingFor_EndChar;
+							else Debugger.Break();
+						}
+						break;
+					case EReadingState.WaitingFor_EndChar:
+						{
+							if (currChar == END_CHAR)
+							{
+								mReadingState = EReadingState.WaitingFor_StartChar;
 								ParseCommand();
 								mReceiveBuffer = new Queue<byte>();
 							}
+							else Debugger.Break();
 						}
 						break;
 				}
@@ -291,7 +352,7 @@ namespace bitLab.LaserCat.Grbl
 
     public bool Connect(string COMPort)
     {
-      throw new NotImplementedException();
+			return true;
     }
   }
 }

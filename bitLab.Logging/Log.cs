@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace bitLab.Logging
 {
@@ -34,6 +35,10 @@ namespace bitLab.Logging
 
     public static void LogInfo(string message, params object[] args)
     {
+			if (String.IsNullOrEmpty(message))
+			{
+				Debugger.Break();
+			}
       DispatchLogMessage(new LogMessage(DateTime.Now, String.Format(message, args), ELogMessageType.Info));
     }
 
