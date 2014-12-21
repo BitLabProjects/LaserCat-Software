@@ -22,7 +22,6 @@ namespace bitLab.LaserCat.Model
       mGCodeSerialPort = new CInMemorySerialPort();
       mLaserCatHardwareSimulator = new CLaserCatHardwareSimulator();
 	    mLaserCatHardwarePIC = new CLaserCatHardwarePIC("COM6");
-      //mGrbl = new GrblFirmware(new GCode(), mSerialPort,  mLaserCatHardwareSimulXator);
       mGrbl = new GrblFirmware(new GCode(), mGCodeSerialPort, mLaserCatHardwarePIC);
     }
 

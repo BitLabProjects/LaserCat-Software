@@ -157,11 +157,12 @@ namespace bitLab.LaserCat.Grbl
     */
     public void st_prep_buffer()
     {
-      //int bufferSpace = mLaserCatHardware.AskHasMoreSegmentBuffer();
-      //while (bufferSpace > 0)
-      //{
-      //  bufferSpace--;
-      while (mLaserCatHardware.AskHasMoreSegmentBuffer() > 0) {
+      int bufferSpace = mLaserCatHardware.AskHasMoreSegmentBuffer();
+      while (bufferSpace > 0)
+      {
+        bufferSpace--;
+      //while (mLaserCatHardware.AskHasMoreSegmentBuffer() > 0) {
+
         // Determine if we need to load a new planner block or if the block has been replanned. 
         if (pl_blockIdx == -1)
         {

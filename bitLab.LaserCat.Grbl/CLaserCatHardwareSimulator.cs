@@ -110,10 +110,10 @@ namespace bitLab.LaserCat.Grbl
     }
     private void recalcSegmentBufferCount()
     {
-      if (segment_buffer_head > segment_buffer_tail)
+      if (segment_buffer_head >= segment_buffer_tail)
         segment_buffer_count = segment_buffer_head - segment_buffer_tail;
       else
-        segment_buffer_count = GrblFirmware.SEGMENT_BUFFER_SIZE - (segment_buffer_tail - segment_buffer_head) - 1;
+        segment_buffer_count = GrblFirmware.SEGMENT_BUFFER_SIZE - (segment_buffer_tail - segment_buffer_head);
     }
 
     // Step segment ring buffer indices
@@ -567,7 +567,7 @@ namespace bitLab.LaserCat.Grbl
     public int AskHasMoreSegmentBuffer()
     {
       //return segment_buffer_tail != segment_next_head;
-      return GrblFirmware.SEGMENT_BUFFER_SIZE - segment_buffer_count;
+      return GrblFirmware.SEGMENT_BUFFER_SIZE - segment_buffer_count - 1;
     }
 
 		public int[] AskPosition()

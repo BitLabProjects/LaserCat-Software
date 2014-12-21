@@ -340,7 +340,7 @@ namespace bitLab.LaserCat.Grbl
 			if (mLastCommandSent == ASKHASMORESEGMENTBUFFER_COMMAND && mLastCommandReceived == OKSEGMENTBUFFER_COMMAND)
 			{
 				message = mLastCommandSent + ":OK";
-				mHasMoreSegmentBuffer = mReceiveBuffer.ElementAt(1) > 0 ? 1 : 0;
+				mHasMoreSegmentBuffer = mReceiveBuffer.ElementAt(1);
 			}
 
 			if (mLastCommandReceived == OK_COMMAND) message = mLastCommandSent + ":OK";
