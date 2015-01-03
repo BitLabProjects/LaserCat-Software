@@ -207,7 +207,7 @@ namespace bitLab.LaserCat.Grbl
 			CommandReceived.WaitOne();
 		}
 
-    private const bool WriteDebugTxRxInfo = false;
+    private const bool WriteDebugTxRxInfo = true;
 
 		private byte[] FormatCommandForSend(byte[] data)
 		{
@@ -255,18 +255,26 @@ namespace bitLab.LaserCat.Grbl
 			for (i = 0; i < bufferLength; i++)
 			{
 				byte currChar = buffer[i];
-
+				Debug.WriteLine(string.Format("byte[{0}] = {1}",i,buffer[i]));
 				switch (mReadingState)
 				{
 					case EReadingState.WaitingFor_StartChar:
 						{
-							if (currChar == START_CHAR) mReadingState = EReadingState.WaitingFor_PacketID;
+							if (currChar == START_CHAR)
+							{
+								mReadingState = EReadingState.WaitingFor_PacketID;
+								Debug.WriteLine("Stato: WaitingFor_PacketID");
+							}
 							else Debugger.Break();
 						}
 						break;
 					case EReadingState.WaitingFor_PacketID:
 						{
-							if (currChar == mLastSentPacketID) mReadingState = EReadingState.WaitingFor_Length;
+							if (currChar == mLastSentPacketID)
+							{
+								mReadingState = EReadingState.WaitingFor_Length;
+								Debug.WriteLine("Stato: WaitingFor_Length");
+							}
 							else Debugger.Break();
               if (WriteDebugTxRxInfo) {
                 Debug.WriteLine("RX Packet id=" + currChar);
@@ -290,12 +298,17 @@ namespace bitLab.LaserCat.Grbl
 							if (mCharToRead == 0)
 							{
 								mReadingState = EReadingState.WaitingFor_CheckSum;
+								Debug.WriteLine("Stato: WaitingFor_CheckSum");
 							}
 						}
 						break;
 					case EReadingState.WaitingFor_CheckSum:
 						{
-							if (currChar == CheckSum(mBufferToCheck)) mReadingState = EReadingState.WaitingFor_EndChar;
+							if (currChar == CheckSum(mBufferToCheck))
+							{
+								mReadingState = EReadingState.WaitingFor_EndChar;
+								Debug.WriteLine("Stato: WaitingFor_EndChar");
+							}
 							else Debugger.Break();
 						}
 						break;
@@ -304,6 +317,7 @@ namespace bitLab.LaserCat.Grbl
 							if (currChar == END_CHAR)
 							{
 								mReadingState = EReadingState.WaitingFor_StartChar;
+								Debug.WriteLine("Stato: WaitingFor_StartChar");
 								ParseCommand();
 								mReceiveBuffer = new Queue<byte>();
 							}

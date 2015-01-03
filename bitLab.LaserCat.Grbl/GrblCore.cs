@@ -132,7 +132,7 @@ namespace bitLab.LaserCat.Grbl
 
       Log.LogInfo("Streaming stepper data...");
       while (mGrbl.plan_get_block_buffer_count() > 0) {
-				System.Threading.Thread.Sleep(500);
+				System.Threading.Thread.Sleep(100);
         mGrbl.st_prep_buffer();
         var newPos = mHardware.AskPosition();
         for (int i = 0; i < newPos.Length; i++)
