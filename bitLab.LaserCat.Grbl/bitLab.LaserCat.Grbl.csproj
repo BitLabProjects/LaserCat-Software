@@ -41,12 +41,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CCommunicationManager.cs" />
     <Compile Include="CLaserCatHardwarePIC.cs" />
     <Compile Include="CLaserCatHardwareSimulator.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Consts.cs" />
     <Compile Include="CoolantControl.cs" />
     <Compile Include="CInMemorySerialPort.cs" />
+    <Compile Include="CProtocolMessage.cs" />
     <Compile Include="Defaults.cs" />
     <Compile Include="Eeprom.cs" />
     <Compile Include="GCode.cs" />
