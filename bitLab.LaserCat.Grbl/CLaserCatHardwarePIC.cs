@@ -52,7 +52,7 @@ namespace bitLab.LaserCat.Grbl
 
 		private byte mLastCommandReceived = 0;
 		private byte mLastCommandSent = 0;
-		private byte mLastSentPacketID = 255;
+		private byte mCurrentTxPacketId = 255;
 		private Int32 mPositionX;
 		private Int32 mPositionY;
 		private Int32 mPositionZ;
@@ -60,13 +60,6 @@ namespace bitLab.LaserCat.Grbl
 		private int mHasMoreSegmentBuffer;
 
 		private AutoResetEvent CommandReceived;
-
-		public event EventHandler CommandParsed;
-		private void RaiseCommandParsed()
-		{
-			if (CommandParsed != null)
-				CommandParsed(this, EventArgs.Empty);
-		}
 
 		public CLaserCatHardwarePIC(string portName)
 		{
@@ -203,34 +196,40 @@ namespace bitLab.LaserCat.Grbl
 		private void SendToPIC(byte[] data)
 		{
 			var dataToSend = FormatCommandForSend(data);
+      Debug.WriteLine("SendToPic, Data=" + string.Join(",", dataToSend));
 			mSerialPort.Write(dataToSend, 0, dataToSend.Length);
+
+      Debug.WriteLine("Waiting event");
 			CommandReceived.WaitOne();
+      Debug.WriteLine("Waiting completed");
 		}
 
     private const bool WriteDebugTxRxInfo = false;
 
 		private byte[] FormatCommandForSend(byte[] data)
 		{
-			List<byte> dataToSend = new List<byte>();
-			List<byte> dataToCheck = new List<byte>();
-			dataToSend.Add(START_CHAR);
-			
-			if (mLastSentPacketID == 255) mLastSentPacketID = 0;
-			else mLastSentPacketID++;
+			if (mCurrentTxPacketId == 255) mCurrentTxPacketId = 0;
+			else mCurrentTxPacketId++;
 
       if (WriteDebugTxRxInfo) {
-        Debug.WriteLine("TX Packet id=" + mLastSentPacketID);
+        Debug.WriteLine("TX Packet id=" + mCurrentTxPacketId);
         Debug.WriteLine("TX Data=" + string.Join(",", data));
       }
 
-			dataToSend.Add(mLastSentPacketID);
-			dataToCheck.Add(mLastSentPacketID);
-			dataToSend.Add(Convert.ToByte(data.Length));
+			List<byte> dataToCheck = new List<byte>();
+			dataToCheck.Add(mCurrentTxPacketId);
 			dataToCheck.Add(Convert.ToByte(data.Length));
-			dataToSend.AddRange(data);
 			dataToCheck.AddRange(data);
-			dataToSend.Add(CheckSum(dataToCheck));
+      var checksum = CheckSum(dataToCheck);
+
+			List<byte> dataToSend = new List<byte>();
+			dataToSend.Add(START_CHAR);
+			dataToSend.Add(mCurrentTxPacketId);
+			dataToSend.Add(Convert.ToByte(data.Length));
+			dataToSend.AddRange(data);
+      dataToSend.Add(checksum);
       dataToSend.Add(END_CHAR);
+
 			return dataToSend.ToArray();
 		}
 
@@ -251,6 +250,8 @@ namespace bitLab.LaserCat.Grbl
 			byte[] buffer = new byte[bufferLength];
 			sp.Read(buffer, 0, bufferLength);
 
+      Debug.WriteLine("ReceiveFromPic, data=" + string.Join(",", buffer));
+
 			int i;
 			for (i = 0; i < bufferLength; i++)
 			{
@@ -260,19 +261,28 @@ namespace bitLab.LaserCat.Grbl
 				{
 					case EReadingState.WaitingFor_StartChar:
 						{
-							if (currChar == START_CHAR) mReadingState = EReadingState.WaitingFor_PacketID;
-							else Debugger.Break();
+							if (currChar == START_CHAR) 
+                mReadingState = EReadingState.WaitingFor_PacketID;
+							else
+                Logging.Log.LogError("Invalid start char: " + currChar);
 						}
 						break;
 					case EReadingState.WaitingFor_PacketID:
 						{
-							if (currChar == mLastSentPacketID) mReadingState = EReadingState.WaitingFor_Length;
-							else Debugger.Break();
+							if (currChar == mCurrentTxPacketId) 
+                mReadingState = EReadingState.WaitingFor_Length;
+							else
+              {
+                mReadingState = EReadingState.WaitingFor_StartChar;
+                Logging.Log.LogError("Invalid RX Packet id: " + currChar);
+              }
+
               if (WriteDebugTxRxInfo) {
                 Debug.WriteLine("RX Packet id=" + currChar);
               }
+
               mBufferToCheck.Clear();
-							mBufferToCheck.Add(mLastSentPacketID);
+							mBufferToCheck.Add(mCurrentTxPacketId);
 						}
 						break;
 					case EReadingState.WaitingFor_Length:
@@ -295,19 +305,25 @@ namespace bitLab.LaserCat.Grbl
 						break;
 					case EReadingState.WaitingFor_CheckSum:
 						{
-							if (currChar == CheckSum(mBufferToCheck)) mReadingState = EReadingState.WaitingFor_EndChar;
-							else Debugger.Break();
+              if (currChar == CheckSum(mBufferToCheck))
+                mReadingState = EReadingState.WaitingFor_EndChar;
+              else
+              {
+                mReadingState = EReadingState.WaitingFor_StartChar;
+                Logging.Log.LogError("Invalid RX checksum: " + currChar);
+              }
 						}
 						break;
 					case EReadingState.WaitingFor_EndChar:
 						{
+              mReadingState = EReadingState.WaitingFor_StartChar;
 							if (currChar == END_CHAR)
 							{
-								mReadingState = EReadingState.WaitingFor_StartChar;
 								ParseCommand();
 								mReceiveBuffer = new Queue<byte>();
 							}
-							else Debugger.Break();
+							else
+                Logging.Log.LogError("Invalid RX End char: " + currChar);
 						}
 						break;
 				}
@@ -347,8 +363,11 @@ namespace bitLab.LaserCat.Grbl
 			if (mLastCommandReceived == ERROR_COMMAND) message = mLastCommandSent + ":ERRORE";
 
 			Logging.Log.LogInfo(message);
-			RaiseCommandParsed();
-			CommandReceived.Set();
+      lock (this)
+      {
+        Debug.WriteLine("Setting event");
+			  CommandReceived.Set();
+      }
 		}
 
     private int QueueReadInt32(Queue<byte> queue, ref int index)
