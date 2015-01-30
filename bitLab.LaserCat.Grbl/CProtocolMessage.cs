@@ -15,9 +15,6 @@ namespace bitLab.LaserCat.Grbl
     public List<Byte> Data;
     public byte CRC;
 
-    public const byte MSG_PING = 60;
-    public const byte MSG_PONG = 70;
-
     public CProtocolMessage(byte ID, ECommands cmd, List<Byte> data)
     {
       this.ID = ID;

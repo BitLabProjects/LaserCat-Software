@@ -6,21 +6,22 @@ using System.Threading.Tasks;
 using System.IO.Ports;
 using System.Diagnostics;
 using System.Threading;
+using System.Collections.Concurrent;
 
 namespace bitLab.LaserCat.Grbl
 {
   public enum ECommands
   {
     //SEND COMMANDS
-		INIT_COMMAND = 1,
-		RESET_COMMAND = 2,
-		SETSETTINGS_COMMAND = 3,
-		WAKEUP_COMMAND = 4,
-		GOIDLE_COMMAND = 5,
-		STOREBLOCK_COMMAND = 6,
-		STORESEGMENT_COMMAND = 7,
-		ASKPOSITION_COMMAND = 10,
-		ASKHASMORESEGMENTBUFFER_COMMAND = 12,
+		INIT_COMMAND = 1, //Ok
+    RESET_COMMAND = 2, //Ok
+    SETSETTINGS_COMMAND = 3, //Ok
+    WAKEUP_COMMAND = 4, //Ok
+    GOIDLE_COMMAND = 5, //Ok
+    STOREBLOCK_COMMAND = 6, //Ok
+    STORESEGMENT_COMMAND = 7, //Ok
+    ASKPOSITION_COMMAND = 10, //OKPOSITION_COMMAND
+    ASKHASMORESEGMENTBUFFER_COMMAND = 12, //OKSEGMENTBUFFER_COMMAND
 
 		//RECEIVE COMMANDS
 		OK_COMMAND = 8,
@@ -32,12 +33,14 @@ namespace bitLab.LaserCat.Grbl
   class CCommunicationManager
   {
     private const int REPLY_TIMEOUT_MSEC = 0;
+    private const bool WriteDebugTxRxInfo = false;
 
     private SerialPort mSerialPort;
-    private AutoResetEvent mCommandReceived;
 
     private byte mLastCommandReceived = 0;
     public byte mLastCommandSent = 0;
+
+    private byte mCurrentTxPacketId = 255;
 
     //TODO Move to call stack 
     public Int32 mPositionX;
@@ -46,9 +49,11 @@ namespace bitLab.LaserCat.Grbl
     public Int32 mSegmentBufferCount;
     public Int32 mHasMoreSegmentBuffer;
 
+    private BlockingCollection<CProtocolMessage> mRxMessageBuffer;
+
     public CCommunicationManager(String portName)
     {
-      mCommandReceived = new AutoResetEvent(false);
+      mRxMessageBuffer = new BlockingCollection<CProtocolMessage>();
 
       var mPortName = portName;
       mSerialPort = new SerialPort(mPortName);
@@ -72,7 +77,39 @@ namespace bitLab.LaserCat.Grbl
       Send(cmd, new List<byte>());
     }
 
+    //TODO Inline on callers
     public void Send(ECommands cmd, List<Byte> data)
+    {
+      SendAndMatch(cmd, data, ECommands.OK_COMMAND);
+    }
+
+    public void SendAndMatch(ECommands cmd, List<Byte> data, ECommands matchCmd)
+    {
+      List<Byte> readData;
+      SendAndRead(cmd, data, matchCmd, out readData);
+    }
+
+    public bool SendAndRead(ECommands cmd, List<Byte> data, ECommands matchCmd, out List<Byte> matchData)
+    {
+      mSendDo(cmd, data);
+
+      var msg = Read();
+      matchData = msg.Data;
+
+      //TODO Wait for pic response
+      //TODO Match
+      return true;
+    }
+
+    private CProtocolMessage Read()
+    {
+      Debug.WriteLine("Waiting event");
+      var msg = mRxMessageBuffer.Take();
+      Debug.WriteLine("Waiting completed");
+      return msg;
+    }
+
+    private void mSendDo(ECommands cmd, List<Byte> data)
     {
       mLastCommandSent = (byte)cmd;
       //Send((new byte[] { (byte)cmd }).Concat(data).ToArray());
@@ -92,52 +129,6 @@ namespace bitLab.LaserCat.Grbl
 
       Debug.WriteLine("SendToPic, Data=" + string.Join(",", rawMessage));
       mSerialPort.Write(rawMessage.ToArray(), 0, rawMessage.Count);
-
-      Debug.WriteLine("Waiting event");
-      mCommandReceived.WaitOne();
-      Debug.WriteLine("Waiting completed");
-    }
-
-//    public void Send(CProtocolMessage msg)
-//    {
-//      dynamic bytes = new List<byte>();
-//      bytes.Add(START_CHAR); 
-//      bytes.Add(msg.ID);
-//      bytes.Add(msg.Cmd);
-//      bytes.Add(msg.DataLength);
-//      bytes.AddRange(msg.Data);
-//      bytes.Add(msg.CRC);
-//      bytes.Add(END_CHAR);
-
-//#if DEBUG
-//      Console.WriteLine("SerialPort TX: " + String.Join(",", bytes));
-//#endif
-//      mSerialPort.Write(bytes.ToArray(), 0, bytes.Count);
-//    }
-
-    //public bool SendAndMatch(CProtocolMessage msg)
-    //{
-    //  Send(msg);
-
-    //  //TODO Wait for pic response
-    //  //TODO Match
-    //  return false;
-    //}
-
-    private const bool WriteDebugTxRxInfo = false;
-    
-    private byte mCurrentTxPacketId = 255;
-    private byte[] FormatCommandForSend(byte[] data)
-    {
-
-
-      //List<byte> dataToCheck = new List<byte>();
-      //dataToCheck.Add(mCurrentTxPacketId);
-      //dataToCheck.Add(Convert.ToByte(data.Length));
-      //dataToCheck.AddRange(data);
-      //var checksum = CheckSum(dataToCheck);
-
-      return null;
     }
 
     private byte CheckSum(List<Byte> data)
@@ -163,6 +154,10 @@ namespace bitLab.LaserCat.Grbl
     private int mCharToRead;
     List<byte> mBufferToCheck = new List<byte>();
     private Queue<byte> mReceiveBuffer;
+
+    private byte mRxPacketId;
+    private byte mRxChecksum;
+
     private void ReceiveFromPIC(object sender, SerialDataReceivedEventArgs e)
     {
       SerialPort sp = (SerialPort)sender;
@@ -189,6 +184,7 @@ namespace bitLab.LaserCat.Grbl
             break;
           case EReadingState.WaitingFor_PacketID:
             {
+              mRxPacketId = currChar;
               if (currChar == mCurrentTxPacketId)
                 mReadingState = EReadingState.WaitingFor_Length;
               else
@@ -226,6 +222,7 @@ namespace bitLab.LaserCat.Grbl
             break;
           case EReadingState.WaitingFor_CheckSum:
             {
+              mRxChecksum = currChar;
               if (currChar == CheckSum(mBufferToCheck))
                 mReadingState = EReadingState.WaitingFor_EndChar;
               else
@@ -285,11 +282,8 @@ namespace bitLab.LaserCat.Grbl
       if (mLastCommandReceived == (byte)ECommands.ERROR_COMMAND) message = mLastCommandSent + ":ERRORE";
 
       Logging.Log.LogInfo(message);
-      lock (this)
-      {
-        Debug.WriteLine("Setting event");
-        mCommandReceived.Set();
-      }
+      Debug.WriteLine("Adding Protocol Message to queue");
+      mRxMessageBuffer.Add(new CProtocolMessage(mRxPacketId, (ECommands)mReceiveBuffer.ElementAt(0), mReceiveBuffer.Skip(1).ToList()));
     }
 
     private int QueueReadInt32(Queue<byte> queue, ref int index)
