@@ -20,53 +20,42 @@ namespace bitLab.LaserCat.Grbl
 
 		public void Init()
 		{
-      mComMan.mLastCommandSent = (byte)ECommands.INIT_COMMAND;
-      byte[] data = { mComMan.mLastCommandSent };
-			SendToPIC(data);
+      mComMan.Send(ECommands.INIT_COMMAND);
 		}
 
 		public void Reset()
 		{
-      mComMan.mLastCommandSent = (byte)ECommands.RESET_COMMAND;
-      byte[] data = { mComMan.mLastCommandSent };
-			SendToPIC(data);
+      mComMan.Send(ECommands.RESET_COMMAND);
 		}
 
 		public void SetSettings(LaserCatSettings settings)
 		{
-      mComMan.mLastCommandSent = (byte)ECommands.SETSETTINGS_COMMAND;
-      byte[] data = { mComMan.mLastCommandSent,
-                      settings.pulse_microseconds,
+      var data = new List<byte>() { settings.pulse_microseconds,
                       settings.step_invert_mask,
                       settings.dir_invert_mask, 
                       settings.stepper_idle_lock_time,
                       settings.flags, 
                       settings.step_port_invert_mask,
                       settings.dir_port_invert_mask};
-			SendToPIC(data);
+      mComMan.Send(ECommands.SETSETTINGS_COMMAND, data);
 		}
 
 		public void WakeUp(bool setupAndEnableMotors)
 		{
-      mComMan.mLastCommandSent = (byte)ECommands.WAKEUP_COMMAND;
-      byte[] data = { mComMan.mLastCommandSent, Convert.ToByte(setupAndEnableMotors) };
-			SendToPIC(data);
+      var data = new List<byte>() {  Convert.ToByte(setupAndEnableMotors) };
+      mComMan.Send(ECommands.WAKEUP_COMMAND, data);
 		}
 
 		public void GoIdle(bool delayAndDisableSteppers)
 		{
-      mComMan.mLastCommandSent = (byte)ECommands.GOIDLE_COMMAND;
-      byte[] data = { mComMan.mLastCommandSent, Convert.ToByte(delayAndDisableSteppers) };
-			SendToPIC(data);
+      var data = new List<byte>() { Convert.ToByte(delayAndDisableSteppers) };
+      mComMan.Send(ECommands.GOIDLE_COMMAND, data);
 		}
 
 		public void StorePlannerBlock(byte blockIndex, st_block_t block)
 		{
-      mComMan.mLastCommandSent = (byte)ECommands.STOREBLOCK_COMMAND;
-
 			List<byte> dataList = new List<byte>();
 
-      dataList.Add(mComMan.mLastCommandSent);
 			dataList.Add(blockIndex);
 			dataList.Add(block.direction_bits);
 
@@ -84,23 +73,19 @@ namespace bitLab.LaserCat.Grbl
 				dataList.Add(mGetSubByteByIndex(Convert.ToInt32(block.step_event_count), j));
 			}
 
-			SendToPIC(dataList.ToArray());
+      mComMan.Send(ECommands.STOREBLOCK_COMMAND, dataList);
 		}
 
 		public int AskHasMoreSegmentBuffer()
 		{
-      mComMan.mLastCommandSent = (byte)ECommands.ASKHASMORESEGMENTBUFFER_COMMAND;
-      byte[] data = { mComMan.mLastCommandSent };
 			Debug.WriteLine("AskHasMoreSegmentBuffer");
-			SendToPIC(data);
+      mComMan.Send(ECommands.ASKHASMORESEGMENTBUFFER_COMMAND);
       Debug.WriteLine("AskHasMoreSegmentBuffer=" + mComMan.mHasMoreSegmentBuffer);
       return mComMan.mHasMoreSegmentBuffer;
 		}
 
 		public void StoreSegment(segment_t segment)
 		{
-      mComMan.mLastCommandSent = (byte)ECommands.STORESEGMENT_COMMAND;
-
 			byte n_stepHI = mGetSubByteByIndex(Convert.ToInt32(segment.n_step), 1);
 			byte n_stepLO = mGetSubByteByIndex(Convert.ToInt32(segment.n_step), 0);
 
@@ -108,14 +93,13 @@ namespace bitLab.LaserCat.Grbl
 			byte cycles_per_tickHI = mGetSubByteByIndex(Convert.ToInt32(segment.cycles_per_tick), 1);
 			byte cycles_per_tickLO = mGetSubByteByIndex(Convert.ToInt32(segment.cycles_per_tick), 0);
 
-      byte[] data = { mComMan.mLastCommandSent,
-                      n_stepLO, n_stepHI,
+      var data = new List<byte>() { n_stepLO, n_stepHI,
                       segment.st_block_index,
                       cycles_per_tickLO, cycles_per_tickHI, 
                       segment.amass_level,
                       segment.prescaler};
 			Debug.WriteLine("StoreSegment");
-			SendToPIC(data);
+      mComMan.Send(ECommands.STORESEGMENT_COMMAND, data);
 		}
 
     public int GetSegmentBufferCount()
@@ -125,17 +109,10 @@ namespace bitLab.LaserCat.Grbl
 
 		public Int32[] AskPosition()
 		{
-      mComMan.mLastCommandSent = (byte)ECommands.ASKPOSITION_COMMAND;
-      byte[] data = { mComMan.mLastCommandSent };
 			Debug.WriteLine("AskPosition");
-			SendToPIC(data);
+      mComMan.Send(ECommands.ASKPOSITION_COMMAND);
       Int32[] position = { mComMan.mPositionX, mComMan.mPositionY, mComMan.mPositionZ };
 			return position;
-		}
-
-		private void SendToPIC(byte[] data)
-		{
-      mComMan.SendToPIC(data);
 		}
 
     private byte mGetSubByteByIndex(int param, int index)

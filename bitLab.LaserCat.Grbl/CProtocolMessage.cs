@@ -10,31 +10,41 @@ namespace bitLab.LaserCat.Grbl
   {
     //Content
     public byte ID;
-    public byte Cmd;
+    public ECommands Cmd;
     public byte DataLength;
-    public byte[] Data;
+    public List<Byte> Data;
     public byte CRC;
 
     public const byte MSG_PING = 60;
     public const byte MSG_PONG = 70;
 
-    public static CProtocolMessage CreatePingMessage(byte id)
+    public CProtocolMessage(byte ID, ECommands cmd, List<Byte> data)
     {
-      var msg = new CProtocolMessage();
-      msg.ID = id;
-      msg.DataLength = 6;
-      msg.Data = new byte[] { MSG_PING, 44, 55, 66, 77, 88 };
-      msg.CalculateCrc();
-      return msg;
+      this.ID = ID;
+      this.Cmd = cmd;
+      this.Data = data;
+      this.DataLength = (byte)data.Count;
+      CalculateCrc();
     }
 
     private void CalculateCrc()
     {
-      CRC = (byte)(ID ^ DataLength);
+      CRC = (byte)(ID ^ (DataLength+1) ^ (byte)Cmd);
       foreach (byte b in Data)
       {
         CRC = (byte)(CRC ^ b);
       }
+    }
+
+    internal List<byte> GetRawData()
+    {
+      List<byte> dataToSend = new List<byte>();
+      dataToSend.Add(ID);
+      dataToSend.Add((byte)(DataLength+1));
+      dataToSend.Add((byte)Cmd);
+      dataToSend.AddRange(Data);
+      dataToSend.Add(CRC);
+      return dataToSend;
     }
   }
 }
