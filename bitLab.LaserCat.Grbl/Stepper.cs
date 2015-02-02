@@ -158,6 +158,7 @@ namespace bitLab.LaserCat.Grbl
     public void st_prep_buffer()
     {
       int bufferSpace = mLaserCatHardware.AskHasMoreSegmentBuffer();
+      //Logging.Log.LogInfo("-------- Sending " + bufferSpace + " segments");
       while (bufferSpace > 0)
       {
         bufferSpace--;

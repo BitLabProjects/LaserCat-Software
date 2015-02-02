@@ -114,7 +114,7 @@ namespace bitLab.LaserCat.Grbl
     // frequencies below 10kHz, where the aliasing between axes of multi-axis motions can cause audible 
     // noise and shake your machine. At even lower step frequencies, AMASS adapts and provides even better
     // step smoothing. See stepper.c for more details on the AMASS system works.
-    public const bool ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING = true; // Default enabled. Comment to disable.
+    public const bool ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING = false; // Default enabled. Comment to disable.
 
     // Sets which axis the tool length offset is applied. Assumes the spindle is always parallel with 
     // the selected axis with the tool oriented toward the negative direction. In other words, a positive

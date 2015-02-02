@@ -91,24 +91,29 @@ namespace bitLab.LaserCat.Grbl
 
 		public bool SendAndRead(ECommands cmd, List<Byte> data, ECommands matchCmd, out List<Byte> matchData)
 		{
-			CProtocolMessage msg = null;
+			CProtocolMessage rxMsg = null;
 			int i;
 
+      var txMsg = new CProtocolMessage(mGetNextTxPacketId(), cmd, data);
 			for (i = 1; i <= 10; i++)
 			{
-				mSendDo(cmd, data);
-				msg = Read();
-				if ((msg.ID == mCurrentTxPacketId) && (msg.CRC == CheckSum(mBufferToCheck)))
-					break;
+				mSendDo(txMsg);
+				rxMsg = Read();
+        if (rxMsg.ID != mCurrentTxPacketId)
+          Logging.Log.LogError("Received invalid packet ID, desired " + mCurrentTxPacketId + ", received " + rxMsg.ID);
+        else if (rxMsg.CRC != CheckSum(mBufferToCheck))
+          Logging.Log.LogError("Received invalid packet CRC, desired " + CheckSum(mBufferToCheck) + ", received " + rxMsg.CRC);
+        else
+          break;
 			}
 
-			if (msg == null)
+			if (rxMsg == null)
 			{
 				matchData = null;
-				Logging.Log.LogError("Invalid Packet. ID: " + msg.ID);
+				Logging.Log.LogError("Invalid Packet. ID: " + rxMsg.ID);
 			}
 			else
-				matchData = msg.Data;
+				matchData = rxMsg.Data;
 
 			//TODO Wait for pic response
 			//TODO Match
@@ -123,20 +128,24 @@ namespace bitLab.LaserCat.Grbl
 			return msg;
 		}
 
-		private void mSendDo(ECommands cmd, List<Byte> data)
+    private byte mGetNextTxPacketId()
+    {
+      if (mCurrentTxPacketId == 255) mCurrentTxPacketId = 0;
+      else mCurrentTxPacketId++;
+      return mCurrentTxPacketId;
+    }
+
+		private void mSendDo(CProtocolMessage msg)
 		{
-			mLastCommandSent = (byte)cmd;
+			mLastCommandSent = (byte)msg.Cmd;
 			//Send((new byte[] { (byte)cmd }).Concat(data).ToArray());
 
-			if (mCurrentTxPacketId == 255) mCurrentTxPacketId = 0;
-			else mCurrentTxPacketId++;
 			if (WriteDebugTxRxInfo)
 			{
 				Debug.WriteLine("TX Packet id=" + mCurrentTxPacketId);
-				Debug.WriteLine("TX Data=" + string.Join(",", data));
+				Debug.WriteLine("TX Data=" + string.Join(",", msg.Data));
 			}
 
-			var msg = new CProtocolMessage(mCurrentTxPacketId, cmd, data);
 			List<byte> rawMessage = msg.GetRawData();
 			rawMessage.Insert(0, START_CHAR);
 			rawMessage.Add(END_CHAR);

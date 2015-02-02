@@ -37,7 +37,7 @@ namespace bitLab.Logging
     {
 			if (String.IsNullOrEmpty(message))
 			{
-				Debugger.Break();
+				//Debugger.Break();
 			}
       DispatchLogMessage(new LogMessage(DateTime.Now, String.Format(message, args), ELogMessageType.Info));
     }
