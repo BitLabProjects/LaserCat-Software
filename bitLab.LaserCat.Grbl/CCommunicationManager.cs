@@ -43,9 +43,6 @@ namespace bitLab.LaserCat.Grbl
 		private byte mCurrentTxPacketId = 255;
 
 		//TODO Move to call stack 
-		public Int32 mPositionX;
-		public Int32 mPositionY;
-		public Int32 mPositionZ;
 		public Int32 mSegmentBufferCount;
 		public Int32 mHasMoreSegmentBuffer;
 
@@ -69,7 +66,7 @@ namespace bitLab.LaserCat.Grbl
 
 		public void Send(ECommands cmd)
 		{
-			Send(cmd, new List<byte>());
+			Send(cmd, null);
 		}
 
 		//TODO Inline on callers
@@ -199,8 +196,10 @@ namespace bitLab.LaserCat.Grbl
 				{
 					case EReadingState.WaitingFor_StartChar:
 						{
-							if (currChar == START_CHAR)
+							if (currChar == START_CHAR) {
 								mReadingState = EReadingState.WaitingFor_PacketID;
+                mReceiveBuffer = new Queue<byte>();
+              }
 							else
 								Logging.Log.LogError("Invalid start char: " + currChar);
 						}
@@ -209,19 +208,6 @@ namespace bitLab.LaserCat.Grbl
 						{
 							mRxPacketId = currChar;
 							mReadingState = EReadingState.WaitingFor_Length;
-
-							//if (currChar == mCurrentTxPacketId)
-							//	mReadingState = EReadingState.WaitingFor_Length;
-							//else
-							//{
-							//	mReadingState = EReadingState.WaitingFor_StartChar;
-							//	Logging.Log.LogError("Invalid RX Packet id: " + currChar);
-							//}
-
-							if (WriteDebugTxRxInfo)
-							{
-								Debug.WriteLine("RX Packet id=" + currChar);
-							}
 						}
 						break;
 					case EReadingState.WaitingFor_Length:
@@ -244,14 +230,6 @@ namespace bitLab.LaserCat.Grbl
 						{
 							mRxChecksum = currChar;
 							mReadingState = EReadingState.WaitingFor_EndChar;
-
-							//if (currChar == CheckSum(mBufferToCheck))
-							//	mReadingState = EReadingState.WaitingFor_EndChar;
-							//else
-							//{
-							//	mReadingState = EReadingState.WaitingFor_StartChar;
-							//	Logging.Log.LogError("Invalid RX checksum: " + currChar);
-							//}
 						}
 						break;
 					case EReadingState.WaitingFor_EndChar:
@@ -259,8 +237,7 @@ namespace bitLab.LaserCat.Grbl
 							mReadingState = EReadingState.WaitingFor_StartChar;
 							if (currChar == END_CHAR)
 							{
-								ParseCommand();
-								mReceiveBuffer = new Queue<byte>();
+                mRxMessageBuffer.Add(new CProtocolMessage(mRxPacketId, (ECommands)mReceiveBuffer.ElementAt(0), mReceiveBuffer.Skip(1).ToList()));
 							}
 							else
 								Logging.Log.LogError("Invalid RX End char: " + currChar);
@@ -268,54 +245,6 @@ namespace bitLab.LaserCat.Grbl
 						break;
 				}
 			}
-		}
-
-		private void ParseCommand()
-		{
-			//TODO
-			String message = "";
-			mLastCommandReceived = mReceiveBuffer.ElementAt(0);
-
-			if (WriteDebugTxRxInfo)
-			{
-				Debug.WriteLine("RX Data=" + string.Join(",", mReceiveBuffer));
-			}
-
-			if (mLastCommandSent == (byte)ECommands.ASKPOSITION_COMMAND)
-			{
-				if (mLastCommandReceived == (byte)ECommands.OKPOSITION_COMMAND)
-				{
-					message = mLastCommandSent + ":OK";
-					int index = 1;
-					//SB!Extracted and corrected, << has higher precedence than +, () needed
-					mPositionX = QueueReadInt32(mReceiveBuffer, ref index);
-					mPositionY = QueueReadInt32(mReceiveBuffer, ref index);
-					mPositionZ = QueueReadInt32(mReceiveBuffer, ref index);
-				}
-			}
-
-			if (mLastCommandSent == (byte)ECommands.ASKHASMORESEGMENTBUFFER_COMMAND && mLastCommandReceived == (byte)ECommands.OKSEGMENTBUFFER_COMMAND)
-			{
-				message = mLastCommandSent + ":OK";
-				mHasMoreSegmentBuffer = mReceiveBuffer.ElementAt(1);
-			}
-
-			if (mLastCommandReceived == (byte)ECommands.OK_COMMAND) message = mLastCommandSent + ":OK";
-			if (mLastCommandReceived == (byte)ECommands.ERROR_COMMAND) message = mLastCommandSent + ":ERRORE";
-
-			Logging.Log.LogInfo(message);
-			Debug.WriteLine("Adding Protocol Message to queue");
-			mRxMessageBuffer.Add(new CProtocolMessage(mRxPacketId, (ECommands)mReceiveBuffer.ElementAt(0), mReceiveBuffer.Skip(1).ToList()));
-		}
-
-		private int QueueReadInt32(Queue<byte> queue, ref int index)
-		{
-			var i = index;
-			index += 4;
-			return ((int)mReceiveBuffer.ElementAt(i)) +
-						 ((int)mReceiveBuffer.ElementAt(i + 1) << 8) +
-						 ((int)mReceiveBuffer.ElementAt(i + 2) << 16) +
-						 ((int)mReceiveBuffer.ElementAt(i + 3) << 24);
 		}
 	}
 }

@@ -42,6 +42,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CCommunicationManager.cs" />
+    <Compile Include="CHelpers.cs" />
     <Compile Include="CLaserCatHardwarePIC.cs" />
     <Compile Include="CLaserCatHardwareSimulator.cs" />
     <Compile Include="Config.cs" />

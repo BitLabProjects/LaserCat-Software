@@ -19,6 +19,8 @@ namespace bitLab.LaserCat.Grbl
     {
       this.ID = ID;
       this.Cmd = cmd;
+      if (data == null)
+        data = new List<byte>();
       this.Data = data;
       this.DataLength = (byte)data.Count;
       CalculateCrc();

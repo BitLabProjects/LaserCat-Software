@@ -79,9 +79,11 @@ namespace bitLab.LaserCat.Grbl
 		public int AskHasMoreSegmentBuffer()
 		{
 			Debug.WriteLine("AskHasMoreSegmentBuffer");
-      mComMan.Send(ECommands.ASKHASMORESEGMENTBUFFER_COMMAND);
-      Debug.WriteLine("AskHasMoreSegmentBuffer=" + mComMan.mHasMoreSegmentBuffer);
-      return mComMan.mHasMoreSegmentBuffer;
+      List<Byte> readData;
+      mComMan.SendAndRead(ECommands.ASKHASMORESEGMENTBUFFER_COMMAND, null, ECommands.OKSEGMENTBUFFER_COMMAND, out readData);
+      byte segmentBufferSpace = readData[0];
+      Debug.WriteLine("AskHasMoreSegmentBuffer=" + segmentBufferSpace);
+      return segmentBufferSpace;
 		}
 
 		public void StoreSegment(segment_t segment)
@@ -110,8 +112,14 @@ namespace bitLab.LaserCat.Grbl
 		public Int32[] AskPosition()
 		{
 			Debug.WriteLine("AskPosition");
-      mComMan.Send(ECommands.ASKPOSITION_COMMAND);
-      Int32[] position = { mComMan.mPositionX, mComMan.mPositionY, mComMan.mPositionZ };
+      List<Byte> readData;
+      mComMan.SendAndRead(ECommands.ASKPOSITION_COMMAND, null, ECommands.OKPOSITION_COMMAND, out readData);
+
+      int index = 0;
+      var position = new Int32[3];
+      position[0] = CHelpers.ListReadInt32(readData, ref index);
+      position[1] = CHelpers.ListReadInt32(readData, ref index);
+      position[2] = CHelpers.ListReadInt32(readData, ref index);
 			return position;
 		}
 
