@@ -106,7 +106,7 @@ namespace bitLab.LaserCat.Grbl
 
     public int GetSegmentBufferCount()
     {
-      return mComMan.mSegmentBufferCount;
+      return 0;
     }
 
 		public Int32[] AskPosition()

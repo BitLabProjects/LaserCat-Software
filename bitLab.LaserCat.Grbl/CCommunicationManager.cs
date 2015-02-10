@@ -33,21 +33,11 @@ namespace bitLab.LaserCat.Grbl
 	class CCommunicationManager
 	{
 		private const int REPLY_TIMEOUT_MSEC = 0;
-		private const bool WriteDebugTxRxInfo = false;
-
-		private SerialPort mSerialPort;
-
-		private byte mLastCommandReceived = 0;
-		public byte mLastCommandSent = 0;
-
-		private byte mCurrentTxPacketId = 255;
-
-		//TODO Move to call stack 
-		public Int32 mSegmentBufferCount;
-		public Int32 mHasMoreSegmentBuffer;
 
     private string mPortName;
-
+		private SerialPort mSerialPort;
+		private byte mCurrentTxPacketId = 255;
+    
 		private BlockingCollection<CProtocolMessage> mRxMessageBuffer;
 
 		public CCommunicationManager(String portName)
@@ -122,13 +112,6 @@ namespace bitLab.LaserCat.Grbl
 		private void mSendDo(CProtocolMessage msg)
 		{
       mMaybeOpenPort();
-			mLastCommandSent = (byte)msg.Cmd;
-
-			if (WriteDebugTxRxInfo)
-			{
-				Debug.WriteLine("TX Packet id=" + mCurrentTxPacketId);
-				Debug.WriteLine("TX Data=" + string.Join(",", msg.Data));
-			}
 
 			List<byte> rawMessage = msg.GetRawData();
 			rawMessage.Insert(0, START_CHAR);
