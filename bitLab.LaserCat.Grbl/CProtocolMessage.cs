@@ -33,6 +33,22 @@ namespace bitLab.LaserCat.Grbl
       }
     }
 
+    public bool VerifyCRC(out byte correctCRC)
+    {
+      correctCRC = GetCalculatedCrc();
+      return (CRC == correctCRC);
+    }
+
+    private byte GetCalculatedCrc()
+    {
+      var CRC = (byte)(ID ^ (DataLength + 1) ^ (byte)Cmd);
+      foreach (byte b in Data)
+      {
+        CRC = (byte)(CRC ^ b);
+      }
+      return CRC;
+    }
+
     internal List<byte> GetRawData()
     {
       List<byte> dataToSend = new List<byte>();

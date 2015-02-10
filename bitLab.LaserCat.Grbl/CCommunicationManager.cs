@@ -49,20 +49,15 @@ namespace bitLab.LaserCat.Grbl
 		public Int32 mSegmentBufferCount;
 		public Int32 mHasMoreSegmentBuffer;
 
+    private string mPortName;
+
 		private BlockingCollection<CProtocolMessage> mRxMessageBuffer;
 
 		public CCommunicationManager(String portName)
 		{
 			mRxMessageBuffer = new BlockingCollection<CProtocolMessage>();
 
-			var mPortName = portName;
-			mSerialPort = new SerialPort(mPortName);
-			mSerialPort.BaudRate = 115200;
-			mSerialPort.Parity = Parity.None;
-			mSerialPort.DataBits = 8;
-			mSerialPort.StopBits = StopBits.One;
-			mSerialPort.DataReceived += ReceiveFromPIC;
-			mSerialPort.Open();
+			mPortName = portName;
 
 			mReadingState = EReadingState.WaitingFor_StartChar;
 			mCharToRead = 0;
@@ -91,33 +86,25 @@ namespace bitLab.LaserCat.Grbl
 
 		public bool SendAndRead(ECommands cmd, List<Byte> data, ECommands matchCmd, out List<Byte> matchData)
 		{
-			CProtocolMessage rxMsg = null;
-			int i;
-
       var txMsg = new CProtocolMessage(mGetNextTxPacketId(), cmd, data);
-			for (i = 1; i <= 10; i++)
+			for (int i = 1; i <= 10; i++)
 			{
 				mSendDo(txMsg);
-				rxMsg = Read();
+        CProtocolMessage rxMsg = Read();
+        byte correctCRC;
         if (rxMsg.ID != mCurrentTxPacketId)
           Logging.Log.LogError("Received invalid packet ID, desired " + mCurrentTxPacketId + ", received " + rxMsg.ID);
-        else if (rxMsg.CRC != CheckSum(mBufferToCheck))
-          Logging.Log.LogError("Received invalid packet CRC, desired " + CheckSum(mBufferToCheck) + ", received " + rxMsg.CRC);
+        else if (!rxMsg.VerifyCRC(out correctCRC))
+          Logging.Log.LogError("Received invalid packet CRC, desired " + correctCRC + ", received " + rxMsg.CRC);
         else
-          break;
+        {
+          matchData = rxMsg.Data;
+          return true;
+        }
 			}
 
-			if (rxMsg == null)
-			{
-				matchData = null;
-				Logging.Log.LogError("Invalid Packet. ID: " + rxMsg.ID);
-			}
-			else
-				matchData = rxMsg.Data;
-
-			//TODO Wait for pic response
-			//TODO Match
-			return true;
+      matchData = null;
+			return false;
 		}
 
 		private CProtocolMessage Read()
@@ -137,8 +124,8 @@ namespace bitLab.LaserCat.Grbl
 
 		private void mSendDo(CProtocolMessage msg)
 		{
+      mMaybeOpenPort();
 			mLastCommandSent = (byte)msg.Cmd;
-			//Send((new byte[] { (byte)cmd }).Concat(data).ToArray());
 
 			if (WriteDebugTxRxInfo)
 			{
@@ -153,6 +140,20 @@ namespace bitLab.LaserCat.Grbl
 			Debug.WriteLine("SendToPic, Data=" + string.Join(",", rawMessage));
 			mSerialPort.Write(rawMessage.ToArray(), 0, rawMessage.Count);
 		}
+
+    private void mMaybeOpenPort()
+    {
+      if (mSerialPort == null)
+      {
+        mSerialPort = new SerialPort(mPortName);
+        mSerialPort.BaudRate = 115200;
+        mSerialPort.Parity = Parity.None;
+        mSerialPort.DataBits = 8;
+        mSerialPort.StopBits = StopBits.One;
+        mSerialPort.DataReceived += ReceiveFromPIC;
+        mSerialPort.Open();
+      }
+    }
 
 		private byte CheckSum(List<Byte> data)
 		{
@@ -175,7 +176,6 @@ namespace bitLab.LaserCat.Grbl
 		};
 		private EReadingState mReadingState;
 		private int mCharToRead;
-		List<byte> mBufferToCheck = new List<byte>();
 		private Queue<byte> mReceiveBuffer;
 
 		private byte mRxPacketId;
@@ -222,23 +222,18 @@ namespace bitLab.LaserCat.Grbl
 							{
 								Debug.WriteLine("RX Packet id=" + currChar);
 							}
-
-							mBufferToCheck.Clear();
-							mBufferToCheck.Add(mCurrentTxPacketId);
 						}
 						break;
 					case EReadingState.WaitingFor_Length:
 						{
 							mCharToRead = currChar;
 							mReadingState = EReadingState.Reading_Data;
-							mBufferToCheck.Add(currChar);
 						}
 						break;
 					case EReadingState.Reading_Data:
 						{
 							mCharToRead--;
 							mReceiveBuffer.Enqueue(buffer[i]);
-							mBufferToCheck.Add(buffer[i]);
 							if (mCharToRead == 0)
 							{
 								mReadingState = EReadingState.WaitingFor_CheckSum;
