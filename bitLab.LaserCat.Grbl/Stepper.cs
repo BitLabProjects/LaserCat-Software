@@ -112,11 +112,7 @@ namespace bitLab.LaserCat.Grbl
       prep = new st_prep_t();
       pl_blockIdx = -1;  // Planner block pointer used by segment buffer
 
-      
-
       st_generate_step_dir_invert_masks();
-
-      mLaserCatHardware.Reset();
 
       LaserCatSettings lcSettings = new LaserCatSettings();
       lcSettings.dir_invert_mask = settings.dir_invert_mask;

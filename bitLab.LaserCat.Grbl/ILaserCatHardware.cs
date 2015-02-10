@@ -67,7 +67,6 @@ namespace bitLab.LaserCat.Grbl
   public interface ILaserCatHardware
   {
     bool Connect(string COMPort);
-    void Init();
     void Reset();
     void SetSettings(LaserCatSettings settings);
     void WakeUp(bool setupAndEnableMotors);

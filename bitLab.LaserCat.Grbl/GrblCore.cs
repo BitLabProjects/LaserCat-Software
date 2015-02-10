@@ -112,8 +112,10 @@ namespace bitLab.LaserCat.Grbl
       else
         Log.LogError("Connection failed");
 
+      Log.LogInfo("Resetting machine...");
+      mHardware.Reset();
+
       Log.LogInfo("Sending initial settings...");
-      mHardware.Init();
       mGrbl.st_reset();
       Log.LogInfo("Done");
     }

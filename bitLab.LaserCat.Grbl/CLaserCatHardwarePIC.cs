@@ -18,9 +18,10 @@ namespace bitLab.LaserCat.Grbl
       mComMan = new CCommunicationManager(portName);
 		}
 
-		public void Init()
+    public bool Connect(string COMPort)
 		{
-      mComMan.Send(ECommands.INIT_COMMAND);
+      mComMan.Send(ECommands.CONNECT_COMMAND);
+      return true;
 		}
 
 		public void Reset()
@@ -127,11 +128,6 @@ namespace bitLab.LaserCat.Grbl
     {
       byte subByte = (byte)((param & (255 << 8 * index)) >> 8 * index);
       return subByte;
-    }
-
-    public bool Connect(string COMPort)
-    {
-			return true;
     }
   }
 }

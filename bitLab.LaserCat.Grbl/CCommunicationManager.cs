@@ -13,7 +13,7 @@ namespace bitLab.LaserCat.Grbl
 	public enum ECommands
 	{
 		//SEND COMMANDS
-		INIT_COMMAND = 1, //Ok
+		CONNECT_COMMAND = 1, //Ok
 		RESET_COMMAND = 2, //Ok
 		SETSETTINGS_COMMAND = 3, //Ok
 		WAKEUP_COMMAND = 4, //Ok
@@ -74,13 +74,24 @@ namespace bitLab.LaserCat.Grbl
 		public bool SendAndRead(ECommands cmd, List<Byte> data, ECommands matchCmd, out List<Byte> matchData)
 		{
       var txMsg = new CProtocolMessage(mGetNextTxPacketId(), cmd, data);
+
+      byte expectedResponsePacketId;
+      //The machine always responds with a packet Ok with id 255 upon reset
+      if (cmd == ECommands.RESET_COMMAND)
+      {
+        mCurrentTxPacketId = 255;
+        expectedResponsePacketId = 255;
+      }
+      else
+        expectedResponsePacketId = mCurrentTxPacketId;
+
 			for (int i = 1; i <= 10; i++)
 			{
 				mSendDo(txMsg);
         CProtocolMessage rxMsg = Read();
         byte correctCRC;
-        if (rxMsg.ID != mCurrentTxPacketId)
-          Logging.Log.LogError("Received invalid packet ID, desired " + mCurrentTxPacketId + ", received " + rxMsg.ID);
+        if (rxMsg.ID != expectedResponsePacketId)
+          Logging.Log.LogError("Received invalid packet ID, desired " + expectedResponsePacketId + ", received " + rxMsg.ID);
         else if (!rxMsg.VerifyCRC(out correctCRC))
           Logging.Log.LogError("Received invalid packet CRC, desired " + correctCRC + ", received " + rxMsg.CRC);
         else
