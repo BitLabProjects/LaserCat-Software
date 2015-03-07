@@ -10,69 +10,70 @@ using System.Collections.Concurrent;
 
 namespace bitLab.LaserCat.Grbl
 {
-	public enum ECommands
-	{
-		//SEND COMMANDS
-		CONNECT_COMMAND = 1, //Ok
-		RESET_COMMAND = 2, //Ok
-		SETSETTINGS_COMMAND = 3, //Ok
-		WAKEUP_COMMAND = 4, //Ok
-		GOIDLE_COMMAND = 5, //Ok
-		STOREBLOCK_COMMAND = 6, //Ok
-		STORESEGMENT_COMMAND = 7, //Ok
-		ASKPOSITION_COMMAND = 10, //OKPOSITION_COMMAND
-		ASKHASMORESEGMENTBUFFER_COMMAND = 12, //OKSEGMENTBUFFER_COMMAND
+  public enum ECommands
+  {
+    //SEND COMMANDS
+    CONNECT_COMMAND = 1, //Ok
+    RESET_COMMAND = 2, //Ok
+    SETSETTINGS_COMMAND = 3, //Ok
+    WAKEUP_COMMAND = 4, //Ok
+    GOIDLE_COMMAND = 5, //Ok
+    STOREBLOCK_COMMAND = 6, //Ok
+    STORESEGMENT_COMMAND = 7, //Ok
+    ASKPOSITION_COMMAND = 10, //OKPOSITION_COMMAND
+    ASKHASMORESEGMENTBUFFER_COMMAND = 12, //OKSEGMENTBUFFER_COMMAND
 
-		//RECEIVE COMMANDS
-		OK_COMMAND = 8,
-		ERROR_COMMAND = 9,
-		OKPOSITION_COMMAND = 11,
-		OKSEGMENTBUFFER_COMMAND = 13
-	}
+    //RECEIVE COMMANDS
+    OK_COMMAND = 8,
+    ERROR_COMMAND = 9,
+    OKPOSITION_COMMAND = 11,
+    OKSEGMENTBUFFER_COMMAND = 13,
+    OKSTORESEGMENT_COMMAND = 14
+  }
 
-	class CCommunicationManager
-	{
-		private const int REPLY_TIMEOUT_MSEC = 0;
+  class CCommunicationManager
+  {
+    private const int REPLY_TIMEOUT_MSEC = 0;
 
     private string mPortName;
-		private SerialPort mSerialPort;
-		private byte mCurrentTxPacketId = 255;
-    
-		private BlockingCollection<CProtocolMessage> mRxMessageBuffer;
+    private SerialPort mSerialPort;
+    private byte mCurrentTxPacketId = 255;
 
-		public CCommunicationManager(String portName)
-		{
-			mRxMessageBuffer = new BlockingCollection<CProtocolMessage>();
+    private BlockingCollection<CProtocolMessage> mRxMessageBuffer;
 
-			mPortName = portName;
+    public CCommunicationManager(String portName)
+    {
+      mRxMessageBuffer = new BlockingCollection<CProtocolMessage>();
 
-			mReadingState = EReadingState.WaitingFor_StartChar;
-			mCharToRead = 0;
-			mReceiveBuffer = new Queue<byte>();
-		}
+      mPortName = portName;
 
-		private const byte START_CHAR = 35; //#
-		private const byte END_CHAR = 36; //$
+      mReadingState = EReadingState.WaitingFor_StartChar;
+      mCharToRead = 0;
+      mReceiveBuffer = new Queue<byte>();
+    }
 
-		public void Send(ECommands cmd)
-		{
-			Send(cmd, null);
-		}
+    private const byte START_CHAR = 35; //#
+    private const byte END_CHAR = 36; //$
 
-		//TODO Inline on callers
-		public void Send(ECommands cmd, List<Byte> data)
-		{
-			SendAndMatch(cmd, data, ECommands.OK_COMMAND);
-		}
+    public void Send(ECommands cmd)
+    {
+      Send(cmd, null);
+    }
 
-		public void SendAndMatch(ECommands cmd, List<Byte> data, ECommands matchCmd)
-		{
-			List<Byte> readData;
-			SendAndRead(cmd, data, matchCmd, out readData);
-		}
+    //TODO Inline on callers
+    public void Send(ECommands cmd, List<Byte> data)
+    {
+      SendAndMatch(cmd, data, ECommands.OK_COMMAND);
+    }
 
-		public bool SendAndRead(ECommands cmd, List<Byte> data, ECommands matchCmd, out List<Byte> matchData)
-		{
+    public void SendAndMatch(ECommands cmd, List<Byte> data, ECommands matchCmd)
+    {
+      List<Byte> readData;
+      SendAndRead(cmd, data, matchCmd, out readData);
+    }
+
+    public bool SendAndRead(ECommands cmd, List<Byte> data, ECommands matchCmd, out List<Byte> matchData)
+    {
       var txMsg = new CProtocolMessage(mGetNextTxPacketId(), cmd, data);
 
       byte expectedResponsePacketId;
@@ -85,33 +86,35 @@ namespace bitLab.LaserCat.Grbl
       else
         expectedResponsePacketId = mCurrentTxPacketId;
 
-			for (int i = 1; i <= 10; i++)
-			{
-				mSendDo(txMsg);
+      for (int i = 1; i <= 10; i++)
+      {
+        mSendDo(txMsg);
         CProtocolMessage rxMsg = Read();
         byte correctCRC;
         if (rxMsg.ID != expectedResponsePacketId)
           Logging.Log.LogError("Received invalid packet ID, desired " + expectedResponsePacketId + ", received " + rxMsg.ID);
         else if (!rxMsg.VerifyCRC(out correctCRC))
           Logging.Log.LogError("Received invalid packet CRC, desired " + correctCRC + ", received " + rxMsg.CRC);
+        else if (rxMsg.Cmd != matchCmd)
+          Logging.Log.LogError("Received invalid response command, desired " + matchCmd.ToString() + ", received " + rxMsg.Cmd.ToString());
         else
         {
           matchData = rxMsg.Data;
           return true;
         }
-			}
+      }
 
       matchData = null;
-			return false;
-		}
+      return false;
+    }
 
-		private CProtocolMessage Read()
-		{
-			Debug.WriteLine("Waiting event");
-			var msg = mRxMessageBuffer.Take();
-			Debug.WriteLine("Waiting completed");
-			return msg;
-		}
+    private CProtocolMessage Read()
+    {
+      Debug.WriteLine("Waiting event");
+      var msg = mRxMessageBuffer.Take();
+      Debug.WriteLine("Waiting completed");
+      return msg;
+    }
 
     private byte mGetNextTxPacketId()
     {
@@ -120,17 +123,17 @@ namespace bitLab.LaserCat.Grbl
       return mCurrentTxPacketId;
     }
 
-		private void mSendDo(CProtocolMessage msg)
-		{
+    private void mSendDo(CProtocolMessage msg)
+    {
       mMaybeOpenPort();
 
-			List<byte> rawMessage = msg.GetRawData();
-			rawMessage.Insert(0, START_CHAR);
-			rawMessage.Add(END_CHAR);
+      List<byte> rawMessage = msg.GetRawData();
+      rawMessage.Insert(0, START_CHAR);
+      rawMessage.Add(END_CHAR);
 
-			Debug.WriteLine("SendToPic, Data=" + string.Join(",", rawMessage));
-			mSerialPort.Write(rawMessage.ToArray(), 0, rawMessage.Count);
-		}
+      Debug.WriteLine("SendToPic, Data=" + string.Join(",", rawMessage));
+      mSerialPort.Write(rawMessage.ToArray(), 0, rawMessage.Count);
+    }
 
     private void mMaybeOpenPort()
     {
@@ -146,99 +149,100 @@ namespace bitLab.LaserCat.Grbl
       }
     }
 
-		private byte CheckSum(List<Byte> data)
-		{
-			byte sum = 0;
-			foreach (byte d in data)
-			{
-				sum = (byte)(sum ^ d);
-			}
-			return sum;
-		}
+    private byte CheckSum(List<Byte> data)
+    {
+      byte sum = 0;
+      foreach (byte d in data)
+      {
+        sum = (byte)(sum ^ d);
+      }
+      return sum;
+    }
 
-		private enum EReadingState
-		{
-			WaitingFor_StartChar,
-			WaitingFor_PacketID,
-			WaitingFor_Length,
-			Reading_Data,
-			WaitingFor_CheckSum,
-			WaitingFor_EndChar,
-		};
-		private EReadingState mReadingState;
-		private int mCharToRead;
-		private Queue<byte> mReceiveBuffer;
+    private enum EReadingState
+    {
+      WaitingFor_StartChar,
+      WaitingFor_PacketID,
+      WaitingFor_Length,
+      Reading_Data,
+      WaitingFor_CheckSum,
+      WaitingFor_EndChar,
+    };
+    private EReadingState mReadingState;
+    private int mCharToRead;
+    private Queue<byte> mReceiveBuffer;
 
-		private byte mRxPacketId;
-		private byte mRxChecksum;
+    private byte mRxPacketId;
+    private byte mRxChecksum;
 
-		private void ReceiveFromPIC(object sender, SerialDataReceivedEventArgs e)
-		{
-			SerialPort sp = (SerialPort)sender;
-			int bufferLength = sp.BytesToRead;
-			byte[] buffer = new byte[bufferLength];
-			sp.Read(buffer, 0, bufferLength);
+    private void ReceiveFromPIC(object sender, SerialDataReceivedEventArgs e)
+    {
+      SerialPort sp = (SerialPort)sender;
+      int bufferLength = sp.BytesToRead;
+      byte[] buffer = new byte[bufferLength];
+      sp.Read(buffer, 0, bufferLength);
 
-			Debug.WriteLine("ReceiveFromPic, data=" + string.Join(",", buffer));
+      Debug.WriteLine("ReceiveFromPic, data=" + string.Join(",", buffer));
 
-			int i;
-			for (i = 0; i < bufferLength; i++)
-			{
-				byte currChar = buffer[i];
+      int i;
+      for (i = 0; i < bufferLength; i++)
+      {
+        byte currChar = buffer[i];
 
-				switch (mReadingState)
-				{
-					case EReadingState.WaitingFor_StartChar:
-						{
-							if (currChar == START_CHAR) {
-								mReadingState = EReadingState.WaitingFor_PacketID;
+        switch (mReadingState)
+        {
+          case EReadingState.WaitingFor_StartChar:
+            {
+              if (currChar == START_CHAR)
+              {
+                mReadingState = EReadingState.WaitingFor_PacketID;
                 mReceiveBuffer = new Queue<byte>();
               }
-							else
-								Logging.Log.LogError("Invalid start char: " + currChar);
-						}
-						break;
-					case EReadingState.WaitingFor_PacketID:
-						{
-							mRxPacketId = currChar;
-							mReadingState = EReadingState.WaitingFor_Length;
-						}
-						break;
-					case EReadingState.WaitingFor_Length:
-						{
-							mCharToRead = currChar;
-							mReadingState = EReadingState.Reading_Data;
-						}
-						break;
-					case EReadingState.Reading_Data:
-						{
-							mCharToRead--;
-							mReceiveBuffer.Enqueue(buffer[i]);
-							if (mCharToRead == 0)
-							{
-								mReadingState = EReadingState.WaitingFor_CheckSum;
-							}
-						}
-						break;
-					case EReadingState.WaitingFor_CheckSum:
-						{
-							mRxChecksum = currChar;
-							mReadingState = EReadingState.WaitingFor_EndChar;
-						}
-						break;
-					case EReadingState.WaitingFor_EndChar:
-						{
-							mReadingState = EReadingState.WaitingFor_StartChar;
-							if (currChar == END_CHAR)
-							{
+              else
+                Logging.Log.LogError("Invalid start char: " + currChar);
+            }
+            break;
+          case EReadingState.WaitingFor_PacketID:
+            {
+              mRxPacketId = currChar;
+              mReadingState = EReadingState.WaitingFor_Length;
+            }
+            break;
+          case EReadingState.WaitingFor_Length:
+            {
+              mCharToRead = currChar;
+              mReadingState = EReadingState.Reading_Data;
+            }
+            break;
+          case EReadingState.Reading_Data:
+            {
+              mCharToRead--;
+              mReceiveBuffer.Enqueue(buffer[i]);
+              if (mCharToRead == 0)
+              {
+                mReadingState = EReadingState.WaitingFor_CheckSum;
+              }
+            }
+            break;
+          case EReadingState.WaitingFor_CheckSum:
+            {
+              mRxChecksum = currChar;
+              mReadingState = EReadingState.WaitingFor_EndChar;
+            }
+            break;
+          case EReadingState.WaitingFor_EndChar:
+            {
+              mReadingState = EReadingState.WaitingFor_StartChar;
+              if (currChar == END_CHAR)
+              {
                 mRxMessageBuffer.Add(new CProtocolMessage(mRxPacketId, (ECommands)mReceiveBuffer.ElementAt(0), mReceiveBuffer.Skip(1).ToList()));
-							}
-							else
-								Logging.Log.LogError("Invalid RX End char: " + currChar);
-						}
-						break;
-				}
-			}
-		}
-	}
+              }
+              else
+                Logging.Log.LogError("Invalid RX End char: " + currChar);
+            }
+            break;
+        }
+      }
+    }
+  }
 }

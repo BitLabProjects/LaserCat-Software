@@ -151,12 +151,16 @@ namespace bitLab.LaserCat.Grbl
        Currently, the segment buffer conservatively holds roughly up to 40-50 msec of steps.
        NOTE: Computation units are in steps, millimeters, and minutes.
     */
-    public void st_prep_buffer()
+    public bool st_prep_buffer()
     {
       int bufferSpace = mLaserCatHardware.AskHasMoreSegmentBuffer();
       //Logging.Log.LogInfo("-------- Sending " + bufferSpace + " segments");
+      int i = 1;
       while (bufferSpace > 0)
       {
+        i++;
+        if (i == 50)
+          return true;
         bufferSpace--;
       //while (mLaserCatHardware.AskHasMoreSegmentBuffer() > 0) {
 
@@ -164,7 +168,7 @@ namespace bitLab.LaserCat.Grbl
         if (pl_blockIdx == -1)
         {
           pl_blockIdx = plan_get_current_block(); // Query planner for a queued block
-          if (pl_blockIdx == -1) { return; } // No planner blocks. Exit.
+          if (pl_blockIdx == -1) { return false; } // No planner blocks. Exit.
 
           // Check if the segment buffer completed the last planner block. If so, load the Bresenham
           // data for the block. If not, we are still mid-block and the velocity profile was updated. 
@@ -432,7 +436,7 @@ namespace bitLab.LaserCat.Grbl
             block_buffer[pl_blockIdx].millimeters = prep.steps_remaining / prep.step_per_mm; // Update with full steps.
             plan_cycle_reinitialize();
             sys.setState(STATE_QUEUED);
-            return; // Segment not generated, but current step data still retained.
+            return false; // Segment not generated, but current step data still retained.
           }
         }
 
@@ -495,8 +499,9 @@ namespace bitLab.LaserCat.Grbl
         }
 
         // Segment complete! Increment segment buffer indices.
-        mLaserCatHardware.StoreSegment(segment_buffer);
-
+        //mLaserCatHardware.StoreSegment(segment_buffer);
+        bufferSpace = mLaserCatHardware.StoreSegment(segment_buffer);
+        
         // Setup initial conditions for next segment.
         if (mm_remaining > prep.mm_complete)
         {
@@ -518,7 +523,7 @@ namespace bitLab.LaserCat.Grbl
             plan_cycle_reinitialize();
             sys.setState(STATE_QUEUED); // End cycle.        
 
-            return; // Bail!
+            return false; // Bail!
             // TODO: Try to move QUEUED setting into cycle re-initialize.
 
           }
@@ -532,6 +537,7 @@ namespace bitLab.LaserCat.Grbl
         }
 
       }
+      return false;
     }
 
 

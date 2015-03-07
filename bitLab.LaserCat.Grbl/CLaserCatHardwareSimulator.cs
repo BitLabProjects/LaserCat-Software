@@ -134,7 +134,7 @@ namespace bitLab.LaserCat.Grbl
       }
     }
 
-    public void StoreSegment(segment_t segment)
+    public byte StoreSegment(segment_t segment)
     {
       lock (this)
       {
@@ -145,6 +145,7 @@ namespace bitLab.LaserCat.Grbl
         recalcSegmentBufferCount();
       }
       RaiseStepperSegmentBufferChanged();
+      return (byte)AskHasMoreSegmentBuffer();
     }
 
     public void SetSettings(LaserCatSettings settings)

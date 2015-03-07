@@ -9,28 +9,28 @@ using System.Diagnostics;
 
 namespace bitLab.LaserCat.Grbl
 {
-	public class CLaserCatHardwarePIC : ILaserCatHardware
-	{
+  public class CLaserCatHardwarePIC : ILaserCatHardware
+  {
     private CCommunicationManager mComMan;
 
-		public CLaserCatHardwarePIC(string portName)
-		{
+    public CLaserCatHardwarePIC(string portName)
+    {
       mComMan = new CCommunicationManager(portName);
-		}
+    }
 
     public bool Connect(string COMPort)
-		{
+    {
       mComMan.Send(ECommands.CONNECT_COMMAND);
       return true;
-		}
+    }
 
-		public void Reset()
-		{
+    public void Reset()
+    {
       mComMan.Send(ECommands.RESET_COMMAND);
-		}
+    }
 
-		public void SetSettings(LaserCatSettings settings)
-		{
+    public void SetSettings(LaserCatSettings settings)
+    {
       var data = new List<byte>() { settings.pulse_microseconds,
                       settings.step_invert_mask,
                       settings.dir_invert_mask, 
@@ -39,80 +39,85 @@ namespace bitLab.LaserCat.Grbl
                       settings.step_port_invert_mask,
                       settings.dir_port_invert_mask};
       mComMan.Send(ECommands.SETSETTINGS_COMMAND, data);
-		}
+    }
 
-		public void WakeUp(bool setupAndEnableMotors)
-		{
-      var data = new List<byte>() {  Convert.ToByte(setupAndEnableMotors) };
+    public void WakeUp(bool setupAndEnableMotors)
+    {
+      var data = new List<byte>() { Convert.ToByte(setupAndEnableMotors) };
       mComMan.Send(ECommands.WAKEUP_COMMAND, data);
-		}
+    }
 
-		public void GoIdle(bool delayAndDisableSteppers)
-		{
+    public void GoIdle(bool delayAndDisableSteppers)
+    {
       var data = new List<byte>() { Convert.ToByte(delayAndDisableSteppers) };
       mComMan.Send(ECommands.GOIDLE_COMMAND, data);
-		}
+    }
 
-		public void StorePlannerBlock(byte blockIndex, st_block_t block)
-		{
-			List<byte> dataList = new List<byte>();
+    public void StorePlannerBlock(byte blockIndex, st_block_t block)
+    {
+      List<byte> dataList = new List<byte>();
 
-			dataList.Add(blockIndex);
-			dataList.Add(block.direction_bits);
+      dataList.Add(blockIndex);
+      dataList.Add(block.direction_bits);
 
-			int i, j;
-			for (i = 0; i <= 2; i++)
-			{
-				for (j = 0; j <= 3; j++)
-				{
-					dataList.Add(mGetSubByteByIndex(Convert.ToInt32(block.steps[i]), j));
-				}
-			}
+      int i, j;
+      for (i = 0; i <= 2; i++)
+      {
+        for (j = 0; j <= 3; j++)
+        {
+          dataList.Add(mGetSubByteByIndex(Convert.ToInt32(block.steps[i]), j));
+        }
+      }
 
-			for (j = 0; j <= 3; j++)
-			{
-				dataList.Add(mGetSubByteByIndex(Convert.ToInt32(block.step_event_count), j));
-			}
+      for (j = 0; j <= 3; j++)
+      {
+        dataList.Add(mGetSubByteByIndex(Convert.ToInt32(block.step_event_count), j));
+      }
 
       mComMan.Send(ECommands.STOREBLOCK_COMMAND, dataList);
-		}
+    }
 
-		public int AskHasMoreSegmentBuffer()
-		{
-			Debug.WriteLine("AskHasMoreSegmentBuffer");
+    public int AskHasMoreSegmentBuffer()
+    {
+      Debug.WriteLine("AskHasMoreSegmentBuffer");
       List<Byte> readData;
       mComMan.SendAndRead(ECommands.ASKHASMORESEGMENTBUFFER_COMMAND, null, ECommands.OKSEGMENTBUFFER_COMMAND, out readData);
       byte segmentBufferSpace = readData[0];
       Debug.WriteLine("AskHasMoreSegmentBuffer=" + segmentBufferSpace);
       return segmentBufferSpace;
-		}
+    }
 
-		public void StoreSegment(segment_t segment)
-		{
-			byte n_stepHI = mGetSubByteByIndex(Convert.ToInt32(segment.n_step), 1);
-			byte n_stepLO = mGetSubByteByIndex(Convert.ToInt32(segment.n_step), 0);
+    //public void StoreSegment(segment_t segment)
+    public byte StoreSegment(segment_t segment)
+    {
+      byte n_stepHI = mGetSubByteByIndex(Convert.ToInt32(segment.n_step), 1);
+      byte n_stepLO = mGetSubByteByIndex(Convert.ToInt32(segment.n_step), 0);
 
       Debug.WriteLine("StoreSegment, cycles_per_tick={0}, stepIdx={1}, steps={2}", segment.cycles_per_tick, segment.st_block_index, segment.n_step);
-			byte cycles_per_tickHI = mGetSubByteByIndex(Convert.ToInt32(segment.cycles_per_tick), 1);
-			byte cycles_per_tickLO = mGetSubByteByIndex(Convert.ToInt32(segment.cycles_per_tick), 0);
+      byte cycles_per_tickHI = mGetSubByteByIndex(Convert.ToInt32(segment.cycles_per_tick), 1);
+      byte cycles_per_tickLO = mGetSubByteByIndex(Convert.ToInt32(segment.cycles_per_tick), 0);
 
       var data = new List<byte>() { n_stepLO, n_stepHI,
                       segment.st_block_index,
                       cycles_per_tickLO, cycles_per_tickHI, 
                       segment.amass_level,
                       segment.prescaler};
-			Debug.WriteLine("StoreSegment");
-      mComMan.Send(ECommands.STORESEGMENT_COMMAND, data);
-		}
+      Debug.WriteLine("StoreSegment");
+
+      List<byte> readData;
+      //mComMan.Send(ECommands.STORESEGMENT_COMMAND, data);
+      mComMan.SendAndRead(ECommands.STORESEGMENT_COMMAND, data, ECommands.OKSTORESEGMENT_COMMAND, out readData);
+      return readData[0];
+    }
 
     public int GetSegmentBufferCount()
     {
       return 0;
     }
 
-		public Int32[] AskPosition()
-		{
-			Debug.WriteLine("AskPosition");
+    public Int32[] AskPosition()
+    {
+      Debug.WriteLine("AskPosition");
       List<Byte> readData;
       mComMan.SendAndRead(ECommands.ASKPOSITION_COMMAND, null, ECommands.OKPOSITION_COMMAND, out readData);
 
@@ -121,8 +126,8 @@ namespace bitLab.LaserCat.Grbl
       position[0] = CHelpers.ListReadInt32(readData, ref index);
       position[1] = CHelpers.ListReadInt32(readData, ref index);
       position[2] = CHelpers.ListReadInt32(readData, ref index);
-			return position;
-		}
+      return position;
+    }
 
     private byte mGetSubByteByIndex(int param, int index)
     {

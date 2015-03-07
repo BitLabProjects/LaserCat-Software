@@ -55,7 +55,7 @@ namespace bitLab.LaserCat.Grbl
     {
       switch (msg.Message)
       {
-        case EGrblMessage.LoadGCode: 
+        case EGrblMessage.LoadGCode:
           loadGCode((List<string>)msg.Param0); break;
         case EGrblMessage.ConnectToMachine:
           connectToMachine((TMachineConnectionSettings)msg.Param0); break;
@@ -133,9 +133,11 @@ namespace bitLab.LaserCat.Grbl
       Log.LogInfo("Done");
 
       Log.LogInfo("Streaming stepper data...");
-      while (mGrbl.plan_get_block_buffer_count() > 0) {
-				System.Threading.Thread.Sleep(100);
-        mGrbl.st_prep_buffer();
+      while (mGrbl.plan_get_block_buffer_count() > 0)
+      {
+        if (!mGrbl.st_prep_buffer())
+          System.Threading.Thread.Sleep(100);
+
         var newPos = mHardware.AskPosition();
         for (int i = 0; i < newPos.Length; i++)
           mGrbl.sys.position[i] = newPos[i];
