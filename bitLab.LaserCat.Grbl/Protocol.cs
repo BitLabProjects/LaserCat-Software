@@ -14,6 +14,7 @@ namespace bitLab.LaserCat.Grbl
     ConnectToMachine,
     Play,
     WakeUp,
+    SetSpeed,
   }
   public struct TMachineConnectionSettings
   {

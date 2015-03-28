@@ -41,6 +41,16 @@ namespace bitLab.LaserCat.ViewModels
     public CDelegateCommand GrblStart { get; set; }
     public CDelegateCommand Connect { get; set; }
     public CDelegateCommand Play { get; set; }
-    public CDelegateCommand WakeUp { get; set; } 
+    public CDelegateCommand WakeUp { get; set; }
+
+    private Double mMotorSpeed;
+    public Double MotorSpeed
+    {
+      get { return mMotorSpeed; }
+      set {
+        if (SetAndNotify(ref mMotorSpeed, value))
+          CLaserCat.Instance.SetSpeed(value);
+      }
+    }
   }
 }
