@@ -61,6 +61,8 @@ namespace bitLab.LaserCat.Grbl
           connectToMachine((TMachineConnectionSettings)msg.Param0); break;
         case EGrblMessage.Play:
           play(); break;
+				case EGrblMessage.WakeUp:
+					wakeup(); break;
       }
     }
     #endregion
@@ -144,6 +146,14 @@ namespace bitLab.LaserCat.Grbl
       }
       Log.LogInfo("Done");
     }
+
+		private void wakeup()
+		{
+			Log.LogInfo("--- wakeup - {0} ---", DateTime.Now.ToShortTimeString());
+			Log.LogInfo("Issuing play command...");
+			mHardware.WakeUp(true);
+			Log.LogInfo("Done");			
+		}
 
     #endregion
   }

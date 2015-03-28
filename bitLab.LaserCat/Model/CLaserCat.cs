@@ -82,6 +82,11 @@ namespace bitLab.LaserCat.Model
       mGrbl.SendMessage(EGrblMessage.Play, null);
     }
 
+		public void WakeUp()
+		{
+			mGrbl.SendMessage(EGrblMessage.WakeUp, null);
+		}
+
     #region Singleton
     private static CLaserCat mInstance;
     public static CLaserCat Instance { get { return mInstance; } }
