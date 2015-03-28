@@ -134,6 +134,13 @@ namespace bitLab.LaserCat.Grbl
       byte subByte = (byte)((param & (255 << 8 * index)) >> 8 * index);
       return subByte;
     }
+
+		public void SetSpeed(int value)
+		{
+			var data = new List<byte>() { (byte)value };
+			mComMan.SendAndMatch(ECommands.SETSPEED_COMMAND, data, ECommands.OK_COMMAND);
+		}
+
   }
 }
 

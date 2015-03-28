@@ -62,9 +62,12 @@ namespace bitLab.LaserCat.Grbl
         case EGrblMessage.Play:
           play(); break;
 				case EGrblMessage.WakeUp:
-					wakeup(); break;
+					wakeUp(); break;
+				case EGrblMessage.SetSpeed:
+					setSpeed((int)msg.Param0); break;
       }
     }
+				
     #endregion
 
     #region Message handlers
@@ -147,12 +150,18 @@ namespace bitLab.LaserCat.Grbl
       Log.LogInfo("Done");
     }
 
-		private void wakeup()
+		private void wakeUp()
 		{
 			Log.LogInfo("--- wakeup - {0} ---", DateTime.Now.ToShortTimeString());
 			Log.LogInfo("Issuing play command...");
 			mHardware.WakeUp(true);
 			Log.LogInfo("Done");			
+		}
+
+		private void setSpeed(int value)
+		{
+			Log.LogInfo("Speed: {0}", (int)value);
+			mHardware.SetSpeed(value);
 		}
 
     #endregion

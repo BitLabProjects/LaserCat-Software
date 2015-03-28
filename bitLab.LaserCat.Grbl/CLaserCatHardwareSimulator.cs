@@ -153,6 +153,11 @@ namespace bitLab.LaserCat.Grbl
       this.settings = settings;
     }
 
+		public void SetSpeed(int value)
+		{
+			throw new NotImplementedException();
+		}
+
     public void WakeUp(bool setupAndEnableMotors)
     {
       // Enable stepper drivers.

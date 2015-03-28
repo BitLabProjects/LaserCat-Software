@@ -79,13 +79,22 @@ namespace bitLab.LaserCat.Model
 
     public void Play()
     {
+			if (!CheckGrblIsStarted()) return;
       mGrbl.SendMessage(EGrblMessage.Play, null);
     }
 
 		public void WakeUp()
 		{
+			if (!CheckGrblIsStarted()) return;
 			mGrbl.SendMessage(EGrblMessage.WakeUp, null);
 		}
+
+		public void SetSpeed(double value)
+		{
+			if (!CheckGrblIsStarted()) return;
+			mGrbl.SendMessage(EGrblMessage.SetSpeed, (int)value);
+		}
+
 
     #region Singleton
     private static CLaserCat mInstance;

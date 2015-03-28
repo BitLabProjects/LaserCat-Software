@@ -77,5 +77,6 @@ namespace bitLab.LaserCat.Grbl
     byte StoreSegment(segment_t segment);
 		Int32[] AskPosition();
     Int32 GetSegmentBufferCount();
+		void SetSpeed(int value);
   }
 }
