@@ -37,8 +37,8 @@
       <Button Content="Connect" Command="{Binding Connect}" Margin="0 10 0 5" />
       <Button Content="Play" Command="{Binding Play}" />
       <Button Content="WakeUp" Command="{Binding WakeUp}" />
-			<Slider Minimum="1" Maximum="65535" Value="{Binding MotorSpeed}" />
-			<Slider Minimum="1" Maximum="65535" Value="{Binding TimerPeriod}" />
+			<Slider Minimum="1" Maximum="200" Value="{Binding MotorSpeed}" />
+      <Slider Minimum="1" Maximum="65500" Value="{Binding TimerPeriod}" />
     </StackPanel>
   </Grid>
 </Window>

@@ -167,3 +167,11 @@ namespace bitLab.LaserCat.Grbl
 		#endregion
 	}
 }
+
+/*
+Period 65280
+Max speed 41
+
+Period 65500
+Max speed 157
+ * */

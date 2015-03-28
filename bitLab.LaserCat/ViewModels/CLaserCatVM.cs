@@ -43,7 +43,7 @@ namespace bitLab.LaserCat.ViewModels
 		public CDelegateCommand Play { get; set; }
 		public CDelegateCommand WakeUp { get; set; }
 
-		private Double mMotorSpeed;
+    private Double mMotorSpeed = 128;
 		public Double MotorSpeed
 		{
 			get { return mMotorSpeed; }
@@ -54,7 +54,7 @@ namespace bitLab.LaserCat.ViewModels
 			}
 		}
 
-		private Double mTimerPeriod;
+    private Double mTimerPeriod = 65280;
 		public Double TimerPeriod
 		{
 			get { return mTimerPeriod; }
