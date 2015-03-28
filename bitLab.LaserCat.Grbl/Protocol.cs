@@ -13,6 +13,7 @@ namespace bitLab.LaserCat.Grbl
     LoadGCode,
     ConnectToMachine,
     Play,
+    WakeUp,
   }
   public struct TMachineConnectionSettings
   {
