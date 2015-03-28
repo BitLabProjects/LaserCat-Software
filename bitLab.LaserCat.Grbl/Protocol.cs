@@ -21,6 +21,12 @@ namespace bitLab.LaserCat.Grbl
     public string COMPort;
   }
 
+	public struct TMotorSpeedSettings
+	{
+		public int SpeedValue;
+		public int TimerPeriod;
+	}
+
   internal struct TGrblMessage
   {
     public EGrblMessage Message;

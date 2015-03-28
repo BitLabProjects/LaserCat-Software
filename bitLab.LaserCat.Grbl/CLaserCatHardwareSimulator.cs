@@ -153,7 +153,7 @@ namespace bitLab.LaserCat.Grbl
       this.settings = settings;
     }
 
-		public void SetSpeed(int value)
+		public void SetSpeed(int speedValue, int timerPeriod)
 		{
 			throw new NotImplementedException();
 		}

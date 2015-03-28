@@ -89,10 +89,11 @@ namespace bitLab.LaserCat.Model
 			mGrbl.SendMessage(EGrblMessage.WakeUp, null);
 		}
 
-		public void SetSpeed(double value)
+		public void SetSpeed(double speedValue, double timerPeriod)
 		{
 			if (!CheckGrblIsStarted()) return;
-			mGrbl.SendMessage(EGrblMessage.SetSpeed, (int)value);
+			mGrbl.SendMessage(EGrblMessage.SetSpeed, new TMotorSpeedSettings() { SpeedValue = (int)speedValue,
+																																					 TimerPeriod = (int)timerPeriod });
 		}
 
 

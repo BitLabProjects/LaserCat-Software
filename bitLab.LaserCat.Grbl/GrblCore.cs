@@ -7,163 +7,163 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  internal class GrblCore
-  {
-    private GrblFirmware mGrbl;
-    private GCode mGCode;
-    private ILaserCatHardware mHardware;
-    public GrblCore(GrblFirmware grbl, GCode gcode, ILaserCatHardware hardware)
-    {
-      mGrbl = grbl;
-      mGCode = gcode;
-      mHardware = hardware;
-      mIsConnected = false;
-    }
+	internal class GrblCore
+	{
+		private GrblFirmware mGrbl;
+		private GCode mGCode;
+		private ILaserCatHardware mHardware;
+		public GrblCore(GrblFirmware grbl, GCode gcode, ILaserCatHardware hardware)
+		{
+			mGrbl = grbl;
+			mGCode = gcode;
+			mHardware = hardware;
+			mIsConnected = false;
+		}
 
-    private enum EGrblCoreState
-    {
-      Idle,
-      GCodeLoaded
-    }
-    private EGrblCoreState mState;
-    private bool mIsConnected;
+		private enum EGrblCoreState
+		{
+			Idle,
+			GCodeLoaded
+		}
+		private EGrblCoreState mState;
+		private bool mIsConnected;
 
-    public void initGrblState()
-    {
-      changeState(EGrblCoreState.Idle);
-      Log.LogInfo("Grbl initialized");
-    }
+		public void initGrblState()
+		{
+			changeState(EGrblCoreState.Idle);
+			Log.LogInfo("Grbl initialized");
+		}
 
-    #region Utilities
-    private void changeState(EGrblCoreState newState)
-    {
-      mState = newState;
-      Log.LogInfo("State changed to " + newState.ToString());
-    }
+		#region Utilities
+		private void changeState(EGrblCoreState newState)
+		{
+			mState = newState;
+			Log.LogInfo("State changed to " + newState.ToString());
+		}
 
-    private bool checkAllowedEntryState(EGrblCoreState[] allowedStates)
-    {
-      if (allowedStates.Contains(mState))
-        return true;
-      Log.LogInfo("Operation not allowed in this state");
-      return false;
-    }
-    #endregion
+		private bool checkAllowedEntryState(EGrblCoreState[] allowedStates)
+		{
+			if (allowedStates.Contains(mState))
+				return true;
+			Log.LogInfo("Operation not allowed in this state");
+			return false;
+		}
+		#endregion
 
-    #region Message dispatch
-    public void handleMessage(TGrblMessage msg)
-    {
-      switch (msg.Message)
-      {
-        case EGrblMessage.LoadGCode:
-          loadGCode((List<string>)msg.Param0); break;
-        case EGrblMessage.ConnectToMachine:
-          connectToMachine((TMachineConnectionSettings)msg.Param0); break;
-        case EGrblMessage.Play:
-          play(); break;
+		#region Message dispatch
+		public void handleMessage(TGrblMessage msg)
+		{
+			switch (msg.Message)
+			{
+				case EGrblMessage.LoadGCode:
+					loadGCode((List<string>)msg.Param0); break;
+				case EGrblMessage.ConnectToMachine:
+					connectToMachine((TMachineConnectionSettings)msg.Param0); break;
+				case EGrblMessage.Play:
+					play(); break;
 				case EGrblMessage.WakeUp:
 					wakeUp(); break;
 				case EGrblMessage.SetSpeed:
-					setSpeed((int)msg.Param0); break;
-      }
-    }
-				
-    #endregion
+					setSpeed((TMotorSpeedSettings)msg.Param0); break;
+			}
+		}
 
-    #region Message handlers
-    private void loadGCode(List<string> GCodeLines)
-    {
-      if (!checkAllowedEntryState(new EGrblCoreState[] { EGrblCoreState.Idle, EGrblCoreState.GCodeLoaded }))
-        return;
+		#endregion
 
-      Log.LogInfo("Resetting planner and parsing GCode...");
-      mGrbl.plan_reset();
-      int idxLine = 1;
-      foreach (var line in GCodeLines)
-      {
-        var result = mGCode.gc_execute_line(line);
-        if (result != GrblFirmware.STATUS_OK)
-        {
-          Log.LogError("GCode parse error: ");
-          Log.LogError(" - Line {0}: {1} ", idxLine, line);
-          Log.LogError(" - Error: {0} ", mGrbl.getStatusMessage(result));
-          changeState(EGrblCoreState.Idle);
-          return;
-        }
-        idxLine++;
-      }
+		#region Message handlers
+		private void loadGCode(List<string> GCodeLines)
+		{
+			if (!checkAllowedEntryState(new EGrblCoreState[] { EGrblCoreState.Idle, EGrblCoreState.GCodeLoaded }))
+				return;
 
-      Log.LogInfo("Parsing GCode completed:");
-      Log.LogInfo("- Parsed {0} GCode lines", GCodeLines.Count);
-      Log.LogInfo("- Planned {0} segments", mGrbl.plan_get_block_buffer_count());
-      changeState(EGrblCoreState.GCodeLoaded);
-    }
+			Log.LogInfo("Resetting planner and parsing GCode...");
+			mGrbl.plan_reset();
+			int idxLine = 1;
+			foreach (var line in GCodeLines)
+			{
+				var result = mGCode.gc_execute_line(line);
+				if (result != GrblFirmware.STATUS_OK)
+				{
+					Log.LogError("GCode parse error: ");
+					Log.LogError(" - Line {0}: {1} ", idxLine, line);
+					Log.LogError(" - Error: {0} ", mGrbl.getStatusMessage(result));
+					changeState(EGrblCoreState.Idle);
+					return;
+				}
+				idxLine++;
+			}
 
-    private void connectToMachine(TMachineConnectionSettings settings)
-    {
-      if (!checkAllowedEntryState(new EGrblCoreState[] { EGrblCoreState.Idle, EGrblCoreState.GCodeLoaded }))
-        return;
+			Log.LogInfo("Parsing GCode completed:");
+			Log.LogInfo("- Parsed {0} GCode lines", GCodeLines.Count);
+			Log.LogInfo("- Planned {0} segments", mGrbl.plan_get_block_buffer_count());
+			changeState(EGrblCoreState.GCodeLoaded);
+		}
 
-      if (mIsConnected)
-      {
-        Log.LogError("Machine already connected");
-        return;
-      }
+		private void connectToMachine(TMachineConnectionSettings settings)
+		{
+			if (!checkAllowedEntryState(new EGrblCoreState[] { EGrblCoreState.Idle, EGrblCoreState.GCodeLoaded }))
+				return;
 
-      Log.LogInfo("Connecting to machine on port {0}...", settings.COMPort);
-      mIsConnected = mHardware.Connect(settings.COMPort);
-      if (mIsConnected)
-        Log.LogInfo("Connected");
-      else
-        Log.LogError("Connection failed");
+			if (mIsConnected)
+			{
+				Log.LogError("Machine already connected");
+				return;
+			}
 
-      Log.LogInfo("Resetting machine...");
-      mHardware.Reset();
+			Log.LogInfo("Connecting to machine on port {0}...", settings.COMPort);
+			mIsConnected = mHardware.Connect(settings.COMPort);
+			if (mIsConnected)
+				Log.LogInfo("Connected");
+			else
+				Log.LogError("Connection failed");
 
-      Log.LogInfo("Sending initial settings...");
-      mGrbl.st_reset();
-      Log.LogInfo("Done");
-    }
+			Log.LogInfo("Resetting machine...");
+			mHardware.Reset();
 
-    private void play()
-    {
-      Log.LogInfo("--- Play - {0} ---", DateTime.Now.ToShortTimeString());
+			Log.LogInfo("Sending initial settings...");
+			mGrbl.st_reset();
+			Log.LogInfo("Done");
+		}
 
-      Log.LogInfo("Filling stepper buffer...");
-      mGrbl.st_prep_buffer();
-      Log.LogInfo("Done");
+		private void play()
+		{
+			Log.LogInfo("--- Play - {0} ---", DateTime.Now.ToShortTimeString());
 
-      Log.LogInfo("Issuing play command...");
-      mHardware.WakeUp(true);
-      Log.LogInfo("Done");
+			Log.LogInfo("Filling stepper buffer...");
+			mGrbl.st_prep_buffer();
+			Log.LogInfo("Done");
 
-      Log.LogInfo("Streaming stepper data...");
-      while (mGrbl.plan_get_block_buffer_count() > 0)
-      {
-        if (!mGrbl.st_prep_buffer())
-          System.Threading.Thread.Sleep(100);
+			Log.LogInfo("Issuing play command...");
+			mHardware.WakeUp(true);
+			Log.LogInfo("Done");
 
-        var newPos = mHardware.AskPosition();
-        for (int i = 0; i < newPos.Length; i++)
-          mGrbl.sys.position[i] = newPos[i];
-      }
-      Log.LogInfo("Done");
-    }
+			Log.LogInfo("Streaming stepper data...");
+			while (mGrbl.plan_get_block_buffer_count() > 0)
+			{
+				if (!mGrbl.st_prep_buffer())
+					System.Threading.Thread.Sleep(100);
+
+				var newPos = mHardware.AskPosition();
+				for (int i = 0; i < newPos.Length; i++)
+					mGrbl.sys.position[i] = newPos[i];
+			}
+			Log.LogInfo("Done");
+		}
 
 		private void wakeUp()
 		{
 			Log.LogInfo("--- wakeup - {0} ---", DateTime.Now.ToShortTimeString());
 			Log.LogInfo("Issuing play command...");
 			mHardware.WakeUp(true);
-			Log.LogInfo("Done");			
+			Log.LogInfo("Done");
 		}
 
-		private void setSpeed(int value)
+		private void setSpeed(TMotorSpeedSettings motorSpeedSettings)
 		{
-			Log.LogInfo("Speed: {0}", (int)value);
-			mHardware.SetSpeed(value);
+			Log.LogInfo("Speed: {0}, Period: {1}", motorSpeedSettings.SpeedValue, motorSpeedSettings.TimerPeriod);
+			mHardware.SetSpeed(motorSpeedSettings.SpeedValue, motorSpeedSettings.TimerPeriod);
 		}
 
-    #endregion
-  }
+		#endregion
+	}
 }
