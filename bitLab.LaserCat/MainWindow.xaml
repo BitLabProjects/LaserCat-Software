@@ -37,6 +37,7 @@
       <Button Content="Connect" Command="{Binding Connect}" Margin="0 10 0 5" />
       <Button Content="Play" Command="{Binding Play}" />
       <Button Content="WakeUp" Command="{Binding WakeUp}" />
+      <Slider Minimum="1" Maximum="255" Value="{Binding MotorSpeed}" />
     </StackPanel>
   </Grid>
 </Window>
