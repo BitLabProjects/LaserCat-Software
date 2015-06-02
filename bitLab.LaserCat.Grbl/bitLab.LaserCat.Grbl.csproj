@@ -49,8 +49,7 @@
     <Compile Include="Consts.cs" />
     <Compile Include="CoolantControl.cs" />
     <Compile Include="bitLabProtocol\CProtocolMessage.cs" />
-    <Compile Include="Defaults.cs" />
-    <Compile Include="Eeprom.cs" />
+    <Compile Include="MachineConfig.cs" />
     <Compile Include="GCode.cs" />
     <Compile Include="Grbl.cs" />
     <Compile Include="GrblCore.cs" />

@@ -96,30 +96,12 @@ namespace bitLab.LaserCat.Grbl
 
     public settings_t settings = new settings_t(true);
 
-
-    // Method to store startup lines into EEPROM
-    public void settings_store_startup_line(byte n, char[] line)
-    {
-      //TODO
-      //uint addr = n * (LINE_BUFFER_SIZE + 1) + EEPROM_ADDR_STARTUP_BLOCK;
-      //memcpy_to_eeprom_with_checksum(addr, (byte*)line, LINE_BUFFER_SIZE);
-    }
-
     // Method to store coord data parameters into EEPROM
     public void settings_write_coord_data(byte coord_select, float[] coord_data)
     {
       //TODO
       //uint addr = coord_select * (sizeof(float) * NutsAndBolts.N_AXIS + 1) + EEPROM_ADDR_PARAMETERS;
       //memcpy_to_eeprom_with_checksum(addr, (byte*)coord_data, sizeof(float) * NutsAndBolts.N_AXIS);
-    }
-
-
-    // Method to store Grbl global settings struct and version number into EEPROM
-    public void write_global_settings()
-    {
-      eeprom_put_char(0, SETTINGS_VERSION);
-      //TODO
-      //memcpy_to_eeprom_with_checksum(EEPROM_ADDR_GLOBAL, (byte*)&settings, (uint)sizeof(settings_t));
     }
 
 
@@ -160,48 +142,12 @@ namespace bitLab.LaserCat.Grbl
       settings.max_travel[NutsAndBolts.X_AXIS] = (-GrblFirmware.DEFAULT_X_MAX_TRAVEL);
       settings.max_travel[NutsAndBolts.Y_AXIS] = (-GrblFirmware.DEFAULT_Y_MAX_TRAVEL);
       settings.max_travel[NutsAndBolts.Z_AXIS] = (-GrblFirmware.DEFAULT_Z_MAX_TRAVEL);
-
-      write_global_settings();
-    }
-
-
-    // Helper function to clear the EEPROM space containing parameter data.
-    public void settings_clear_parameters()
-    {
-      byte idx;
-      float[] coord_data = new float[3];
-      //memset(&coord_data, 0, sizeof(coord_data));
-      //for (idx=0; idx < SETTING_INDEX_NCOORD; idx++) { settings_write_coord_data(idx, coord_data); }
-      //TODO
-    }
-
-
-
-    // Helper function to clear the EEPROM space containing the user build info string.
-    public void settings_clear_build_info() { eeprom_put_char(EEPROM_ADDR_BUILD_INFO, 0); }
-
-
-    // Reads startup line from EEPROM. Updated pointed line string data.
-    public bool settings_read_startup_line(byte n, char[] line)
-    {
-      //TODO
-      line[0] = '\0';
-      return true;
-      //uint addr = n * (LINE_BUFFER_SIZE + 1) + EEPROM_ADDR_STARTUP_BLOCK;
-      //if (!(memcpy_from_eeprom_with_checksum(line, addr, LINE_BUFFER_SIZE)))
-      //{
-      //  // Reset line with default value
-      //  line[0] = 0; // Empty line
-      //  settings_store_startup_line(n, line);
-      //  return (false);
-      //}
-      //return (true);
     }
 
     // Read selected coordinate data from EEPROM. Updates pointed coord_data value.
     public bool settings_read_coord_data(byte coord_select, float[] coord_data)
     {
-      //TODO 
+      //@_TODO 
       //uint addr = coord_select * (sizeof(float) * NutsAndBolts.N_AXIS + 1) + EEPROM_ADDR_PARAMETERS;
       //if (!(memcpy_from_eeprom_with_checksum((char*)coord_data, addr, sizeof(float)*Consts.NutsAndBolts.N_AXIS))) {
       //  // Reset with default zero vector
@@ -215,141 +161,10 @@ namespace bitLab.LaserCat.Grbl
       return false;
     }
 
-
-    // Reads Grbl global settings struct from EEPROM.
-    public bool read_global_settings()
-    {
-      // Check version-byte of eeprom
-      byte version = eeprom_get_char(0);
-      //if (version == SETTINGS_VERSION) {
-      //  // Read settings-record and check checksum
-      //  if (!(memcpy_from_eeprom_with_checksum((char*)&settings, EEPROM_ADDR_GLOBAL, sizeof(settings_t)))) {
-      //    return(false);
-      //  }
-      //} else {
-      //  return(false); 
-      //}
-      //return(true);
-      //TODO 
-      return false;
-    }
-
-
-    // A helper method to set settings from command line
-    public byte settings_store_global_setting(byte parameter, float value)
-    {
-      if (value < 0.0) { return (STATUS_NEGATIVE_VALUE); }
-      if (parameter >= AXIS_SETTINGS_START_VAL)
-      {
-        // Store axis configuration. Axis numbering sequence set by AXIS_SETTING defines.
-        // NOTE: Ensure the setting index corresponds to the report.c settings printout.
-        parameter -= AXIS_SETTINGS_START_VAL;
-        byte set_idx = 0;
-        while (set_idx < AXIS_N_SETTINGS)
-        {
-          if (parameter < NutsAndBolts.N_AXIS)
-          {
-            // Valid axis setting found.
-            switch (set_idx)
-            {
-              case 0: settings.steps_per_mm[parameter] = value; break;
-              case 1: settings.max_rate[parameter] = value; break;
-              case 2: settings.acceleration[parameter] = value * 60 * 60; break; // Convert to mm/min^2 for grbl internal use.
-              case 3: settings.max_travel[parameter] = -value; break;  // Store as negative for grbl internal use.
-            }
-            break; // Exit while-loop after setting has been configured and proceed to the EEPROM write call.
-          }
-          else
-          {
-            set_idx++;
-            // If axis index greater than Consts.NutsAndBolts.N_AXIS or setting index greater than number of axis settings, error out.
-            if ((parameter < AXIS_SETTINGS_INCREMENT) || (set_idx == AXIS_N_SETTINGS)) { return (STATUS_INVALID_STATEMENT); }
-            parameter -= AXIS_SETTINGS_INCREMENT;
-          }
-        }
-      }
-      else
-      {
-        // Store non-axis Grbl settings
-        byte int_value = (byte)trunc(value);
-        switch (parameter)
-        {
-          case 0:
-            if (int_value < 3) { return (STATUS_SETTING_STEP_PULSE_MIN); }
-            settings.pulse_microseconds = int_value; break;
-          case 1: settings.stepper_idle_lock_time = int_value; break;
-          case 2:
-            settings.step_invert_mask = int_value;
-            st_generate_step_dir_invert_masks(); // Regenerate step and direction port invert masks.
-            break;
-          case 3:
-            settings.dir_invert_mask = int_value;
-            st_generate_step_dir_invert_masks(); // Regenerate step and direction port invert masks.
-            break;
-          case 4: // Reset to ensure change. Immediate re-init may cause problems.
-            if (int_value != 0) { settings.flags |= BITFLAG_INVERT_ST_ENABLE; }
-            else { settings.flags &= unchecked((byte)(~BITFLAG_INVERT_ST_ENABLE)); }
-            break;
-          case 5: // Reset to ensure change. Immediate re-init may cause problems.
-            if (int_value != 0) { settings.flags |= BITFLAG_INVERT_LIMIT_PINS; }
-            else { settings.flags &= unchecked((byte)(~BITFLAG_INVERT_LIMIT_PINS)); }
-            break;
-          case 6: // Reset to ensure change. Immediate re-init may cause problems.
-            if (int_value != 0) { settings.flags |= BITFLAG_INVERT_PROBE_PIN; }
-            else { settings.flags &= unchecked((byte)(~BITFLAG_INVERT_PROBE_PIN)); }
-            break;
-          case 10: settings.status_report_mask = int_value; break;
-          case 11: settings.junction_deviation = value; break;
-          case 12: settings.arc_tolerance = value; break;
-          case 13:
-            if (int_value != 0) { settings.flags |= BITFLAG_REPORT_INCHES; }
-            else { settings.flags &= unchecked((byte)(~BITFLAG_REPORT_INCHES)); }
-            break;
-          case 14: // Reset to ensure change. Immediate re-init may cause problems.
-            if (int_value != 0) { settings.flags |= BITFLAG_AUTO_START; }
-            else { settings.flags &= unchecked((byte)(~BITFLAG_AUTO_START)); }
-            break;
-          case 20:
-            if (int_value != 0)
-            {
-              if (bit_isfalse(settings.flags, BITFLAG_HOMING_ENABLE)) { return (STATUS_SOFT_LIMIT_ERROR); }
-              settings.flags |= BITFLAG_SOFT_LIMIT_ENABLE;
-            }
-            else { settings.flags &= unchecked((byte)(~BITFLAG_SOFT_LIMIT_ENABLE)); }
-            break;
-          case 21:
-            if (int_value != 0) { settings.flags |= BITFLAG_HARD_LIMIT_ENABLE; }
-            else { settings.flags &= unchecked((byte)(~BITFLAG_HARD_LIMIT_ENABLE)); }
-            limits_init(); // Re-init to immediately change. NOTE: Nice to have but could be problematic later.
-            break;
-          case 22:
-            if (int_value != 0) { settings.flags |= BITFLAG_HOMING_ENABLE; }
-            else
-            {
-              settings.flags &= unchecked((byte)(~BITFLAG_HOMING_ENABLE));
-              settings.flags &= unchecked((byte)(~BITFLAG_SOFT_LIMIT_ENABLE)); // Force disable soft-limits.
-            }
-            break;
-          case 23: settings.homing_dir_mask = int_value; break;
-          case 24: settings.homing_feed_rate = value; break;
-          case 25: settings.homing_seek_rate = value; break;
-          case 26: settings.homing_debounce_delay = int_value; break;
-          case 27: settings.homing_pulloff = value; break;
-          default:
-            return (STATUS_INVALID_STATEMENT);
-        }
-      }
-      write_global_settings();
-      return (STATUS_OK);
-    }
-
-
     // Initialize the config subsystem
     public void settings_init()
     {
-      //SB!Simplified initialization by loading default settings and ignoring eeprom
       settings_restore_global_settings();
-      //report_grbl_settings();
     }
 
 
