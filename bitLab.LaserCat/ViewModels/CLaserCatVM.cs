@@ -27,7 +27,7 @@ namespace bitLab.LaserCat.ViewModels
 			});
 			LoadBitLabLogo = new CDelegateCommand((obj) =>
 			{
-				string TestGCodeFile = Path.Combine(Environment.CurrentDirectory, @"..\..\Data\bitLabLogo.nc");
+				string TestGCodeFile = Path.Combine(Environment.CurrentDirectory, @"..\..\Data\bitLabLogoSmall.nc");
 				CLaserCat.Instance.LoadGCode(TestGCodeFile);
 			});
 			GrblStart = new CDelegateCommand((obj) => { CLaserCat.Instance.GrblStart(); });

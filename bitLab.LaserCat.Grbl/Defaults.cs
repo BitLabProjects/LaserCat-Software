@@ -10,9 +10,13 @@ namespace bitLab.LaserCat.Grbl
   {
     //#ifdef DEFAULTS_GENERIC
     // Grbl generic default settings. Should work across different machines.
-    public const float DEFAULT_X_STEPS_PER_MM = 250.0f;
-    public const float DEFAULT_Y_STEPS_PER_MM = 250.0f;
-    public const float DEFAULT_Z_STEPS_PER_MM = 250.0f;
+    //public const float DEFAULT_X_STEPS_PER_MM = 250.0f;
+    //public const float DEFAULT_Y_STEPS_PER_MM = 250.0f;
+    //public const float DEFAULT_Z_STEPS_PER_MM = 250.0f;
+    public const float DEFAULT_X_STEPS_PER_MM = 100.0f;
+    public const float DEFAULT_Y_STEPS_PER_MM = 8.0f;
+    public const float DEFAULT_Z_STEPS_PER_MM = 100.0f;
+
     public const float DEFAULT_X_MAX_RATE = 500.0f; // mm/min
     public const float DEFAULT_Y_MAX_RATE = 500.0f; // mm/min
     public const float DEFAULT_Z_MAX_RATE = 500.0f; // mm/min

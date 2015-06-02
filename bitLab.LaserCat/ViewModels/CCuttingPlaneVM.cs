@@ -37,7 +37,9 @@ namespace bitLab.LaserCat.ViewModels
       else
         scale = mCuttingPlaneSize.x / worldWidth;
 
-      mWorldToCuttingPlaneTransform = new ScaleTranslateTransform(new DblPoint3(scale, -scale, 1),
+      var factor = GrblFirmware.DEFAULT_X_STEPS_PER_MM / GrblFirmware.DEFAULT_Y_STEPS_PER_MM;
+
+      mWorldToCuttingPlaneTransform = new ScaleTranslateTransform(new DblPoint3(scale, -scale * factor, 1),
                                                                   new DblPoint3(mCuttingPlaneSize.x / 2,
                                                                                 mCuttingPlaneSize.y / 2,
                                                                                 0));
@@ -82,7 +84,8 @@ namespace bitLab.LaserCat.ViewModels
       //SB! Save original coordinates and normalize them in the property getter so that we can dinamically size the 
       //drawing surface
       //mSysPosition = new DblPoint2(LaserCatHardwareSimulator.sys.position[0], LaserCatHardwareSimulator.sys.position[1]);
-			mSysPosition = new DblPoint2(Grbl.sys.position[0], Grbl.sys.position[1]);
+      mSysPosition = new DblPoint2(Grbl.sys.position[0],
+                                   Grbl.sys.position[1]);
       mSysPositionTransformed = mWorldToCuttingPlaneTransform.Apply(mSysPosition);
       Notify("CurrX");
       Notify("CurrY");
