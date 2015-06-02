@@ -9,12 +9,10 @@ namespace bitLab.LaserCat.Grbl
   public partial class GrblFirmware
   {
     private GCode mGCode;
-    private ISerialPort mSerialPort;
     private ILaserCatHardware mLaserCatHardware;
-    public GrblFirmware(GCode GCode, ISerialPort serialPort, ILaserCatHardware laserCatHardware)
+    public GrblFirmware(GCode GCode, ILaserCatHardware laserCatHardware)
     {
       mGCode = GCode;
-      mSerialPort = serialPort;
       mLaserCatHardware = laserCatHardware;
       mGCode.Initialize(this);
     }
@@ -22,7 +20,7 @@ namespace bitLab.LaserCat.Grbl
     public void Execute()
     {
       // Initialize system upon power-up.
-      serial_init();   // Setup serial baud rate and interrupts
+      //serial_init();   // Setup serial baud rate and interrupts
       settings_init(); // Load grbl settings from EEPROM
       //stepper_init();  // Configure stepper pins and interrupt timers
       system_init();   // Configure pinout pins and pin-change interrupt
@@ -50,7 +48,7 @@ namespace bitLab.LaserCat.Grbl
         // a system abort and ensuring any active interrupts are cleanly reset.
   
         // Reset Grbl primary systems.
-        serial_reset_read_buffer(); // Clear serial read buffer
+        //serial_reset_read_buffer(); // Clear serial read buffer
         mGCode.gc_init(); // Set g-code parser to default state
         spindle_init();
         coolant_init();

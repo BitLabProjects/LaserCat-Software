@@ -41,22 +41,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CCommunicationManager.cs" />
+    <Compile Include="bitLabProtocol\CCommunicationManager.cs" />
     <Compile Include="CHelpers.cs" />
     <Compile Include="CLaserCatHardwarePIC.cs" />
     <Compile Include="CLaserCatHardwareSimulator.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Consts.cs" />
     <Compile Include="CoolantControl.cs" />
-    <Compile Include="CInMemorySerialPort.cs" />
-    <Compile Include="CProtocolMessage.cs" />
+    <Compile Include="bitLabProtocol\CProtocolMessage.cs" />
     <Compile Include="Defaults.cs" />
     <Compile Include="Eeprom.cs" />
     <Compile Include="GCode.cs" />
     <Compile Include="Grbl.cs" />
     <Compile Include="GrblCore.cs" />
     <Compile Include="ILaserCatHardware.cs" />
-    <Compile Include="ISerialPort.cs" />
     <Compile Include="Limits.cs" />
     <Compile Include="MotionControl.cs" />
     <Compile Include="NutsAndBolts.cs" />
@@ -66,7 +64,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Protocol.cs" />
     <Compile Include="Report.cs" />
-    <Compile Include="Serial.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="SpindleControl.cs" />
     <Compile Include="Stepper.cs" />
