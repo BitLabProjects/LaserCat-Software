@@ -56,6 +56,24 @@ namespace bitLab.LaserCat.Grbl
     private const byte START_CHAR = 35; //#
     private const byte END_CHAR = 36; //$
 
+    public void OpenPort()
+    {
+      if (mSerialPort == null)
+      {
+        mSerialPort = new SerialPort(mPortName);
+        mSerialPort.BaudRate = 115200;
+        mSerialPort.Parity = Parity.None;
+        mSerialPort.DataBits = 8;
+        mSerialPort.StopBits = StopBits.One;
+        mSerialPort.DataReceived += ReceiveFromPIC;
+        mSerialPort.Open();
+      }
+      else
+      {
+        Logging.Log.LogError("Port is already open");
+      }
+    }
+
     public void Send(ECommands cmd)
     {
       Send(cmd, null);
@@ -126,7 +144,7 @@ namespace bitLab.LaserCat.Grbl
 
     private void mSendDo(CProtocolMessage msg)
     {
-      mMaybeOpenPort();
+      mCheckPortIsOpen();
 
       List<byte> rawMessage = msg.GetRawData();
       rawMessage.Insert(0, START_CHAR);
@@ -136,17 +154,11 @@ namespace bitLab.LaserCat.Grbl
       mSerialPort.Write(rawMessage.ToArray(), 0, rawMessage.Count);
     }
 
-    private void mMaybeOpenPort()
+    private void mCheckPortIsOpen()
     {
       if (mSerialPort == null)
       {
-        mSerialPort = new SerialPort(mPortName);
-        mSerialPort.BaudRate = 115200;
-        mSerialPort.Parity = Parity.None;
-        mSerialPort.DataBits = 8;
-        mSerialPort.StopBits = StopBits.One;
-        mSerialPort.DataReceived += ReceiveFromPIC;
-        mSerialPort.Open();
+        throw new InvalidOperationException("Port not open");
       }
     }
 

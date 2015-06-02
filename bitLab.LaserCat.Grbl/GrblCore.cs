@@ -112,10 +112,13 @@ namespace bitLab.LaserCat.Grbl
 
 			Log.LogInfo("Connecting to machine on port {0}...", settings.COMPort);
 			mIsConnected = mHardware.Connect(settings.COMPort);
-			if (mIsConnected)
-				Log.LogInfo("Connected");
-			else
+      if (!mIsConnected)
+      {
 				Log.LogError("Connection failed");
+        return;
+      }
+
+			Log.LogInfo("Connected");
 
 			Log.LogInfo("Resetting machine...");
 			mHardware.Reset();
@@ -127,6 +130,9 @@ namespace bitLab.LaserCat.Grbl
 
 		private void play()
 		{
+      if (!mCheckIsConnected())
+        return;
+
 			Log.LogInfo("--- Play - {0} ---", DateTime.Now.ToShortTimeString());
 
 			Log.LogInfo("Filling stepper buffer...");
@@ -152,6 +158,9 @@ namespace bitLab.LaserCat.Grbl
 
 		private void wakeUp()
 		{
+      if (!mCheckIsConnected())
+        return;
+
 			Log.LogInfo("--- wakeup - {0} ---", DateTime.Now.ToShortTimeString());
 			Log.LogInfo("Issuing play command...");
 			mHardware.WakeUp(true);
@@ -160,12 +169,27 @@ namespace bitLab.LaserCat.Grbl
 
 		private void setSpeed(TMotorSpeedSettings motorSpeedSettings)
 		{
+      if (!mCheckIsConnected())
+        return;
+
 			Log.LogInfo("Speed: {0}, Period: {1}", motorSpeedSettings.SpeedValue, motorSpeedSettings.TimerPeriod);
 			mHardware.SetSpeed(motorSpeedSettings.SpeedValue, motorSpeedSettings.TimerPeriod);
 		}
 
 		#endregion
-	}
+
+    #region Utilities
+    private bool mCheckIsConnected()
+    {
+      if (!mIsConnected)
+      {
+        Log.LogError("Not connected");
+        return false;
+      }
+      return true;
+    }
+    #endregion
+  }
 }
 
 /*

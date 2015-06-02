@@ -13,13 +13,23 @@ namespace bitLab.LaserCat.Grbl
 	{
 		private CCommunicationManager mComMan;
 
-		public CLaserCatHardwarePIC(string portName)
+		public CLaserCatHardwarePIC()
 		{
-			mComMan = new CCommunicationManager(portName);
+			//Create the communication manager when connecting
 		}
 
 		public bool Connect(string COMPort)
 		{
+      mComMan = new CCommunicationManager(COMPort);
+      try
+      {
+        mComMan.OpenPort();
+      }
+      catch(Exception ex)
+      {
+        Logging.Log.LogError("Error opening port {0}: {1}", COMPort, ex.Message);
+        return false;
+      }
 			mComMan.Send(ECommands.CONNECT_COMMAND);
 			return true;
 		}
