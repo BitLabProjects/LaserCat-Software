@@ -46,7 +46,7 @@ namespace bitLab.LaserCat.Grbl
     {
       mMessageQueue = new BlockingCollection<TGrblMessage>();
       var core = new GrblCore(this, mGCode, mLaserCatHardware);
-      core.initGrblState();
+      Log.LogInfo("Grbl initialized");
 
       try
       {

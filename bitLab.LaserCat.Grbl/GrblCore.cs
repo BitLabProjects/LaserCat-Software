@@ -7,6 +7,18 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
+  internal struct GrblCoreState
+  {
+    public bool IsGCodeLoaded;
+    public bool IsConnected;
+
+    public void Reset()
+    {
+      IsGCodeLoaded = false;
+      IsConnected = false;
+    }
+  }
+
 	internal class GrblCore
 	{
 		private GrblFirmware mGrbl;
@@ -17,38 +29,11 @@ namespace bitLab.LaserCat.Grbl
 			mGrbl = grbl;
 			mGCode = gcode;
 			mHardware = hardware;
-			mIsConnected = false;
+      mState = new GrblCoreState();
+      mState.Reset();
 		}
 
-		private enum EGrblCoreState
-		{
-			Idle,
-			GCodeLoaded
-		}
-		private EGrblCoreState mState;
-		private bool mIsConnected;
-
-		public void initGrblState()
-		{
-			changeState(EGrblCoreState.Idle);
-			Log.LogInfo("Grbl initialized");
-		}
-
-		#region Utilities
-		private void changeState(EGrblCoreState newState)
-		{
-			mState = newState;
-			Log.LogInfo("State changed to " + newState.ToString());
-		}
-
-		private bool checkAllowedEntryState(EGrblCoreState[] allowedStates)
-		{
-			if (allowedStates.Contains(mState))
-				return true;
-			Log.LogInfo("Operation not allowed in this state");
-			return false;
-		}
-		#endregion
+    private GrblCoreState mState;
 
 		#region Message dispatch
 		public void handleMessage(TGrblMessage msg)
@@ -67,13 +52,12 @@ namespace bitLab.LaserCat.Grbl
 					setSpeed((TMotorSpeedSettings)msg.Param0); break;
 			}
 		}
-
 		#endregion
 
 		#region Message handlers
 		private void loadGCode(List<string> GCodeLines)
 		{
-			if (!checkAllowedEntryState(new EGrblCoreState[] { EGrblCoreState.Idle, EGrblCoreState.GCodeLoaded }))
+      if (!mCheckIsGCodeLoaded())
 				return;
 
 			Log.LogInfo("Resetting planner and parsing GCode...");
@@ -87,7 +71,6 @@ namespace bitLab.LaserCat.Grbl
 					Log.LogError("GCode parse error: ");
 					Log.LogError(" - Line {0}: {1} ", idxLine, line);
 					Log.LogError(" - Error: {0} ", mGrbl.getStatusMessage(result));
-					changeState(EGrblCoreState.Idle);
 					return;
 				}
 				idxLine++;
@@ -96,23 +79,20 @@ namespace bitLab.LaserCat.Grbl
 			Log.LogInfo("Parsing GCode completed:");
 			Log.LogInfo("- Parsed {0} GCode lines", GCodeLines.Count);
 			Log.LogInfo("- Planned {0} segments", mGrbl.plan_get_block_buffer_count());
-			changeState(EGrblCoreState.GCodeLoaded);
+      mState.IsGCodeLoaded = true;
 		}
 
 		private void connectToMachine(TMachineConnectionSettings settings)
 		{
-			if (!checkAllowedEntryState(new EGrblCoreState[] { EGrblCoreState.Idle, EGrblCoreState.GCodeLoaded }))
-				return;
-
-			if (mIsConnected)
+			if (mState.IsConnected)
 			{
 				Log.LogError("Machine already connected");
 				return;
 			}
 
 			Log.LogInfo("Connecting to machine on port {0}...", settings.COMPort);
-			mIsConnected = mHardware.Connect(settings.COMPort);
-      if (!mIsConnected)
+      mState.IsConnected = mHardware.Connect(settings.COMPort);
+      if (!mState.IsConnected)
       {
 				Log.LogError("Connection failed");
         return;
@@ -132,6 +112,8 @@ namespace bitLab.LaserCat.Grbl
 		{
       if (!mCheckIsConnected())
         return;
+      if (!mCheckIsGCodeLoaded())
+        return;
 
 			Log.LogInfo("--- Play - {0} ---", DateTime.Now.ToShortTimeString());
 
@@ -139,9 +121,7 @@ namespace bitLab.LaserCat.Grbl
 			mGrbl.st_prep_buffer();
 			Log.LogInfo("Done");
 
-			Log.LogInfo("Issuing play command...");
-			mHardware.WakeUp(true);
-			Log.LogInfo("Done");
+      mSendWakeUpCommand();
 
 			Log.LogInfo("Streaming stepper data...");
 			while (mGrbl.plan_get_block_buffer_count() > 0)
@@ -162,10 +142,15 @@ namespace bitLab.LaserCat.Grbl
         return;
 
 			Log.LogInfo("--- wakeup - {0} ---", DateTime.Now.ToShortTimeString());
-			Log.LogInfo("Issuing play command...");
-			mHardware.WakeUp(true);
-			Log.LogInfo("Done");
+      mSendWakeUpCommand();
 		}
+
+    private void mSendWakeUpCommand()
+    {
+      Log.LogInfo("Issuing wakeUp command...");
+      mHardware.WakeUp(true);
+      Log.LogInfo("Done");
+    }
 
 		private void setSpeed(TMotorSpeedSettings motorSpeedSettings)
 		{
@@ -181,9 +166,18 @@ namespace bitLab.LaserCat.Grbl
     #region Utilities
     private bool mCheckIsConnected()
     {
-      if (!mIsConnected)
+      if (!mState.IsConnected)
       {
         Log.LogError("Not connected");
+        return false;
+      }
+      return true;
+    }
+    private bool mCheckIsGCodeLoaded()
+    {
+      if (!mState.IsGCodeLoaded)
+      {
+        Log.LogError("No GCode loaded");
         return false;
       }
       return true;
