@@ -19,11 +19,7 @@ namespace bitLab.LaserCat.Grbl
 
     public void Execute()
     {
-      // Initialize system upon power-up.
-      //serial_init();   // Setup serial baud rate and interrupts
       settings_init(); // Load grbl settings from EEPROM
-      //stepper_init();  // Configure stepper pins and interrupt timers
-      system_init();   // Configure pinout pins and pin-change interrupt
   
       sys = new system_t(true); // Clear all system variables
       sys.abort = 1;   // Set abort to complete initialization

@@ -41,15 +41,6 @@ namespace bitLab.LaserCat.Grbl
 
     public system_t sys = new system_t(true);
 
-    public void system_init() 
-    {
-      PINOUT_DDR &= ~(PINOUT_MASK); // Configure as input pins
-      PINOUT_PORT |= PINOUT_MASK;   // Enable internal pull-up resistors. Normal high operation.
-      PINOUT_PCMSK |= PINOUT_MASK;  // Enable specific pins of the Pin Change Interrupt
-      //TODO PCICR |= (1 << PINOUT_INT);   // Enable Pin Change Interrupt
-    }
-
-
     // Pin change interrupt for pin-out commands, i.e. cycle start, feed hold, and reset. Sets
     // only the runtime command execute variable to have the main program execute these when 
     // its ready. This works exactly like the character-based runtime commands when picked off

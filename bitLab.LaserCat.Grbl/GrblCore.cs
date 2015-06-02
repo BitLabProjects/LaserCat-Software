@@ -57,9 +57,6 @@ namespace bitLab.LaserCat.Grbl
 		#region Message handlers
 		private void loadGCode(List<string> GCodeLines)
 		{
-      if (!mCheckIsGCodeLoaded())
-				return;
-
 			Log.LogInfo("Resetting planner and parsing GCode...");
 			mGrbl.plan_reset();
 			int idxLine = 1;
