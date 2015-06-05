@@ -23,7 +23,7 @@ namespace bitLab.LaserCat.ViewModels
       mStatusPollingTimer.Interval = TimeSpan.FromMilliseconds(100);
       mStatusPollingTimer.Tick += mStatusPollingTimer_Tick;
       mStatusPollingTimer.Start();
-      Grbl.PlannerBlocksChanged += mGrbl_PlannerBlocksChanged;
+      Grbl.Planner.PlannerBlocksChanged += mGrbl_PlannerBlocksChanged;
     }
 
     private void mStatusPollingTimer_Tick(object sender, EventArgs e)
@@ -51,7 +51,7 @@ namespace bitLab.LaserCat.ViewModels
         return String.Format("X:{0:0.000}, Y:{1:0.000}, Z:{2:0.000}", Grbl.sys.position[0], Grbl.sys.position[1], Grbl.sys.position[2]);
       }
     }
-    public int PlannerBlockCount { get { return Grbl.plan_get_block_buffer_count(); } }
+    public int PlannerBlockCount { get { return Grbl.Planner.plan_get_block_buffer_count(); } }
     public int PlannerBlockMaxSize { get { return 1000; } }
     public int StepperSegmentBufferCount { get { return LaserCatHardwareSimulator.GetSegmentBufferCount(); } }
     public int StepperSegmentBufferMaxSize { get { return GrblFirmware.SEGMENT_BUFFER_SIZE; } }

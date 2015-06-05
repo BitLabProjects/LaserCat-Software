@@ -55,7 +55,7 @@ namespace bitLab.LaserCat.Grbl
       //#ifdef USE_LINE_NUMBERS
       //  plan_buffer_line(target, feed_rate, invert_feed_rate, line_number);
       //#else
-      plan_buffer_line(target, feed_rate, invert_feed_rate);
+      mPlanner.plan_buffer_line(target, feed_rate, invert_feed_rate);
       //#endif
 
       // If idle, indicate to the system there is now a planned block in the buffer ready to cycle 

@@ -18,7 +18,7 @@ namespace bitLab.LaserCat.ViewModels
     {
       mPlannedLines = new ObservableCollection<CLineVM>();
       mDrawnLines = new ObservableCollection<CLineVM>();
-      Grbl.PlannerBlocksChanged += mGrbl_PlannerBlocksChanged;
+      Grbl.Planner.PlannerBlocksChanged += mGrbl_PlannerBlocksChanged;
 
       mCuttingPlaneSize = new DblPoint2(500, 500);
       CalculateTransform();

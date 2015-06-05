@@ -9,13 +9,18 @@ namespace bitLab.LaserCat.Grbl
   public partial class GrblFirmware
   {
     private GCode mGCode;
+    private GrblPlanner mPlanner;
     private ILaserCatHardware mLaserCatHardware;
-    public GrblFirmware(GCode GCode, ILaserCatHardware laserCatHardware)
+    public GrblFirmware(GCode GCode, GrblPlanner planner, ILaserCatHardware laserCatHardware)
     {
       mGCode = GCode;
+      mPlanner = planner;
       mLaserCatHardware = laserCatHardware;
       mGCode.Initialize(this);
+      mPlanner.Initialize(this);
     }
+
+    public GrblPlanner Planner { get { return mPlanner; } }
 
     public void Execute()
     {
@@ -50,10 +55,10 @@ namespace bitLab.LaserCat.Grbl
         coolant_init();
         //TODO limits_init(); 
         probe_init();
-        plan_reset(); // Clear block buffer and planner variables
+        mPlanner.plan_reset(); // Clear block buffer and planner variables
 
         // Sync cleared gcode and planner positions to current system position.
-        plan_sync_position();
+        mPlanner.plan_sync_position();
         mGCode.gc_sync_position();
 
         // Reset system variables.

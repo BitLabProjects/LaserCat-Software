@@ -58,7 +58,7 @@ namespace bitLab.LaserCat.Grbl
 		private void loadGCode(List<string> GCodeLines)
 		{
 			Log.LogInfo("Resetting planner and parsing GCode...");
-			mGrbl.plan_reset();
+			mGrbl.Planner.plan_reset();
 			int idxLine = 1;
 			foreach (var line in GCodeLines)
 			{
@@ -75,7 +75,7 @@ namespace bitLab.LaserCat.Grbl
 
 			Log.LogInfo("Parsing GCode completed:");
 			Log.LogInfo("- Parsed {0} GCode lines", GCodeLines.Count);
-			Log.LogInfo("- Planned {0} segments", mGrbl.plan_get_block_buffer_count());
+			Log.LogInfo("- Planned {0} segments", mGrbl.Planner.plan_get_block_buffer_count());
       mState.IsGCodeLoaded = true;
 		}
 
@@ -121,7 +121,7 @@ namespace bitLab.LaserCat.Grbl
       mSendWakeUpCommand();
 
 			Log.LogInfo("Streaming stepper data...");
-			while (mGrbl.plan_get_block_buffer_count() > 0)
+			while (mGrbl.Planner.plan_get_block_buffer_count() > 0)
 			{
 				if (!mGrbl.st_prep_buffer())
 					System.Threading.Thread.Sleep(100);

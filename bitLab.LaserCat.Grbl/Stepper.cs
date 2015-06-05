@@ -131,7 +131,7 @@ namespace bitLab.LaserCat.Grbl
       if (pl_blockIdx != -1)
       { // Ignore if at start of a new block.
         prep.flag_partial_block = 1;
-        block_buffer[pl_blockIdx].entry_speed_sqr = prep.current_speed * prep.current_speed; // Update entry speed.
+        mPlanner.block_buffer[pl_blockIdx].entry_speed_sqr = prep.current_speed * prep.current_speed; // Update entry speed.
         //pl_block = null; // Flag st_prep_segment() to load new velocity profile.
         pl_blockIdx = -1;
       }
@@ -167,7 +167,7 @@ namespace bitLab.LaserCat.Grbl
         // Determine if we need to load a new planner block or if the block has been replanned. 
         if (pl_blockIdx == -1)
         {
-          pl_blockIdx = plan_get_current_block(); // Query planner for a queued block
+          pl_blockIdx = mPlanner.plan_get_current_block(); // Query planner for a queued block
           if (pl_blockIdx == -1) { return false; } // No planner blocks. Exit.
 
           // Check if the segment buffer completed the last planner block. If so, load the Bresenham
@@ -185,29 +185,29 @@ namespace bitLab.LaserCat.Grbl
             // when the segment buffer completes the planner block, it may be discarded when the 
             // segment buffer finishes the prepped block, but the stepper ISR is still executing it. 
             st_block_t st_block_buffer = new st_block_t(true);
-            st_block_buffer.direction_bits = block_buffer[pl_blockIdx].direction_bits;
+            st_block_buffer.direction_bits = mPlanner.block_buffer[pl_blockIdx].direction_bits;
             if (!ADAPTIVE_MULTI_AXIS_STEP_SMOOTHING)
             {
-              st_block_buffer.steps[NutsAndBolts.X_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.X_AXIS];
-              st_block_buffer.steps[NutsAndBolts.Y_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Y_AXIS];
-              st_block_buffer.steps[NutsAndBolts.Z_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Z_AXIS];
-              st_block_buffer.step_event_count = block_buffer[pl_blockIdx].step_event_count;
+              st_block_buffer.steps[NutsAndBolts.X_AXIS] = mPlanner.block_buffer[pl_blockIdx].steps[NutsAndBolts.X_AXIS];
+              st_block_buffer.steps[NutsAndBolts.Y_AXIS] = mPlanner.block_buffer[pl_blockIdx].steps[NutsAndBolts.Y_AXIS];
+              st_block_buffer.steps[NutsAndBolts.Z_AXIS] = mPlanner.block_buffer[pl_blockIdx].steps[NutsAndBolts.Z_AXIS];
+              st_block_buffer.step_event_count = mPlanner.block_buffer[pl_blockIdx].step_event_count;
             }
             else
             {
               // With AMASS enabled, simply bit-shift multiply all Bresenham data by the max AMASS 
               // level, such that we never divide beyond the original data anywhere in the algorithm.
               // If the original data is divided, we can lose a step from integer roundoff.
-              st_block_buffer.steps[NutsAndBolts.X_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.X_AXIS] << MAX_AMASS_LEVEL;
-              st_block_buffer.steps[NutsAndBolts.Y_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Y_AXIS] << MAX_AMASS_LEVEL;
-              st_block_buffer.steps[NutsAndBolts.Z_AXIS] = block_buffer[pl_blockIdx].steps[NutsAndBolts.Z_AXIS] << MAX_AMASS_LEVEL;
-              st_block_buffer.step_event_count = block_buffer[pl_blockIdx].step_event_count << MAX_AMASS_LEVEL;
+              st_block_buffer.steps[NutsAndBolts.X_AXIS] = mPlanner.block_buffer[pl_blockIdx].steps[NutsAndBolts.X_AXIS] << MAX_AMASS_LEVEL;
+              st_block_buffer.steps[NutsAndBolts.Y_AXIS] = mPlanner.block_buffer[pl_blockIdx].steps[NutsAndBolts.Y_AXIS] << MAX_AMASS_LEVEL;
+              st_block_buffer.steps[NutsAndBolts.Z_AXIS] = mPlanner.block_buffer[pl_blockIdx].steps[NutsAndBolts.Z_AXIS] << MAX_AMASS_LEVEL;
+              st_block_buffer.step_event_count = mPlanner.block_buffer[pl_blockIdx].step_event_count << MAX_AMASS_LEVEL;
             }
             mLaserCatHardware.StorePlannerBlock(prep.st_block_index, st_block_buffer);
 
             // Initialize segment buffer data for generating the segments.
-            prep.steps_remaining = block_buffer[pl_blockIdx].step_event_count;
-            prep.step_per_mm = prep.steps_remaining / block_buffer[pl_blockIdx].millimeters;
+            prep.steps_remaining = mPlanner.block_buffer[pl_blockIdx].step_event_count;
+            prep.step_per_mm = prep.steps_remaining / mPlanner.block_buffer[pl_blockIdx].millimeters;
             prep.req_mm_increment = REQ_MM_INCREMENT_SCALAR / prep.step_per_mm;
 
             prep.dt_remainder = 0.0f; // Reset for new planner block
@@ -216,9 +216,9 @@ namespace bitLab.LaserCat.Grbl
             {
               // Override planner block entry speed and enforce deceleration during feed hold.
               prep.current_speed = prep.exit_speed;
-              block_buffer[pl_blockIdx].entry_speed_sqr = prep.exit_speed * prep.exit_speed;
+              mPlanner.block_buffer[pl_blockIdx].entry_speed_sqr = prep.exit_speed * prep.exit_speed;
             }
-            else { prep.current_speed = (float)System.Math.Sqrt(block_buffer[pl_blockIdx].entry_speed_sqr); }
+            else { prep.current_speed = (float)System.Math.Sqrt(mPlanner.block_buffer[pl_blockIdx].entry_speed_sqr); }
           }
 
           /* --------------------------------------------------------------------------------- 
@@ -228,18 +228,18 @@ namespace bitLab.LaserCat.Grbl
              hold, override the planner velocities and decelerate to the target exit speed.
           */
           prep.mm_complete = 0.0f; // Default velocity profile complete at 0.0mm from end of block.
-          float inv_2_accel = 0.5f / block_buffer[pl_blockIdx].acceleration;
+          float inv_2_accel = 0.5f / mPlanner.block_buffer[pl_blockIdx].acceleration;
           if (sys.state == STATE_HOLD)
           { // [Forced Deceleration to Zero Velocity]
             // Compute velocity profile parameters for a feed hold in-progress. This profile overrides
             // the planner block profile, enforcing a deceleration to zero speed.
             prep.ramp_type = RAMP_DECEL;
             // Compute decelerate distance relative to end of block.
-            float decel_dist = block_buffer[pl_blockIdx].millimeters - inv_2_accel * block_buffer[pl_blockIdx].entry_speed_sqr;
+            float decel_dist = mPlanner.block_buffer[pl_blockIdx].millimeters - inv_2_accel * mPlanner.block_buffer[pl_blockIdx].entry_speed_sqr;
             if (decel_dist < 0.0)
             {
               // Deceleration through entire planner block. End of feed hold is not in this block.
-              prep.exit_speed = (float)System.Math.Sqrt(block_buffer[pl_blockIdx].entry_speed_sqr - 2 * block_buffer[pl_blockIdx].acceleration * block_buffer[pl_blockIdx].millimeters);
+              prep.exit_speed = (float)System.Math.Sqrt(mPlanner.block_buffer[pl_blockIdx].entry_speed_sqr - 2 * mPlanner.block_buffer[pl_blockIdx].acceleration * mPlanner.block_buffer[pl_blockIdx].millimeters);
             }
             else
             {
@@ -251,21 +251,21 @@ namespace bitLab.LaserCat.Grbl
           { // [Normal Operation]
             // Compute or recompute velocity profile parameters of the prepped planner block.
             prep.ramp_type = RAMP_ACCEL; // Initialize as acceleration ramp.
-            prep.accelerate_until = block_buffer[pl_blockIdx].millimeters;
-            prep.exit_speed = plan_get_exec_block_exit_speed();
+            prep.accelerate_until = mPlanner.block_buffer[pl_blockIdx].millimeters;
+            prep.exit_speed = mPlanner.plan_get_exec_block_exit_speed();
             float exit_speed_sqr = prep.exit_speed * prep.exit_speed;
             float intersect_distance =
-                    0.5f * (block_buffer[pl_blockIdx].millimeters + inv_2_accel * (block_buffer[pl_blockIdx].entry_speed_sqr - exit_speed_sqr));
+                    0.5f * (mPlanner.block_buffer[pl_blockIdx].millimeters + inv_2_accel * (mPlanner.block_buffer[pl_blockIdx].entry_speed_sqr - exit_speed_sqr));
             if (intersect_distance > 0.0f)
             {
-              if (intersect_distance < block_buffer[pl_blockIdx].millimeters)
+              if (intersect_distance < mPlanner.block_buffer[pl_blockIdx].millimeters)
               { // Either trapezoid or triangle types
                 // NOTE: For acceleration-cruise and cruise-only types, following calculation will be 0.0.
-                prep.decelerate_after = inv_2_accel * (block_buffer[pl_blockIdx].nominal_speed_sqr - exit_speed_sqr);
+                prep.decelerate_after = inv_2_accel * (mPlanner.block_buffer[pl_blockIdx].nominal_speed_sqr - exit_speed_sqr);
                 if (prep.decelerate_after < intersect_distance)
                 { // Trapezoid type
-                  prep.maximum_speed = (float)System.Math.Sqrt(block_buffer[pl_blockIdx].nominal_speed_sqr);
-                  if (block_buffer[pl_blockIdx].entry_speed_sqr == block_buffer[pl_blockIdx].nominal_speed_sqr)
+                  prep.maximum_speed = (float)System.Math.Sqrt(mPlanner.block_buffer[pl_blockIdx].nominal_speed_sqr);
+                  if (mPlanner.block_buffer[pl_blockIdx].entry_speed_sqr == mPlanner.block_buffer[pl_blockIdx].nominal_speed_sqr)
                   {
                     // Cruise-deceleration or cruise-only type.
                     prep.ramp_type = RAMP_CRUISE;
@@ -273,20 +273,20 @@ namespace bitLab.LaserCat.Grbl
                   else
                   {
                     // Full-trapezoid or acceleration-cruise types
-                    prep.accelerate_until -= inv_2_accel * (block_buffer[pl_blockIdx].nominal_speed_sqr - block_buffer[pl_blockIdx].entry_speed_sqr);
+                    prep.accelerate_until -= inv_2_accel * (mPlanner.block_buffer[pl_blockIdx].nominal_speed_sqr - mPlanner.block_buffer[pl_blockIdx].entry_speed_sqr);
                   }
                 }
                 else
                 { // Triangle type
                   prep.accelerate_until = intersect_distance;
                   prep.decelerate_after = intersect_distance;
-                  prep.maximum_speed = (float)System.Math.Sqrt(2.0 * block_buffer[pl_blockIdx].acceleration * intersect_distance + exit_speed_sqr);
+                  prep.maximum_speed = (float)System.Math.Sqrt(2.0 * mPlanner.block_buffer[pl_blockIdx].acceleration * intersect_distance + exit_speed_sqr);
                 }
               }
               else
               { // Deceleration-only type
                 prep.ramp_type = RAMP_DECEL;
-                // prep.decelerate_after = block_buffer[pl_blockIdx].millimeters;
+                // prep.decelerate_after = mPlanner.block_buffer[pl_blockIdx].millimeters;
                 prep.maximum_speed = prep.current_speed;
               }
             }
@@ -327,7 +327,7 @@ namespace bitLab.LaserCat.Grbl
         float time_var = dt_max; // Time worker variable
         float mm_var; // mm-Distance worker variable
         float speed_var; // Speed worker variable   
-        float mm_remaining = block_buffer[pl_blockIdx].millimeters; // New segment distance from end of block.
+        float mm_remaining = mPlanner.block_buffer[pl_blockIdx].millimeters; // New segment distance from end of block.
         float minimum_mm = mm_remaining - prep.req_mm_increment; // Guarantee at least one step.
         if (minimum_mm < 0.0) { minimum_mm = 0.0f; }
 
@@ -337,13 +337,13 @@ namespace bitLab.LaserCat.Grbl
           {
             case RAMP_ACCEL:
               // NOTE: Acceleration ramp only computes during first do-while loop.
-              speed_var = block_buffer[pl_blockIdx].acceleration * time_var;
+              speed_var = mPlanner.block_buffer[pl_blockIdx].acceleration * time_var;
               mm_remaining -= time_var * (prep.current_speed + 0.5f * speed_var);
               if (mm_remaining < prep.accelerate_until)
               { // End of acceleration ramp.
                 // Acceleration-cruise, acceleration-deceleration ramp junction, or end of block.
                 mm_remaining = prep.accelerate_until; // NOTE: 0.0 at EOB
-                time_var = 2.0f * (block_buffer[pl_blockIdx].millimeters - mm_remaining) / (prep.current_speed + prep.maximum_speed);
+                time_var = 2.0f * (mPlanner.block_buffer[pl_blockIdx].millimeters - mm_remaining) / (prep.current_speed + prep.maximum_speed);
                 if (mm_remaining == prep.decelerate_after) { prep.ramp_type = RAMP_DECEL; }
                 else { prep.ramp_type = RAMP_CRUISE; }
                 prep.current_speed = prep.maximum_speed;
@@ -372,7 +372,7 @@ namespace bitLab.LaserCat.Grbl
               break;
             default: // case RAMP_DECEL:
               // NOTE: mm_var used as a misc worker variable to prevent errors when near zero speed.
-              speed_var = block_buffer[pl_blockIdx].acceleration * time_var; // Used as delta speed (mm/min)
+              speed_var = mPlanner.block_buffer[pl_blockIdx].acceleration * time_var; // Used as delta speed (mm/min)
               if (prep.current_speed > speed_var)
               { // Check if at or below zero speed.
                 // Compute distance from end of segment to end of block.
@@ -433,8 +433,8 @@ namespace bitLab.LaserCat.Grbl
             prep.current_speed = 0.0f;
             prep.dt_remainder = 0.0f;
             prep.steps_remaining = n_steps_remaining;
-            block_buffer[pl_blockIdx].millimeters = prep.steps_remaining / prep.step_per_mm; // Update with full steps.
-            plan_cycle_reinitialize();
+            mPlanner.block_buffer[pl_blockIdx].millimeters = prep.steps_remaining / prep.step_per_mm; // Update with full steps.
+            mPlanner.plan_cycle_reinitialize();
             sys.setState(STATE_QUEUED);
             return false; // Segment not generated, but current step data still retained.
           }
@@ -506,7 +506,7 @@ namespace bitLab.LaserCat.Grbl
         if (mm_remaining > prep.mm_complete)
         {
           // Normal operation. Block incomplete. Distance remaining in block to be executed.
-          block_buffer[pl_blockIdx].millimeters = mm_remaining;
+          mPlanner.block_buffer[pl_blockIdx].millimeters = mm_remaining;
           prep.steps_remaining = steps_remaining;
         }
         else
@@ -519,8 +519,8 @@ namespace bitLab.LaserCat.Grbl
             prep.current_speed = 0.0f;
             prep.dt_remainder = 0.0f;
             prep.steps_remaining = (float)System.Math.Ceiling(steps_remaining);
-            block_buffer[pl_blockIdx].millimeters = prep.steps_remaining / prep.step_per_mm; // Update with full steps.
-            plan_cycle_reinitialize();
+            mPlanner.block_buffer[pl_blockIdx].millimeters = prep.steps_remaining / prep.step_per_mm; // Update with full steps.
+            mPlanner.plan_cycle_reinitialize();
             sys.setState(STATE_QUEUED); // End cycle.        
 
             return false; // Bail!
@@ -532,7 +532,7 @@ namespace bitLab.LaserCat.Grbl
             // The planner block is complete. All steps are set to be executed in the segment buffer.
             //pl_block = null;
             pl_blockIdx = -1;
-            plan_discard_current_block();
+            mPlanner.plan_discard_current_block();
           }
         }
 

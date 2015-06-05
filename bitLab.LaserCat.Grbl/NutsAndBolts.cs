@@ -134,12 +134,12 @@ namespace bitLab.LaserCat.Grbl
       return (float)(x * System.Math.Sqrt(1 + t * t));
     }
 
-    public void copyArray(float[] dst, float[] src)
+    public static void copyArray(float[] dst, float[] src)
     {
       for (int i = 0; i < src.Length; i++)
         dst[i] = src[i];
     }
-    public void copyArray(int[] dst, int[] src)
+    public static void copyArray(int[] dst, int[] src)
     {
       for (int i = 0; i < src.Length; i++)
         dst[i] = src[i];

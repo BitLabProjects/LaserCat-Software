@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace bitLab.LaserCat.Grbl
 {
-  unsafe public partial class GCode
+  public partial class GCode
   {
     private GrblFirmware mGrbl;
     public void Initialize(GrblFirmware grbl)
@@ -1109,7 +1109,7 @@ namespace bitLab.LaserCat.Grbl
           mGrbl.settings_write_coord_data(coord_select, parameter_data);
           // Update system coordinate system if currently active.
           if (gc_state.modal.coord_select == coord_select) {
-            mGrbl.copyArray(gc_state.coord_system, parameter_data); 
+            GrblFirmware.copyArray(gc_state.coord_system, parameter_data); 
           }
           break;
         case NON_MODAL_GO_HOME_0: case NON_MODAL_GO_HOME_1: 
@@ -1127,7 +1127,7 @@ namespace bitLab.LaserCat.Grbl
           //#else
           mGrbl.mc_line(parameter_data, -1.0f, false); 
           //#endif
-          mGrbl.copyArray(gc_state.position, parameter_data);
+          GrblFirmware.copyArray(gc_state.position, parameter_data);
           break;
         case NON_MODAL_SET_HOME_0:
           mGrbl.settings_write_coord_data(GrblFirmware.SETTING_INDEX_G28, gc_state.position);
@@ -1136,7 +1136,7 @@ namespace bitLab.LaserCat.Grbl
           mGrbl.settings_write_coord_data(GrblFirmware.SETTING_INDEX_G30, gc_state.position);
           break;
         case NON_MODAL_SET_COORDINATE_OFFSET:
-          mGrbl.copyArray(gc_state.coord_offset, gc_block.values.xyz);
+          GrblFirmware.copyArray(gc_state.coord_offset, gc_block.values.xyz);
           break;
         case NON_MODAL_RESET_COORDINATE_OFFSET: 
           mGrbl.clear_vector(gc_state.coord_offset); // Disable G92 offsets by zeroing offset vector.
@@ -1188,7 +1188,7 @@ namespace bitLab.LaserCat.Grbl
           // As far as the parser is concerned, the position is now == target. In reality the
           // motion control system might still be processing the action and the real tool position
           // in any intermediate location.
-          mGrbl.copyArray(gc_state.position, gc_block.values.xyz); // gc.position[] = target[];
+          GrblFirmware.copyArray(gc_state.position, gc_block.values.xyz); // gc.position[] = target[];
         }
       }
   
