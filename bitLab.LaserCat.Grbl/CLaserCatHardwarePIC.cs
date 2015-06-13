@@ -158,6 +158,13 @@ namespace bitLab.LaserCat.Grbl
 			mComMan.SendAndMatch(ECommands.SETSPEED_COMMAND, data, ECommands.OK_COMMAND);
 		}
 
+		public void ManualStep(byte idxMotor, byte motorDirection)
+		{
+			var data = new List<byte>() { idxMotor , 
+																		motorDirection};
+			mComMan.SendAndMatch(ECommands.MANUALSTEP_COMMAND, data, ECommands.OK_COMMAND);
+		}
+
 	}
 }
 

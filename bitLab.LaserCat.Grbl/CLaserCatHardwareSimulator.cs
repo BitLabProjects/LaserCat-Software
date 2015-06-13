@@ -158,6 +158,11 @@ namespace bitLab.LaserCat.Grbl
 			throw new NotImplementedException();
 		}
 
+		public void ManualStep(byte idxMotor, byte motorDirection)
+		{
+			throw new NotImplementedException();
+		}
+
     public void WakeUp(bool setupAndEnableMotors)
     {
       // Enable stepper drivers.

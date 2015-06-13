@@ -158,6 +158,15 @@ namespace bitLab.LaserCat.Grbl
 			mHardware.SetSpeed(motorSpeedSettings.SpeedValue, motorSpeedSettings.TimerPeriod);
 		}
 
+		private void manualStep(TManualStepSettings manualStepSettings)
+		{
+			if (!mCheckIsConnected())
+				return;
+			
+			Log.LogInfo("IdxMotor: {0}, Direction: {1}", manualStepSettings.IdxMotor, manualStepSettings.MotorDirection);
+			mHardware.ManualStep(manualStepSettings.IdxMotor, manualStepSettings.MotorDirection );
+		}
+
 		#endregion
 
     #region Utilities

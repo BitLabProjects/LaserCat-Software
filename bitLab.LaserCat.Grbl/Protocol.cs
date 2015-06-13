@@ -14,7 +14,8 @@ namespace bitLab.LaserCat.Grbl
     ConnectToMachine,
     Play,
     WakeUp,
-    SetSpeed
+    SetSpeed,
+		ManualStep
   }
   public struct TMachineConnectionSettings
   {
@@ -25,6 +26,12 @@ namespace bitLab.LaserCat.Grbl
 	{
 		public int SpeedValue;
 		public int TimerPeriod;
+	}
+
+	public struct TManualStepSettings
+	{
+		public byte IdxMotor;
+		public byte MotorDirection;
 	}
 
   internal struct TGrblMessage

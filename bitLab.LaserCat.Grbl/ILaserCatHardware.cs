@@ -78,5 +78,6 @@ namespace bitLab.LaserCat.Grbl
 		Int32[] AskPosition();
     Int32 GetSegmentBufferCount();
 		void SetSpeed(int speedValue , int timerPeriod);
+		void ManualStep(byte idxMotor, byte motorDirection);
   }
 }

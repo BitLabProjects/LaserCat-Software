@@ -95,6 +95,10 @@ namespace bitLab.LaserCat.Model
 																																					 TimerPeriod = (int)timerPeriod });
 		}
 
+		public void ManualStep(byte idxMotor, byte motorDirection) {
+			mGrbl.SendMessage(EGrblMessage.ManualStep, new TManualStepSettings(){ IdxMotor = idxMotor,
+																																						MotorDirection = motorDirection });
+		}
 
     #region Singleton
     private static CLaserCat mInstance;
