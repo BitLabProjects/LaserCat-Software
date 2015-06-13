@@ -34,10 +34,10 @@ namespace bitLab.LaserCat.ViewModels
 			Connect = new CDelegateCommand((obj) => { CLaserCat.Instance.Connect(); });
 			Play = new CDelegateCommand((obj) => { CLaserCat.Instance.Play(); });
 			WakeUp = new CDelegateCommand((obj) => { CLaserCat.Instance.WakeUp(); });
-      ManualStepMotor1Forward = new CDelegateCommand((obj) => { CLaserCat.Instance.WakeUp(); });
-      ManualStepMotor1Backward = new CDelegateCommand((obj) => { CLaserCat.Instance.WakeUp(); });
-      ManualStepMotor2Forward = new CDelegateCommand((obj) => { CLaserCat.Instance.WakeUp(); });
-      ManualStepMotor2Backward = new CDelegateCommand((obj) => { CLaserCat.Instance.WakeUp(); });
+      ManualStepMotor1Forward = new CDelegateCommand((obj) => { CLaserCat.Instance.ManualStep(0,1); });
+			ManualStepMotor1Backward = new CDelegateCommand((obj) => { CLaserCat.Instance.ManualStep(0,2); });
+			ManualStepMotor2Forward = new CDelegateCommand((obj) => { CLaserCat.Instance.ManualStep(1,1); });
+			ManualStepMotor2Backward = new CDelegateCommand((obj) => { CLaserCat.Instance.ManualStep(1,2); });
 		}
 
 		public CDelegateCommand LoadTestGCode { get; set; }
