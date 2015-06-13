@@ -11,7 +11,6 @@ namespace bitLab.LaserCat.Model
 {
   class CLaserCat
   {
-    private CInMemorySerialPort mGCodeSerialPort;
     private CLaserCatHardwareSimulator mLaserCatHardwareSimulator;
 		private CLaserCatHardwarePIC mLaserCatHardwarePIC;
     private GrblFirmware mGrbl;
@@ -19,10 +18,10 @@ namespace bitLab.LaserCat.Model
 
     private CLaserCat()
     {
-      mGCodeSerialPort = new CInMemorySerialPort();
       mLaserCatHardwareSimulator = new CLaserCatHardwareSimulator();
-	    mLaserCatHardwarePIC = new CLaserCatHardwarePIC("COM3");
-      mGrbl = new GrblFirmware(new GCode(), mGCodeSerialPort, mLaserCatHardwarePIC);
+	    mLaserCatHardwarePIC = new CLaserCatHardwarePIC();
+      //mGrbl = new GrblFirmware(new GCode(), mLaserCatHardwarePIC);
+      mGrbl = new GrblFirmware(new GCode(), new GrblPlanner(), mLaserCatHardwarePIC);
     }
 
     public GrblFirmware GrblFirmware { get { return mGrbl; } }
@@ -74,7 +73,7 @@ namespace bitLab.LaserCat.Model
     {
       if (!CheckGrblIsStarted()) return;
 
-      mGrbl.SendMessage(EGrblMessage.ConnectToMachine, new TMachineConnectionSettings() { COMPort = "COM6" });
+      mGrbl.SendMessage(EGrblMessage.ConnectToMachine, new TMachineConnectionSettings() { COMPort = "COM8" });
     }
 
     public void Play()
