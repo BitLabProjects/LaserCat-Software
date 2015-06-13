@@ -26,16 +26,6 @@ namespace bitLab.LaserCat.Grbl
       mGrbl = grbl;
     }
 
-		// The number of linear motions that can be in the plan at any give time
-		//#ifndef BLOCK_BUFFER_SIZE
-		//  #ifdef USE_LINE_NUMBERS
-		//    #define BLOCK_BUFFER_SIZE 16
-		//  #else
-		//    #define BLOCK_BUFFER_SIZE 18
-		//  #endif
-		//#endif
-		//public const int BLOCK_BUFFER_SIZE = 18;
-
 		//SB! Added event to notify planner blocks changes
 		public event EventHandler<CPlannerBlocksChangedEventArgs> PlannerBlocksChanged;
     private void RaisePlannerBlocksChanged(EPlannerBlockChangedState state)

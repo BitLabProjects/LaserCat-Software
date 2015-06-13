@@ -225,17 +225,17 @@ namespace bitLab.LaserCat.Grbl
     //// These values are retained until Grbl is power-cycled, whereby they will be re-zeroed.
     public void report_probe_parameters()
     {
-    //  uint8_t i;
-    //  float print_position[NutsAndBolts.N_AXIS];
+      //byte i;
+      //float[] print_position = new float[NutsAndBolts.N_AXIS];
 
-    //  // Report in terms of machine position.
-    //  printPgmString(PSTR("[PRB:")); 
-    //  for (i=0; i< NutsAndBolts.N_AXIS; i++) {
-    //    print_position[i] = sys.probe_position[i]/settings.steps_per_mm[i];
-    //    printFloat_CoordValue(print_position[i]);
-    //    if (i < (NutsAndBolts.N_AXIS-1)) { printPgmString(PSTR(",")); }
-    //  }  
-    //  printPgmString(PSTR("]\r\n"));
+      //// Report in terms of machine position.
+      //printPgmString(PSTR("[PRB:")); 
+      //for (i=0; i< NutsAndBolts.N_AXIS; i++) {
+      //  print_position[i] = sys.probe_position[i]/settings.steps_per_mm[i];
+      //  printFloat_CoordValue(print_position[i]);
+      //  if (i < (NutsAndBolts.N_AXIS-1)) { printPgmString(PSTR(",")); }
+      //}  
+      //printPgmString(PSTR("]\r\n"));
     }
 
 
