@@ -96,6 +96,7 @@ namespace bitLab.LaserCat.Model
 		}
 
 		public void ManualStep(byte idxMotor, byte motorDirection) {
+      if (!CheckGrblIsStarted()) return;
 			mGrbl.SendMessage(EGrblMessage.ManualStep, new TManualStepSettings(){ IdxMotor = idxMotor,
 																																						MotorDirection = motorDirection });
 		}

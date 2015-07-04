@@ -50,6 +50,8 @@ namespace bitLab.LaserCat.Grbl
 					wakeUp(); break;
 				case EGrblMessage.SetSpeed:
 					setSpeed((TMotorSpeedSettings)msg.Param0); break;
+        case EGrblMessage.ManualStep:
+          manualStep((TManualStepSettings)msg.Param0); break;
 			}
 		}
 		#endregion
